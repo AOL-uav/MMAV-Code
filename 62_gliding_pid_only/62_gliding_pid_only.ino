@@ -5,7 +5,6 @@
 #include <SD.h>
 #include <math.h>
 
-
 /*
   Assumptions:
     - Nano RP2040 Connect built-in LSM6DSOX IMU.
