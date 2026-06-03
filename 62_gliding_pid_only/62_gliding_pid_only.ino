@@ -28,7 +28,10 @@ static const uint32_t LIVE_PRINT_DT_MS = (uint32_t)(1000.0f / LIVE_PRINT_HZ);
 static const uint32_t SD_LOG_DT_US = (uint32_t)(1000000.0f / SD_LOG_HZ);
 
 static const float RECORD_START_S = 0.0f;
-static const float RECORD_END_S = 3600.0f;
+static const float RECORD_END_S = 3600.0f;Sketch uses 118186 bytes (0%) of program storage space. Maximum is 16777216 bytes.
+Global variables use 46664 bytes (17%) of dynamic memory, leaving 223672 bytes for local variables. Maximum is 270336 bytes.
+.....................
+Failed uploading: uploading error: exit status 1
 static const int SD_CS_PIN = 10;
 static const bool SD_FLUSH_EVERY_SAMPLE = true;
 
