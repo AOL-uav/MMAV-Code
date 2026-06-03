@@ -6,8 +6,7 @@
 #include <math.h>
 
 
-// lol ahsfgojihpuasyvegarhuweo;
-
+// go fuck urself 
 
 /*
   Assumptions:
