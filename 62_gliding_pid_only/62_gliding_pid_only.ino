@@ -6,6 +6,8 @@
 #include <math.h>
 
 /*
+  Objective: 
+
   Assumptions:
     - Nano RP2040 Connect built-in LSM6DSOX IMU.
     - Two servos only: left/right wing AoA.
