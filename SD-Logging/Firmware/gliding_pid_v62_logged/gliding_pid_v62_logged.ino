@@ -5,14 +5,7 @@
 #include <SPI.h>
 #include "SdFat.h"
 
-/*
-  Samara V2 - Gliding PID v62 (Robust 500Hz Black-Box Logging)
-  Changes for reliability:
-    - Explicit IMU wait for 500Hz sync
-    - Verbose Serial debugging for SD/IMU init
-    - Larger buffer and consolidated SD writes
-    - Explicit ODR configuration after IMU.begin()
-*/
+//
 
 // --- HARDWARE CONFIG ---
 #define SD_CS_PIN 5
