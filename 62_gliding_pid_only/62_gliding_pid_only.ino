@@ -6,8 +6,6 @@
 #include <math.h>
 
 
-// go fuck urself retar
-
 /*
   Assumptions:
     - Nano RP2040 Connect built-in LSM6DSOX IMU.
