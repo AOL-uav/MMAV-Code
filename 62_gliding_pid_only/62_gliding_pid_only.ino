@@ -1,10 +1,3 @@
-#include <Arduino.h>
-#include <Arduino_LSM6DSOX.h>
-#include <Servo.h>
-#include <SPI.h>
-#include <SD.h>
-#include <math.h>
-
 /*
   Objective: Phase 1 Glider Flight w/ PID & Comp
 
@@ -15,6 +8,7 @@
     - External 5V servo power with common GND.
     - External SPI SD module, CS pin D10.
 */
+
 
 static const uint32_t SERIAL_BAUD = 115200;
 static const uint32_t SERIAL_WAIT_MS = 1500;
