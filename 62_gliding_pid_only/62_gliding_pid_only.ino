@@ -6,7 +6,7 @@
 #include <math.h>
 
 /*
-  Objective: Phase 1 Glider Deployment 
+  Objective: Phase 1 Glider Deployment w/ 
 
   Assumptions:
     - Nano RP2040 Connect built-in LSM6DSOX IMU.
