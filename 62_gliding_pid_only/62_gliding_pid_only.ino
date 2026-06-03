@@ -8,6 +8,7 @@
     - External 5V servo power with common GND.
     - External SPI SD module, CS pin D10.
 */
+
 #include <Arduino.h>
 #include <Arduino_LSM6DSOX.h>
 #include <Servo.h>
