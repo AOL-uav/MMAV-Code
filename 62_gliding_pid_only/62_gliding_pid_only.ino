@@ -1,8 +1,6 @@
 /*
   Author: Jeff & Jamie
-
   Objective: Phase 1 Glider Flight w/ PID & Comp
-
   Assumptions:
     - Nano RP2040 Connect built-in LSM6DSOX IMU.
     - Two servos only: left/right wing AoA.
