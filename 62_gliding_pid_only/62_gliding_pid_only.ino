@@ -6,7 +6,7 @@
 #include <math.h>
 
 
-// go fuck urself 
+// go fuck urself retar
 
 /*
   Assumptions:
