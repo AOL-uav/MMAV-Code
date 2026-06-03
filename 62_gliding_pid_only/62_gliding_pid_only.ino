@@ -16,7 +16,6 @@
 #include <SD.h>
 #include <math.h>
 
-
 static const uint32_t SERIAL_BAUD = 115200;
 static const uint32_t SERIAL_WAIT_MS = 1500;
 
