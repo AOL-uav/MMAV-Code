@@ -32,8 +32,8 @@ static const float RECORD_END_S = 3600.0f;
 static const int SD_CS_PIN = 10;
 static const bool SD_FLUSH_EVERY_SAMPLE = true;
 
-static const int SERVO_LEFT_PIN = 2;
-static const int SERVO_RIGHT_PIN = 3;
+static const int SERVO_LEFT_PIN = 0;
+static const int SERVO_RIGHT_PIN = 1;
 static const bool SERVO_LEFT_REVERSE = false;
 static const bool SERVO_RIGHT_REVERSE = false;
 
