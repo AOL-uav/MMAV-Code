@@ -1,5 +1,5 @@
 /*
-  Author: Jeff & 
+  Author: Jeff & Jamie
 
   Objective: Phase 1 Glider Flight w/ PID & Comp
 
