@@ -11,7 +11,6 @@
     - `fetch_logs.py`: Python script to download data over Serial.
 
 ## File Naming Conventions
-- **Firmware Numbering**: The `62` in file and folder names refers to the development date of **June 2nd**, not a version number.
 - **Log Files**: 
     - `fl000.csv`: Standard flight logs from `gliding_pid_sd`.
     - `bt00.csv`: Burst/High-speed logs from `gliding_pid_buffered`.
