@@ -33,7 +33,22 @@ static const uint32_t SD_LOG_DT_US = (uint32_t)(1000000.0f / SD_LOG_HZ);
 static const float RECORD_START_S = 0.0f;
 static const float RECORD_END_S = 3600.0f;
 static const int SD_CS_PIN = 10;
-static const bool SD_FLUSH_EVERY_SAMPLE = true;
+static const bool SD_FLUSH_EVERY_SAMPLE = false; // Using buffer instead
+
+// --- BUFFER CONFIG ---
+struct LogEntry {
+  uint32_t ms;
+  float ax, ay, az;
+  float gx, gy, gz;
+  float rollCf, pitchCf;
+  float uRoll, uPitch;
+  float leftCmd, rightCmd;
+  uint16_t leftPwm, rightPwm;
+};
+
+#define BUFFER_SIZE 250 // Stores 0.5 seconds of data at 500Hz
+static LogEntry logBuffer[BUFFER_SIZE];
+static int bufferIdx = 0;
 
 static const int SERVO_LEFT_PIN = D4;
 static const int SERVO_RIGHT_PIN = D3;
@@ -495,13 +510,50 @@ static void maybeWriteSdLog() {
     nextSdLogUs += SD_LOG_DT_US;
   }
 
-  const uint32_t logMs = elapsedMs - recordStartMs();
-  writeRecord(logFile, makeRecord(logMs));
-  recordCount++;
+  // 1. Save current state to RAM buffer
+  if (bufferIdx < BUFFER_SIZE) {
+    LogEntry &entry = logBuffer[bufferIdx];
+    entry.ms = elapsedMs - recordStartMs();
+    entry.ax = imu.ax; entry.ay = imu.ay; entry.az = imu.az;
+    entry.gx = imu.gx; entry.gy = imu.gy; entry.gz = imu.gz;
+    entry.rollCf = rollDeg;
+    entry.pitchCf = pitchDeg;
+    entry.uRoll = uRollDeg;
+    entry.uPitch = uPitchDeg;
+    entry.leftCmd = leftCmdFiltDeg;
+    entry.rightCmd = rightCmdFiltDeg;
+    entry.leftPwm = leftPwmUs;
+    entry.rightPwm = rightPwmUs;
+    bufferIdx++;
+    recordCount++;
+  }
 
-  if (SD_FLUSH_EVERY_SAMPLE) logFile.flush();
-  if (logFile.getWriteError()) {
-    stopSdLog(F("sd_write_error"));
+  // 2. Burst write RAM buffer to SD every half-second (or when full)
+  if (bufferIdx >= BUFFER_SIZE) {
+    for (int i = 0; i < bufferIdx; i++) {
+      LogEntry &e = logBuffer[i];
+      logFile.print(e.ms); logFile.print(',');
+      logFile.print(e.ax, 4); logFile.print(',');
+      logFile.print(e.ay, 4); logFile.print(',');
+      logFile.print(e.az, 4); logFile.print(',');
+      logFile.print(e.gx, 3); logFile.print(',');
+      logFile.print(e.gy, 3); logFile.print(',');
+      logFile.print(e.gz, 3); logFile.print(',');
+      logFile.print(e.rollCf, 2); logFile.print(',');
+      logFile.print(e.pitchCf, 2); logFile.print(',');
+      logFile.print(e.uRoll, 2); logFile.print(',');
+      logFile.print(e.uPitch, 2); logFile.print(',');
+      logFile.print(e.leftCmd, 2); logFile.print(',');
+      logFile.print(e.rightCmd, 2); logFile.print(',');
+      logFile.print(e.leftPwm); logFile.print(',');
+      logFile.println(e.rightPwm);
+    }
+    logFile.flush(); // Commit to SD physical layer
+    bufferIdx = 0;
+
+    if (logFile.getWriteError()) {
+      stopSdLog(F("sd_write_error"));
+    }
   }
 }
 
