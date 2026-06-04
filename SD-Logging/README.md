@@ -53,4 +53,4 @@
 ## Things to Know
 *   **Logging Frequency**: `gliding_pid_sd` (100Hz), `gliding_pid_buffered` (500Hz).
 *   **Buffer Management**: The buffered version flushes to the SD card every 0.5 seconds to ensure control loop stability.
-<!-- Sync Test: 2026-06-03 23:15 -->
+*   **Excel Formatting**: CSV files are best viewed in Excel or Google Sheets for automatic column alignment.
