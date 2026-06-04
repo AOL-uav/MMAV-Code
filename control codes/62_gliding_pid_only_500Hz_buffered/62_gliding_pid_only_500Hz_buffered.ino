@@ -2,12 +2,8 @@
 #include <Arduino_LSM6DSOX.h>
 #include <Servo.h>
 #include <SPI.h>
-#include <SD.h>
+#include "SdFat.h"
 #include <math.h>
-
-
-// change
-// More chnage
 
 /*
   Assumptions:
@@ -16,7 +12,7 @@
     - Left Servo: D4 (GPIO 16)
     - Right Servo: D3 (GPIO 15)
     - External 5V servo power (or 1S LiPo) with common GND.
-    - External SPI SD module, CS pin D10.
+    - External SPI SD module, CS pin D5.
 */
 
 static const uint32_t SERIAL_BAUD = 115200;
@@ -32,7 +28,13 @@ static const uint32_t SD_LOG_DT_US = (uint32_t)(1000000.0f / SD_LOG_HZ);
 
 static const float RECORD_START_S = 0.0f;
 static const float RECORD_END_S = 3600.0f;
-static const int SD_CS_PIN = 10;
+
+// SD Pins for Nano RP2040 Connect on Philhower core
+#define SD_CS_PIN 5
+#define SD_MOSI_PIN 7
+#define SD_MISO_PIN 4
+#define SD_SCK_PIN 6
+
 static const bool SD_FLUSH_EVERY_SAMPLE = false; // Using buffer instead
 
 // --- BUFFER CONFIG ---
@@ -129,7 +131,10 @@ struct ControlRecord {
 static Servo servoLeft;
 static Servo servoRight;
 static ImuSample imu = {};
-static File logFile;
+
+SdFat sd;
+FsFile logFile;
+char logFileName[16];
 
 static bool estimatorReady = false;
 static float gyroBiasDps[3] = {};
@@ -302,67 +307,34 @@ static ControlRecord makeRecord(uint32_t ms) {
 }
 
 static void writeCsvHeader(Print &out) {
-  out.println(F("ms,ax_g,ay_g,az_g,a_norm_g,gx_dps,gy_dps,gz_dps,roll_acc_deg,pitch_acc_deg,roll_cf_deg,pitch_cf_deg,p_filt_dps,q_filt_dps,u_roll_deg,u_pitch_deg,left_cmd_deg,right_cmd_deg,left_servo_deg,right_servo_deg,left_pwm,right_pwm"));
-}
-
-static void writeRecord(Print &out, const ControlRecord &rec) {
-  out.print(rec.ms); out.print(',');
-  out.print(rec.ax, 6); out.print(',');
-  out.print(rec.ay, 6); out.print(',');
-  out.print(rec.az, 6); out.print(',');
-  out.print(rec.aNorm, 6); out.print(',');
-  out.print(rec.gx, 6); out.print(',');
-  out.print(rec.gy, 6); out.print(',');
-  out.print(rec.gz, 6); out.print(',');
-  out.print(rec.rollAccDeg, 3); out.print(',');
-  out.print(rec.pitchAccDeg, 3); out.print(',');
-  out.print(rec.rollCfDeg, 3); out.print(',');
-  out.print(rec.pitchCfDeg, 3); out.print(',');
-  out.print(rec.pFiltDps, 3); out.print(',');
-  out.print(rec.qFiltDps, 3); out.print(',');
-  out.print(rec.uRollDeg, 3); out.print(',');
-  out.print(rec.uPitchDeg, 3); out.print(',');
-  out.print(rec.leftCmdDeg, 3); out.print(',');
-  out.print(rec.rightCmdDeg, 3); out.print(',');
-  out.print(rec.leftServoDeg, 2); out.print(',');
-  out.print(rec.rightServoDeg, 2); out.print(',');
-  out.print(rec.leftPwmUs); out.print(',');
-  out.println(rec.rightPwmUs);
+  out.println(F("ms,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,roll_cf_deg,pitch_cf_deg,u_roll_deg,u_pitch_deg,left_cmd_deg,right_cmd_deg,left_pwm,right_pwm"));
 }
 
 static void initSdLog() {
-  pinMode(SD_CS_PIN, OUTPUT);
-  digitalWrite(SD_CS_PIN, HIGH);
-  SPI.begin();
-  delay(100);
-
-  sdReady = SD.begin(SD_CS_PIN);
-  if (!sdReady) {
+  SPI.setRX(SD_MISO_PIN); SPI.setTX(SD_MOSI_PIN); SPI.setSCK(SD_SCK_PIN); SPI.begin();
+  if (!sd.begin(SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(12)))) {
     if (Serial) Serial.println(F("# ERROR: SD.begin failed."));
     return;
   }
 
-  char name[16];
-  for (int i = 0; i < 100; i++) {
-    snprintf(name, sizeof(name), "P62_%02d.CSV", i);
-    if (!SD.exists(name)) {
-      logFile = SD.open(name, FILE_WRITE);
-      break;
-    }
+  for (int i = 0; i < 1000; i++) {
+    snprintf(logFileName, sizeof(logFileName), "P62_%03d.csv", i);
+    if (!sd.exists(logFileName)) break;
   }
 
-  if (!logFile) {
+  if (!logFile.open(logFileName, O_WRONLY | O_CREAT | O_EXCL)) {
     sdReady = false;
     if (Serial) Serial.println(F("# ERROR: cannot create SD log file."));
     return;
   }
 
+  sdReady = true;
   writeCsvHeader(logFile);
-  logFile.flush();
+  logFile.sync();
 
   if (Serial) {
     Serial.print(F("# SD logging file: "));
-    Serial.println(logFile.name());
+    Serial.println(logFileName);
   }
 }
 
@@ -376,7 +348,7 @@ static void stopSdLog(const __FlashStringHelper *reason) {
     logFile.println(reason);
     logFile.print(F("# records="));
     logFile.println(recordCount);
-    logFile.flush();
+    logFile.sync();
     logFile.close();
   }
 }
