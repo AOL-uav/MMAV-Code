@@ -2,11 +2,8 @@
 #include <Arduino_LSM6DSOX.h>
 #include <Servo.h>
 #include <SPI.h>
-#include <SD.h>
+#include "SdFat.h"
 #include <math.h>
-
-
-// change
 
 /*
   Assumptions:
@@ -14,7 +11,7 @@
     - Two servos only: left/right wing AoA.
     - Servo 1 signal D2, servo 2 signal D3.
     - External 5V servo power with common GND.
-    - External SPI SD module, CS pin D10.
+    - External SPI SD module, CS pin D5.
 */
 
 static const uint32_t SERIAL_BAUD = 115200;
@@ -30,7 +27,13 @@ static const uint32_t SD_LOG_DT_US = (uint32_t)(1000000.0f / SD_LOG_HZ);
 
 static const float RECORD_START_S = 0.0f;
 static const float RECORD_END_S = 3600.0f;
-static const int SD_CS_PIN = 10;
+
+// SD Pins for Nano RP2040 Connect on Philhower core
+#define SD_CS_PIN 5
+#define SD_MOSI_PIN 7
+#define SD_MISO_PIN 4
+#define SD_SCK_PIN 6
+
 static const bool SD_FLUSH_EVERY_SAMPLE = true;
 
 static const int SERVO_LEFT_PIN = 2;
@@ -112,7 +115,10 @@ struct ControlRecord {
 static Servo servoLeft;
 static Servo servoRight;
 static ImuSample imu = {};
-static File logFile;
+
+SdFat sd;
+FsFile logFile;
+char logFileName[16];
 
 static bool estimatorReady = false;
 static float gyroBiasDps[3] = {};
@@ -314,38 +320,30 @@ static void writeRecord(Print &out, const ControlRecord &rec) {
 }
 
 static void initSdLog() {
-  pinMode(SD_CS_PIN, OUTPUT);
-  digitalWrite(SD_CS_PIN, HIGH);
-  SPI.begin();
-  delay(100);
-
-  sdReady = SD.begin(SD_CS_PIN);
-  if (!sdReady) {
+  SPI.setRX(SD_MISO_PIN); SPI.setTX(SD_MOSI_PIN); SPI.setSCK(SD_SCK_PIN); SPI.begin();
+  if (!sd.begin(SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(12)))) {
     if (Serial) Serial.println(F("# ERROR: SD.begin failed."));
     return;
   }
 
-  char name[16];
-  for (int i = 0; i < 100; i++) {
-    snprintf(name, sizeof(name), "P62_%02d.CSV", i);
-    if (!SD.exists(name)) {
-      logFile = SD.open(name, FILE_WRITE);
-      break;
-    }
+  for (int i = 0; i < 1000; i++) {
+    snprintf(logFileName, sizeof(logFileName), "P62_%03d.csv", i);
+    if (!sd.exists(logFileName)) break;
   }
 
-  if (!logFile) {
+  if (!logFile.open(logFileName, O_WRONLY | O_CREAT | O_EXCL)) {
     sdReady = false;
     if (Serial) Serial.println(F("# ERROR: cannot create SD log file."));
     return;
   }
 
+  sdReady = true;
   writeCsvHeader(logFile);
-  logFile.flush();
+  logFile.sync();
 
   if (Serial) {
     Serial.print(F("# SD logging file: "));
-    Serial.println(logFile.name());
+    Serial.println(logFileName);
   }
 }
 
@@ -359,7 +357,7 @@ static void stopSdLog(const __FlashStringHelper *reason) {
     logFile.println(reason);
     logFile.print(F("# records="));
     logFile.println(recordCount);
-    logFile.flush();
+    logFile.sync();
     logFile.close();
   }
 }
