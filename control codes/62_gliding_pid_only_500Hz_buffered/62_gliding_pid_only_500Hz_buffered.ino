@@ -52,8 +52,8 @@ struct LogEntry {
 static LogEntry logBuffer[BUFFER_SIZE];
 static int bufferIdx = 0;
 
-static const int SERVO_LEFT_PIN = D4;
-static const int SERVO_RIGHT_PIN = D3;
+static const int SERVO_LEFT_PIN = 16;  // Nano Pin D4
+static const int SERVO_RIGHT_PIN = 15; // Nano Pin D3 (PCB Pin 1)
 static const bool SERVO_LEFT_REVERSE = false;
 static const bool SERVO_RIGHT_REVERSE = false;
 
