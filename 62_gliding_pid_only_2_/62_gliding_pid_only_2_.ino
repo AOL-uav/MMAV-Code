@@ -24,7 +24,7 @@ static const uint32_t SERIAL_WAIT_MS = 1500;
 
 static const float CONTROL_HZ = 100.0f;
 static const float LIVE_PRINT_HZ = 20.0f;
-static const float SD_LOG_HZ = 20.0f;
+static const float SD_LOG_HZ = 500.0f;
 static const float DT_NOMINAL = 1.0f / CONTROL_HZ;
 static const uint32_t CONTROL_DT_US = (uint32_t)(1000000.0f / CONTROL_HZ);
 static const uint32_t LIVE_PRINT_DT_MS = (uint32_t)(1000.0f / LIVE_PRINT_HZ);
