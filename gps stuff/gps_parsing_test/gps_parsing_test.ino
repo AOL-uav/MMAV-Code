@@ -63,10 +63,8 @@ void displayInfo() {
   // Speed
   Serial.print(F(" | Spd: "));
   if (gps.speed.isValid()) {
-    Serial.print(gps.speed.kmph());
-    Serial.print(F(" km/h ("));
-    Serial.print(gps.speed.knots());
-    Serial.print(F(" knots)"));
+    Serial.print(gps.speed.mps());
+    Serial.print(F(" m/s"));
   } else {
     Serial.print(F("INVALID"));
   }
