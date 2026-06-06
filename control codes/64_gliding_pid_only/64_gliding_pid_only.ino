@@ -6,6 +6,8 @@
 #include <math.h>
 
 /*
+  Objective: Achieve glider stabilization w/ PID and comp. filter
+  Authors: Jeff & Jeff
   Assumptions:
     - Nano RP2040 Connect built-in LSM6DSOX IMU.
     - Two servos only: left/right wing AoA.
@@ -14,20 +16,26 @@
     - External SPI SD module, CS pin D10.
 */
 
+// ==================================== Intialization ====================================
+
+// Serial communication settings
 static const uint32_t SERIAL_BAUD = 115200;  // Serial monitor speed.
 static const uint32_t SERIAL_WAIT_MS = 1500;  // USB wait time at boot.
 
+// Control loop and SD logging rates
 static const float CONTROL_HZ = 100.0f;  // Servo control loop rate.
 static const float SD_LOG_HZ = 20.0f;  // SD CSV write rate.
 static const float DT_NOMINAL = 1.0f / CONTROL_HZ;  // Backup dt.
 static const uint32_t CONTROL_DT_US = (uint32_t)(1000000.0f / CONTROL_HZ);  // Control period.
 static const uint32_t SD_LOG_DT_US = (uint32_t)(1000000.0f / SD_LOG_HZ);  // SD log period.
 
+// SD card recording values and set up
 static const float RECORD_START_S = 0.0f;  // Log start after setup.
 static const float RECORD_END_S = 3600.0f;  // Log stop after setup.
 static const int SD_CS_PIN = 10;  // SD chip-select pin.
 static const bool SD_FLUSH_EVERY_SAMPLE = true;  // Save each row quickly.
 
+// Servo motor initialization
 static const int SERVO_LEFT_PIN = 4;  // Left wing servo signal.
 static const int SERVO_RIGHT_PIN = 3;  // Right wing servo signal.
 static const bool SERVO_LEFT_REVERSE = true;  // Flip left servo direction.
@@ -35,6 +43,7 @@ static const bool SERVO_RIGHT_REVERSE = false;  // Flip right servo direction.
 static const float SERVO_LEFT_GAIN = 1.00f;  // Scale left physical travel.
 static const float SERVO_RIGHT_GAIN = 1.00f;  // Scale right physical travel.
 
+// Servo motor speed and range limitations
 static const int SERVO_MIN_US = 1000;  // Servo minimum PWM.
 static const int SERVO_MAX_US = 2000;  // Servo maximum PWM.
 static const float SERVO_MIN_DEG = 0.0f;  // Servo angle minimum.
@@ -43,17 +52,21 @@ static const float AOA_NEUTRAL_DEG = 90.0f;  // Neutral AoA command.
 static const float AOA_RATE_LIMIT_DEG_PER_S = 240.0f;  // Command slew limit.
 static const float AOA_CMD_LIMIT_DEG = 60.0f;  // Max AoA correction.
 
+// Unit converstion values
 static const float RAD2DEG_LOCAL = 57.29577951308232f;  // rad to deg.
 static const float DEG2RAD_LOCAL = 0.017453292519943295f;  // deg to rad.
 
+// IMU calibration
 static const uint16_t CAL_SAMPLES = 500;  // Startup gyro samples.
 static const uint16_t CAL_DT_MS = 4;  // Calibration sample gap.
 
+// IMU noise values
 static const float ACCEL_NOISE_G = 0.0010f;  // Measured accel noise (a_norm_std=0.00094).
 static const float ACCEL_ANGLE_NOISE_DEG = 0.055f;  // Measured: roll=0.032, pitch=0.051 deg.
 static const float GYRO_NOISE_DPS_X = 0.043f;  // Measured gx std (roll axis).
 static const float GYRO_NOISE_DPS_Y = 0.239f;  // Measured gy std (pitch axis).
 
+// Complementary filter values
 static const float ACC_GATE_LOW_G = 0.82f;  // Lower accel trust gate.
 static const float ACC_GATE_HIGH_G = 1.18f;  // Upper accel trust gate.
 static const float COMP_ALPHA = 0.980f;  // Gyro weight in filter.
@@ -63,12 +76,16 @@ static const float LARGE_ANGLE_START_DEG = 12.0f;  // Accel assist starts.
 static const float LARGE_ANGLE_FULL_DEG = 45.0f;  // Accel assist full.
 static const float LARGE_ANGLE_ACCEL_BLEND_MAX = 0.65f;  // Max accel assist.
 
+// Control target values
 static const float ROLL_TARGET_DEG = 0.0f;  // Desired roll.
 static const float PITCH_TARGET_DEG = 0.0f;  // Desired pitch.
+
+// Deadband values
 static const float ANGLE_DEADBAND_DEG = 2.5f * ACCEL_ANGLE_NOISE_DEG;  // Smaller deadband for faster response.
 static const float RATE_DEADBAND_P_DPS = 3.0f * GYRO_NOISE_DPS_X;  // Roll rate deadband.
 static const float RATE_DEADBAND_Q_DPS = 3.0f * GYRO_NOISE_DPS_Y;  // Pitch rate deadband.
 
+// PID controller values
 static const float KP_ROLL = 1.10f;  // Roll P gain.
 static const float KI_ROLL = 0.00f;  // Roll I gain.
 static const float KD_ROLL = 0.060f;  // Roll D gain.
@@ -149,6 +166,9 @@ static bool sdReady = false;  // SD init status.
 static bool recording = false;  // Inside log window.
 static bool recordFinished = false;  // Log file closed.
 
+// ==================================== Helper Functions ====================================
+
+// Math functions ----------------------------------------------------------------
 static float sqf(float x) {
   // Square helper.
   return x * x;
@@ -172,6 +192,7 @@ static float rateLimit(float target, float current, float maxStep) {
   return current + clampfLocal(target - current, -maxStep, maxStep);
 }
 
+// SD Logging  ----------------------------------------------------------------
 static uint32_t recordStartMs() {
   // Log start time in ms.
   return (uint32_t)(RECORD_START_S * 1000.0f + 0.5f);
@@ -182,6 +203,7 @@ static uint32_t recordEndMs() {
   return (uint32_t)(RECORD_END_S * 1000.0f + 0.5f);
 }
 
+// Servo Commands ----------------------------------------------------------------
 static int pwmFromDeg(float deg) {
   // Convert servo angle to PWM.
   const float d = clampfLocal(deg, SERVO_MIN_DEG, SERVO_MAX_DEG);
@@ -200,6 +222,7 @@ static float scaleServoTravel(float deg, float gain) {
   return clampfLocal(AOA_NEUTRAL_DEG + (deg - AOA_NEUTRAL_DEG) * gain, SERVO_MIN_DEG, SERVO_MAX_DEG);
 }
 
+// IMU Reading ----------------------------------------------------------------
 static bool readImu(ImuSample &s) {
   // Read accel and gyro together.
   const uint32_t waitStartUs = micros();
@@ -216,6 +239,7 @@ static bool readImu(ImuSample &s) {
   return true;
 }
 
+// Accelerometer Attitude Calculations ----------------------------------------------------------------
 static float accelNormG(const ImuSample &s) {
   // Accel magnitude for gating.
   return sqrtf(sqf(s.ax) + sqf(s.ay) + sqf(s.az));
@@ -237,6 +261,7 @@ static bool accelUsable(const ImuSample &s) {
   return a >= ACC_GATE_LOW_G && a <= ACC_GATE_HIGH_G;
 }
 
+// Wing AoA Actuation ----------------------------------------------------------------
 static void writeServos(float leftDeg, float rightDeg, float dt) {
   // Send final servo PWM.
   const float step = AOA_RATE_LIMIT_DEG_PER_S * dt;
@@ -251,6 +276,9 @@ static void writeServos(float leftDeg, float rightDeg, float dt) {
   servoRight.writeMicroseconds(rightPwmUs);
 }
 
+// ==================================== Major Functions ====================================
+
+// Save the state (snapshot) of the aircraft at that current state
 static ControlRecord makeRecord(uint32_t ms) {
   ControlRecord rec = {};
   rec.ms = ms;
