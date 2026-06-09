@@ -669,6 +669,7 @@ void setup() {
   calibrateGyroAndLevel();
 
   logClockStartMs = millis();
+  lastStatsMs = logClockStartMs;
   lastControlUs = micros();
   nextControlUs = lastControlUs + CONTROL_DT_US;
   nextSdLogUs = lastControlUs;
