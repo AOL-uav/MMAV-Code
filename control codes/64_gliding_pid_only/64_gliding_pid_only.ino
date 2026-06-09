@@ -160,6 +160,7 @@ static uint32_t nextControlUs = 0;  // Next control tick.
 static uint32_t lastControlUs = 0;  // Previous control tick.
 static uint32_t logClockStartMs = 0;  // SD log time origin.
 static uint32_t nextSdLogUs = 0;  // Next SD write tick.
+static uint32_t lastSdSyncMs = 0;  // Periodic sync timestamp.
 static String inputLine;  // Serial command buffer.
 
 static uint32_t recordCount = 0;  // Rows written to SD.
@@ -568,6 +569,7 @@ static void maybeWriteSdLog() {
   if (!recording) {
     recording = true;
     nextSdLogUs = micros();
+    lastSdSyncMs = millis();
   }
 
   if (elapsedMs >= recordEndMs()) {
@@ -586,8 +588,12 @@ static void maybeWriteSdLog() {
   writeRecord(logFile, makeRecord(logMs));
   recordCount++;
 
-  // Flush each row.
-  if (SD_FLUSH_EVERY_SAMPLE) logFile.flush();
+  // Flush periodically instead of every sample.
+  if (SD_FLUSH_EVERY_SAMPLE || (millis() - lastSdSyncMs >= SD_SYNC_INTERVAL_MS)) {
+    logFile.flush();
+    lastSdSyncMs = millis();
+  }
+
   if (logFile.getWriteError()) {
     stopSdLog(F("sd_write_error"));
   }
