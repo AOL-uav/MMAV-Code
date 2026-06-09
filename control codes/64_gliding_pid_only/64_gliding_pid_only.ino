@@ -158,6 +158,9 @@ static uint16_t leftPwmUs = 1500;  // Final left PWM.
 static uint16_t rightPwmUs = 1500;  // Final right PWM.
 static uint32_t nextControlUs = 0;  // Next control tick.
 static uint32_t lastControlUs = 0;  // Previous control tick.
+static uint32_t lastStatsMs = 0;  // Last stats print.
+static uint32_t loopCount = 0;  // Loops since last print.
+static uint32_t maxLoopTimeUs = 0;  // Longest loop execution.
 static uint32_t logClockStartMs = 0;  // SD log time origin.
 static uint32_t nextSdLogUs = 0;  // Next SD write tick.
 static uint32_t lastSdSyncMs = 0;  // Periodic sync timestamp.
@@ -672,6 +675,7 @@ void setup() {
 }
 
 void loop() {
+  const uint32_t loopStartUs = micros();
   processSerial();
 
   const uint32_t nowUs = micros();
@@ -685,9 +689,26 @@ void loop() {
   lastControlUs = nowUs;
   if (dt <= 0.0f || dt > 0.1f) dt = DT_NOMINAL;
 
-  if (!readImu(imu)) return;
+  if (readImu(imu)) {
+    updateComplementary(dt);
+    updatePidAndServos(dt);
+    maybeWriteSdLog();
+  }
 
-  updateComplementary(dt);
-  updatePidAndServos(dt);
-  maybeWriteSdLog();
+  // Performance monitoring
+  loopCount++;
+  uint32_t loopTimeUs = micros() - loopStartUs;
+  if (loopTimeUs > maxLoopTimeUs) maxLoopTimeUs = loopTimeUs;
+
+  if (millis() - lastStatsMs >= 1000) {
+    if (Serial) {
+      Serial.print(F("# Hz: "));
+      Serial.print(loopCount);
+      Serial.print(F(" | Max Loop Us: "));
+      Serial.println(maxLoopTimeUs);
+    }
+    loopCount = 0;
+    maxLoopTimeUs = 0;
+    lastStatsMs = millis();
+  }
 }
