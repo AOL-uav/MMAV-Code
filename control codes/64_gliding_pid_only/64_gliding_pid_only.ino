@@ -34,7 +34,7 @@ static const float RECORD_START_S = 0.0f;  // Log start after setup.
 static const float RECORD_END_S = 3600.0f;  // Log stop after setup.
 static const int SD_CS_PIN = 10;  // SD chip-select pin.
 static const bool SD_FLUSH_EVERY_SAMPLE = false;  // Disabled for performance.
-static const uint32_t SD_SYNC_INTERVAL_MS = 2000;  // Flush every 2s.
+static const uint32_t SD_SYNC_INTERVAL_MS = 5000;  // Flush every 5s.
 
 // Servo motor initialization
 static const int SERVO_LEFT_PIN = 4;  // Left wing servo signal.
