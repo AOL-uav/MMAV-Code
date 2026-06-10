@@ -27,7 +27,7 @@ void setup() {
   Serial.begin(115200);
   delay(2000);
   Serial.println("Gimbal v6.1-TEST: 2-AXIS SLOW MOTION");
-
+  
   attachAll();
   centerAll();
 }
@@ -61,7 +61,7 @@ int degToUs(float deg) {
 
 void updateServos() {
   if (relaxed) return;
-
+  
   curYaw   = (targetYaw * alpha)   + (curYaw * (1.0 - alpha));
   curPitch = (targetPitch * alpha) + (curPitch * (1.0 - alpha));
 
@@ -111,7 +111,7 @@ void processCommand(String cmd) {
   cmd.trim();
   if (cmd.length() == 0) return;
   char type = cmd.charAt(0);
-
+  
   if (type == 'S' || type == 's') detachAll();
   else if (type == 'A' || type == 'a') { attachAll(); autoMode = true; }
   else if (type == 'C' || type == 'c') centerAll();
@@ -123,4 +123,3 @@ void processCommand(String cmd) {
     else if (type == 'P' || type == 'p') targetPitch = us;
   }
 }
-
