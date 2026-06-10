@@ -69,8 +69,8 @@ void updateServos() {
   curYaw   = (targetYaw * alpha)   + (curYaw * (1.0 - alpha));
   curPitch = (targetPitch * alpha) + (curPitch * (1.0 - alpha));
 
-  yawServo.writeMicroseconds((int)constrain(curYaw, minSafeUS, maxSafeUS));
-  pitchServo.writeMicroseconds((int)constrain(curPitch, minSafeUS, maxSafeUS));
+  yawServo.writeMicroseconds((int)constrain(curYaw, minYawUS, maxYawUS));
+  pitchServo.writeMicroseconds((int)constrain(curPitch, minPitchUS, maxPitchUS));
 }
 
 void loop() {
