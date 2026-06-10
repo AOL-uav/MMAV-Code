@@ -63,18 +63,11 @@ int degToUs(float deg) {
   return map(constrain(deg, 60, 120), 0, 180, 500, 2500);
 }
 
-void updateServos() {
-  if (relaxed) return;
-  
-  curYaw   = (targetYaw * alpha)   + (curYaw * (1.0 - alpha));
-  curPitch = (targetPitch * alpha) + (curPitch * (1.0 - alpha));
-
-  yawServo.writeMicroseconds((int)constrain(curYaw, minYawUS, maxYawUS));
-  pitchServo.writeMicroseconds((int)constrain(curPitch, minPitchUS, maxPitchUS));
-}
-
 void loop() {
   static String inputString = "";
+  static unsigned long lastUpdate = 0;
+  
+  // 1. Process Serial Commands immediately
   while (Serial.available() > 0) {
     char inChar = (char)Serial.read();
     if (inChar == '\n' || inChar == '\r') {
@@ -85,19 +78,24 @@ void loop() {
     }
   }
 
-  if (!relaxed) {
-    if (autoMode) {
-      unsigned long now = millis();
-      float phase = now / 1000.0;
-      targetYaw   = 1500 + (300 * sin(phase * 0.4)); 
-      targetPitch = 1500 + (300 * sin(phase * 0.7 + 1.0));
+  // 2. Fixed-Rate Servo Update (100Hz / Every 10ms)
+  unsigned long now = millis();
+  if (now - lastUpdate >= 10) {
+    lastUpdate = now;
+    
+    if (!relaxed) {
+      if (autoMode) {
+        float phase = now / 1000.0;
+        targetYaw   = 1500 + (300 * sin(phase * 0.4)); 
+        targetPitch = 1500 + (300 * sin(phase * 0.7 + 1.0));
+      }
+      updateServos();
     }
-    updateServos();
   }
 
-  // Telemetry
+  // 3. Telemetry (Every 250ms)
   static unsigned long lastLog = 0;
-  if (millis() - lastLog > 250) {
+  if (now - lastLog > 250) {
     if (relaxed) {
       Serial.println("STATE:RELAXED");
     } else {
@@ -105,10 +103,27 @@ void loop() {
       Serial.print((int)curYaw); Serial.print(",");
       Serial.println((int)curPitch);
     }
-    lastLog = millis();
+    lastLog = now;
   }
+}
 
-  delay(20); 
+void updateServos() {
+  if (relaxed) return;
+  
+  float oldYaw = curYaw;
+  float oldPitch = curPitch;
+
+  // Smoothing
+  curYaw   = (targetYaw * alpha)   + (curYaw * (1.0 - alpha));
+  curPitch = (targetPitch * alpha) + (curPitch * (1.0 - alpha));
+
+  // Small deadzone to prevent "hunting" jitters (only write if changed by > 0.5us)
+  if (abs(curYaw - oldYaw) > 0.5) {
+    yawServo.writeMicroseconds((int)constrain(curYaw, minYawUS, maxYawUS));
+  }
+  if (abs(curPitch - oldPitch) > 0.5) {
+    pitchServo.writeMicroseconds((int)constrain(curPitch, minPitchUS, maxPitchUS));
+  }
 }
 
 void processCommand(String cmd) {
