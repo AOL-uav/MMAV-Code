@@ -11,10 +11,11 @@ float targetYaw = 1500, targetPitch = 1500;
 // Slew Rate: Max microseconds to move per 20ms frame
 float maxStep = 10.0; 
 
-const int minYawUS = 1167; 
-const int maxYawUS = 1744; 
-const int minPitchUS = 834; 
-const int maxPitchUS = 2166;
+// UNIFIED HARDWARE LIMITS
+const int minYawUS = 1167; // 60 deg
+const int maxYawUS = 1744; // 112 deg (Mechanical Limit)
+const int minPitchUS = 1000; // 45 deg
+const int maxPitchUS = 2000; // 135 deg (Safety Reduction)
 
 bool relaxed = false;
 bool autoMode = false;
@@ -22,8 +23,9 @@ bool autoMode = false;
 void setup() {
   Serial.begin(115200);
   delay(2000);
-  Serial.println("Gimbal v6.5: SLEW-RATE & SILENT MODE");
+  Serial.println("Gimbal v6.6: TIGHTENED LIMITS");
   attachAll();
+  centerAll();
 }
 
 void attachAll() {
@@ -37,12 +39,17 @@ void detachAll() {
   relaxed = true; autoMode = false;
 }
 
+void centerAll() {
+  autoMode = false;
+  attachAll();
+  targetYaw = 1500; targetPitch = 1500;
+}
+
 void loop() {
   static String inputString = "";
   static unsigned long lastUpdate = 0;
   unsigned long now = millis();
 
-  // 1. Check Serial
   while (Serial.available() > 0) {
     char inChar = (char)Serial.read();
     if (inChar == '\n' || inChar == '\r') {
@@ -53,14 +60,13 @@ void loop() {
     }
   }
 
-  // 2. Linear Slew Update (50Hz / 20ms)
   if (now - lastUpdate >= 20) {
     lastUpdate = now;
     if (!relaxed) {
       if (autoMode) {
         float phase = now / 1000.0;
         targetYaw = 1500 + (250 * sin(phase * 0.4));
-        targetPitch = 1500 + (500 * sin(phase * 0.7));
+        targetPitch = 1500 + (400 * sin(phase * 0.7));
       }
       updateServos();
     }
@@ -70,28 +76,23 @@ void loop() {
 void updateServos() {
   bool moving = false;
 
-  // Linear Slew for Yaw
-  if (abs(targetYaw - curYaw) > maxStep) {
-    curYaw += (targetYaw > curYaw) ? maxStep : -maxStep;
+  // Constrain targets to hardware limits before moving
+  float safeTargetYaw = constrain(targetYaw, minYawUS, maxYawUS);
+  float safeTargetPitch = constrain(targetPitch, minPitchUS, maxPitchUS);
+
+  if (abs(safeTargetYaw - curYaw) > maxStep) {
+    curYaw += (safeTargetYaw > curYaw) ? maxStep : -maxStep;
     moving = true;
-  } else {
-    curYaw = targetYaw;
-  }
+  } else { curYaw = safeTargetYaw; }
 
-  // Linear Slew for Pitch
-  if (abs(targetPitch - curPitch) > maxStep) {
-    curPitch += (targetPitch > curPitch) ? maxStep : -maxStep;
+  if (abs(safeTargetPitch - curPitch) > maxStep) {
+    curPitch += (safeTargetPitch > curPitch) ? maxStep : -maxStep;
     moving = true;
-  } else {
-    curPitch = targetPitch;
-  }
+  } else { curPitch = safeTargetPitch; }
 
-  // Apply to hardware
-  yawServo.writeMicroseconds((int)constrain(curYaw, minYawUS, maxYawUS));
-  pitchServo.writeMicroseconds((int)constrain(curPitch, minPitchUS, maxPitchUS));
+  yawServo.writeMicroseconds((int)curYaw);
+  pitchServo.writeMicroseconds((int)curPitch);
 
-  // 3. SILENT MODE: Only print if we have STOPPED moving
-  // This prevents Serial interrupts from jittering the PWM signal during motion
   static bool wasMoving = false;
   if (wasMoving && !moving) {
     Serial.print("STOPPED:"); Serial.print((int)curYaw);
@@ -107,18 +108,16 @@ void processCommand(String cmd) {
   
   if (type == 'S' || type == 's') detachAll();
   else if (type == 'A' || type == 'a') { attachAll(); autoMode = true; }
-  else if (type == 'C' || type == 'c') { 
-    attachAll(); autoMode = false; 
-    targetYaw = 1500; targetPitch = 1500; 
-  }
+  else if (type == 'C' || type == 'c') centerAll();
   else if (cmd.length() > 1) {
     int val = cmd.substring(1).toInt();
     if (type == 'V' || type == 'v') {
-      maxStep = constrain(val / 2.0, 1.0, 50.0); // Map UI slider to Slew Rate
+      maxStep = constrain(val / 2.0, 1.0, 50.0);
       return;
     }
     if (relaxed) attachAll();
     autoMode = false;
+    // Map 0-180 UI to 500-2500 range
     float us = map(constrain(val, 0, 180), 0, 180, 500, 2500);
     if (type == 'Y' || type == 'y') targetYaw = us;
     else if (type == 'P' || type == 'p') targetPitch = us;
