@@ -17,18 +17,18 @@ bool relaxed = false;
 float curYaw = 1500, curPitch = 1500, curRoll = 1500;
 float targetYaw = 1500, targetPitch = 1500, targetRoll = 1500;
 
-// Conservative Smoothing Factor (Alpha)
-const float alpha = 0.08; 
+// VERY Conservative Smoothing for First Test
+const float alpha = 0.02; 
 
-// STALL PREVENTION: Restricted range (approx 60-120 degrees)
-// Updated for 25kg servos (500-2500us range)
-const int minSafeUS = 1150; 
-const int maxSafeUS = 1850;
+// FIRST TEST LIMITS: Extremely restricted (approx 75-105 degrees)
+// Centered at 1500us, allowed range is only +/- 150us
+const int minSafeUS = 1350; 
+const int maxSafeUS = 1650;
 
 void setup() {
   Serial.begin(115200);
   delay(2000);
-  Serial.println("Gimbal v6.0: 25kg Servo Upgrade");
+  Serial.println("Gimbal v6.1-TEST: SLOW MOTION ENABLED");
 
   attachAll();
   centerAll();
