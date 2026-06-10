@@ -39,19 +39,19 @@ style.configure("TLabel", font=("Helvetica", 12))
 
 # Yaw Slider
 ttk.Label(root, text="Yaw (Pin 0)").pack(pady=5)
-yaw_slider = ttk.Scale(root, from_=0, to=180, orient='horizontal', command=update_yaw)
+yaw_slider = ttk.Scale(root, from_=60, to=120, orient='horizontal', command=update_yaw)
 yaw_slider.set(90)
 yaw_slider.pack(fill='x', padx=20)
 
 # Pitch Slider
 ttk.Label(root, text="Pitch (Pin 1)").pack(pady=5)
-pitch_slider = ttk.Scale(root, from_=0, to=180, orient='horizontal', command=update_pitch)
+pitch_slider = ttk.Scale(root, from_=60, to=120, orient='horizontal', command=update_pitch)
 pitch_slider.set(90)
 pitch_slider.pack(fill='x', padx=20)
 
 # Roll Slider
 ttk.Label(root, text="Roll (Pin 2)").pack(pady=5)
-roll_slider = ttk.Scale(root, from_=0, to=180, orient='horizontal', command=update_roll)
+roll_slider = ttk.Scale(root, from_=60, to=120, orient='horizontal', command=update_roll)
 roll_slider.set(90)
 roll_slider.pack(fill='x', padx=20)
 
