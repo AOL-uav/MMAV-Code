@@ -18,7 +18,7 @@ float targetYaw = 1500, targetPitch = 1500;
 // Smoothing Factor (Alpha) - Now adjustable via Serial 'V' command
 float alpha = 0.15; 
 
-// UPDATED RANGE LIMITS (Microseconds)
+// RANGE LIMITS (Microseconds)
 // Pin 0 (Yaw): Range 60 to 112 degrees (1500 +/- 250us approx)
 const int minYawUS = 1167; 
 const int maxYawUS = 1744; // Capped at 112 degrees
@@ -30,17 +30,20 @@ const int maxPitchUS = 2166;
 void setup() {
   Serial.begin(115200);
   delay(2000);
-  Serial.println("Gimbal v6.2: HIGH SPEED & EXTENDED RANGE");
+  Serial.println("Gimbal v6.3: OPTIMIZED FOR 25KG SERVOS");
   
   attachAll();
   centerAll();
 }
 
 void attachAll() {
-  if (!yawServo.attached()) yawServo.attach(yawPin, 500, 2500);
-  if (!pitchServo.attached()) pitchServo.attach(pitchPin, 500, 2500);
-  relaxed = false;
-  Serial.println("STATUS:ALL_ATTACHED");
+  bool changed = false;
+  if (!yawServo.attached()) { yawServo.attach(yawPin, 500, 2500); changed = true; }
+  if (!pitchServo.attached()) { pitchServo.attach(pitchPin, 500, 2500); changed = true; }
+  if (relaxed || changed) {
+    relaxed = false;
+    Serial.println("STATUS:ACTIVE");
+  }
 }
 
 void detachAll() {
@@ -48,14 +51,14 @@ void detachAll() {
   pitchServo.detach();
   relaxed = true;
   autoMode = false;
-  Serial.println("STATUS:RELAXED_ALL");
+  Serial.println("STATUS:RELAXED");
 }
 
 void centerAll() {
   autoMode = false;
   attachAll();
   targetYaw = 1500; targetPitch = 1500;
-  Serial.println("STATUS:CENTERED_ALL");
+  Serial.println("STATUS:CENTERING");
 }
 
 int degToUs(float deg) {
@@ -148,10 +151,5 @@ void processCommand(String cmd) {
     float us = degToUs(val);
     if (type == 'Y' || type == 'y') targetYaw = us;
     else if (type == 'P' || type == 'p') targetPitch = us;
-  }
-}
- = constrain(val / 100.0, 0.01, 0.5);
-      Serial.print("SPEED_ALPHA:"); Serial.println(alpha);
-    }
   }
 }
