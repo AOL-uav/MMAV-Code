@@ -49,7 +49,9 @@ static const int SERVO_MIN_US = 1000;  // Servo minimum PWM.
 static const int SERVO_MAX_US = 2000;  // Servo maximum PWM.
 static const float SERVO_MIN_DEG = 0.0f;  // Servo angle minimum.
 static const float SERVO_MAX_DEG = 180.0f;  // Servo angle maximum.
-static const float AOA_NEUTRAL_DEG = 90.0f;  // Neutral AoA command.
+//static const float AOA_NEUTRAL_DEG = 90.0f;  // Neutral AoA command.
+static const float SERVO_LEFT_NEUTRAL_DEG  = 103.5f;  // measured (jog): raw servo deg for LEFT  wing 0 incidence
+static const float SERVO_RIGHT_NEUTRAL_DEG =  90.0f;  // measured (jog): raw servo deg for RIGHT wing 0 incidence
 static const float AOA_RATE_LIMIT_DEG_PER_S = 240.0f;  // Command slew limit.
 static const float AOA_CMD_LIMIT_DEG = 60.0f;  // Max AoA correction.
 
@@ -152,8 +154,10 @@ static float leftCmdDeg = 0.0f;  // Raw left AoA offset.
 static float rightCmdDeg = 0.0f;  // Raw right AoA offset.
 static float leftCmdFiltDeg = 0.0f;  // Smoothed left command.
 static float rightCmdFiltDeg = 0.0f;  // Smoothed right command.
-static float leftServoDeg = AOA_NEUTRAL_DEG;  // Final left servo angle.
-static float rightServoDeg = AOA_NEUTRAL_DEG;  // Final right servo angle.
+//static float leftServoDeg = AOA_NEUTRAL_DEG;  // Final left servo angle.
+//static float rightServoDeg = AOA_NEUTRAL_DEG;  // Final right servo angle.
+static float leftServoDeg  = SERVO_LEFT_NEUTRAL_DEG;   
+static float rightServoDeg = SERVO_RIGHT_NEUTRAL_DEG;
 static uint16_t leftPwmUs = 1500;  // Final left PWM.
 static uint16_t rightPwmUs = 1500;  // Final right PWM.
 static uint32_t nextControlUs = 0;  // Next control tick.
@@ -216,15 +220,20 @@ static int pwmFromDeg(float deg) {
   return (int)lroundf(SERVO_MIN_US + s * (SERVO_MAX_US - SERVO_MIN_US));
 }
 
-static float maybeReverseDeg(bool reverse, float deg) {
-  // Optional servo direction flip.
-  if (!reverse) return deg;
-  return SERVO_MIN_DEG + SERVO_MAX_DEG - deg;
-}
-
-static float scaleServoTravel(float deg, float gain) {
-  // Keep neutral fixed, scale travel.
-  return clampfLocal(AOA_NEUTRAL_DEG + (deg - AOA_NEUTRAL_DEG) * gain, SERVO_MIN_DEG, SERVO_MAX_DEG);
+//static float maybeReverseDeg(bool reverse, float deg) {
+//  // Optional servo direction flip.
+//  if (!reverse) return deg;
+//  return SERVO_MIN_DEG + SERVO_MAX_DEG - deg;
+//}
+//
+//static float scaleServoTravel(float deg, float gain) {
+//  // Keep neutral fixed, scale travel.
+//  return clampfLocal(AOA_NEUTRAL_DEG + (deg - AOA_NEUTRAL_DEG) * gain, SERVO_MIN_DEG, SERVO_MAX_DEG);
+//}
+static int   revSign(bool reverse) { return reverse ? -1 : +1; }
+static float sideServoOut(float incidence, float neutral, float gain, bool reverse) {
+  // servo = NEUTRAL[side] + REVSIGN[side] * GAIN[side] * incidence
+  return clampfLocal(neutral + revSign(reverse) * gain * incidence, SERVO_MIN_DEG, SERVO_MAX_DEG);
 }
 
 // IMU Reading ----------------------------------------------------------------
@@ -269,14 +278,24 @@ static bool accelUsable(const ImuSample &s) {
 // Wing AoA Actuation ----------------------------------------------------------------
 static void writeServos(float leftDeg, float rightDeg, float dt) {
   // Send final servo PWM.
-  const float step = AOA_RATE_LIMIT_DEG_PER_S * dt;
-  const float leftScaledDeg = scaleServoTravel(leftDeg, SERVO_LEFT_GAIN);
-  const float rightScaledDeg = scaleServoTravel(rightDeg, SERVO_RIGHT_GAIN);
-  leftServoDeg = rateLimit(leftScaledDeg, leftServoDeg, step);
-  rightServoDeg = rateLimit(rightScaledDeg, rightServoDeg, step);
+//  const float step = AOA_RATE_LIMIT_DEG_PER_S * dt;
+//  const float leftScaledDeg = scaleServoTravel(leftDeg, SERVO_LEFT_GAIN);
+//  const float rightScaledDeg = scaleServoTravel(rightDeg, SERVO_RIGHT_GAIN);
+//  leftServoDeg = rateLimit(leftScaledDeg, leftServoDeg, step);
+//  rightServoDeg = rateLimit(rightScaledDeg, rightServoDeg, step);
+//
+//  leftPwmUs = (uint16_t)pwmFromDeg(maybeReverseDeg(SERVO_LEFT_REVERSE, leftServoDeg));
+//  rightPwmUs = (uint16_t)pwmFromDeg(maybeReverseDeg(SERVO_RIGHT_REVERSE, rightServoDeg));
 
-  leftPwmUs = (uint16_t)pwmFromDeg(maybeReverseDeg(SERVO_LEFT_REVERSE, leftServoDeg));
-  rightPwmUs = (uint16_t)pwmFromDeg(maybeReverseDeg(SERVO_RIGHT_REVERSE, rightServoDeg));
+  const float incL = leftDeg  - AOA_NEUTRAL_DEG;   // callers pass AOA_NEUTRAL_DEG + incidence
+  const float incR = rightDeg - AOA_NEUTRAL_DEG;
+  const float step = AOA_RATE_LIMIT_DEG_PER_S * dt;
+  const float l = sideServoOut(incL, SERVO_LEFT_NEUTRAL_DEG,  SERVO_LEFT_GAIN,  SERVO_LEFT_REVERSE);
+  const float r = sideServoOut(incR, SERVO_RIGHT_NEUTRAL_DEG, SERVO_RIGHT_GAIN, SERVO_RIGHT_REVERSE);
+  leftServoDeg  = rateLimit(l, leftServoDeg, step);
+  rightServoDeg = rateLimit(r, rightServoDeg, step);
+  leftPwmUs  = (uint16_t)pwmFromDeg(leftServoDeg);   // reverse includes in sideServoOut
+  rightPwmUs = (uint16_t)pwmFromDeg(rightServoDeg);
   servoLeft.writeMicroseconds(leftPwmUs);
   servoRight.writeMicroseconds(rightPwmUs);
 }
