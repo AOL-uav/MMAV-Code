@@ -136,12 +136,21 @@ void processCommand(String cmd) {
   else if (type == 'C' || type == 'c') centerAll();
   else if (cmd.length() > 1) {
     int val = cmd.substring(1).toInt();
+    
+    if (type == 'V' || type == 'v') {
+      alpha = constrain(val / 100.0, 0.01, 0.5);
+      return;
+    }
+
+    if (relaxed) attachAll();
+    autoMode = false;
+    
     float us = degToUs(val);
-    autoMode = false; attachAll();
     if (type == 'Y' || type == 'y') targetYaw = us;
     else if (type == 'P' || type == 'p') targetPitch = us;
-    else if (type == 'V' || type == 'v') {
-      alpha = constrain(val / 100.0, 0.01, 0.5);
+  }
+}
+ = constrain(val / 100.0, 0.01, 0.5);
       Serial.print("SPEED_ALPHA:"); Serial.println(alpha);
     }
   }
