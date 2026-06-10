@@ -15,18 +15,22 @@ bool relaxed = false;
 float curYaw = 1500, curPitch = 1500;
 float targetYaw = 1500, targetPitch = 1500;
 
-// VERY Conservative Smoothing for First Test
-const float alpha = 0.02; 
+// Higher Speed Smoothing (0.15 for faster response)
+const float alpha = 0.15; 
 
-// FIRST TEST LIMITS: Extremely restricted (approx 75-105 degrees)
-// Centered at 1500us, allowed range is only +/- 150us
-const int minSafeUS = 1350; 
-const int maxSafeUS = 1650;
+// UPDATED RANGE LIMITS (Microseconds)
+// Pin 0 (Yaw): +/- 30 degrees from center (1500 +/- 333us)
+const int minYawUS = 1167; 
+const int maxYawUS = 1833;
+
+// Pin 1 (Pitch): +/- 60 degrees from center (1500 +/- 666us)
+const int minPitchUS = 834; 
+const int maxPitchUS = 2166;
 
 void setup() {
   Serial.begin(115200);
   delay(2000);
-  Serial.println("Gimbal v6.1-TEST: 2-AXIS SLOW MOTION");
+  Serial.println("Gimbal v6.2: HIGH SPEED & EXTENDED RANGE");
   
   attachAll();
   centerAll();

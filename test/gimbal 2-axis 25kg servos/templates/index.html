@@ -27,13 +27,13 @@
             <div class="status-bar" id="status">Mode: Initializing</div>
             
             <div class="slider-group">
-                <label>Yaw (Pin 0) <span id="yaw-val" class="value">90</span></label>
+                <label>Yaw (Pin 0) [+/-30°] <span id="yaw-val" class="value">90</span></label>
                 <input type="range" min="60" max="120" value="90" id="yaw-slider" oninput="update('Y', this.value)">
             </div>
 
             <div class="slider-group">
-                <label>Pitch (Pin 1) <span id="pitch-val" class="value">90</span></label>
-                <input type="range" min="60" max="120" value="90" id="pitch-slider" oninput="update('P', this.value)">
+                <label>Pitch (Pin 1) [+/-60°] <span id="pitch-val" class="value">90</span></label>
+                <input type="range" min="30" max="150" value="90" id="pitch-slider" oninput="update('P', this.value)">
             </div>
 
             <button onclick="centerAll()" style="margin-bottom: 8px;">Center All</button>
