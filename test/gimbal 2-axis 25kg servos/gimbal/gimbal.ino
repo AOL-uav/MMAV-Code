@@ -19,9 +19,9 @@ float targetYaw = 1500, targetPitch = 1500;
 const float alpha = 0.15; 
 
 // UPDATED RANGE LIMITS (Microseconds)
-// Pin 0 (Yaw): +/- 30 degrees from center (1500 +/- 333us)
+// Pin 0 (Yaw): Range 60 to 112 degrees (1500 +/- 250us approx)
 const int minYawUS = 1167; 
-const int maxYawUS = 1833;
+const int maxYawUS = 1744; // Capped at 112 degrees
 
 // Pin 1 (Pitch): +/- 60 degrees from center (1500 +/- 666us)
 const int minPitchUS = 834; 
