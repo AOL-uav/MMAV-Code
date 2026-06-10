@@ -3,19 +3,17 @@
 // Pin assignments
 const int yawPin = 0;
 const int pitchPin = 1;
-const int rollPin = 2;
 
 Servo yawServo;
 Servo pitchServo;
-Servo rollServo;
 
 // Mode State
 bool autoMode = false;
 bool relaxed = false;
 
 // Motion Variables (in Microseconds)
-float curYaw = 1500, curPitch = 1500, curRoll = 1500;
-float targetYaw = 1500, targetPitch = 1500, targetRoll = 1500;
+float curYaw = 1500, curPitch = 1500;
+float targetYaw = 1500, targetPitch = 1500;
 
 // VERY Conservative Smoothing for First Test
 const float alpha = 0.02; 
@@ -28,7 +26,7 @@ const int maxSafeUS = 1650;
 void setup() {
   Serial.begin(115200);
   delay(2000);
-  Serial.println("Gimbal v6.1-TEST: SLOW MOTION ENABLED");
+  Serial.println("Gimbal v6.1-TEST: 2-AXIS SLOW MOTION");
 
   attachAll();
   centerAll();
@@ -37,7 +35,6 @@ void setup() {
 void attachAll() {
   if (!yawServo.attached()) yawServo.attach(yawPin, 500, 2500);
   if (!pitchServo.attached()) pitchServo.attach(pitchPin, 500, 2500);
-  if (!rollServo.attached()) rollServo.attach(rollPin, 500, 2500);
   relaxed = false;
   Serial.println("STATUS:ALL_ATTACHED");
 }
@@ -45,7 +42,6 @@ void attachAll() {
 void detachAll() {
   yawServo.detach();
   pitchServo.detach();
-  rollServo.detach();
   relaxed = true;
   autoMode = false;
   Serial.println("STATUS:RELAXED_ALL");
@@ -54,7 +50,7 @@ void detachAll() {
 void centerAll() {
   autoMode = false;
   attachAll();
-  targetYaw = 1500; targetPitch = 1500; targetRoll = 1500;
+  targetYaw = 1500; targetPitch = 1500;
   Serial.println("STATUS:CENTERED_ALL");
 }
 
@@ -63,17 +59,14 @@ int degToUs(float deg) {
   return map(constrain(deg, 60, 120), 0, 180, 500, 2500);
 }
 
-
 void updateServos() {
   if (relaxed) return;
-  
+
   curYaw   = (targetYaw * alpha)   + (curYaw * (1.0 - alpha));
   curPitch = (targetPitch * alpha) + (curPitch * (1.0 - alpha));
-  curRoll  = (targetRoll * alpha)  + (curRoll * (1.0 - alpha));
 
   yawServo.writeMicroseconds((int)constrain(curYaw, minSafeUS, maxSafeUS));
   pitchServo.writeMicroseconds((int)constrain(curPitch, minSafeUS, maxSafeUS));
-  rollServo.writeMicroseconds((int)constrain(curRoll, minSafeUS, maxSafeUS));
 }
 
 void loop() {
@@ -94,7 +87,6 @@ void loop() {
       float phase = now / 1000.0;
       targetYaw   = 1500 + (300 * sin(phase * 0.4)); 
       targetPitch = 1500 + (300 * sin(phase * 0.7 + 1.0));
-      targetRoll  = 1500 + (250 * cos(phase * 1.2));
     }
     updateServos();
   }
@@ -107,8 +99,7 @@ void loop() {
     } else {
       Serial.print("POS:"); 
       Serial.print((int)curYaw); Serial.print(",");
-      Serial.print((int)curPitch); Serial.print(",");
-      Serial.println((int)curRoll);
+      Serial.println((int)curPitch);
     }
     lastLog = millis();
   }
@@ -120,7 +111,7 @@ void processCommand(String cmd) {
   cmd.trim();
   if (cmd.length() == 0) return;
   char type = cmd.charAt(0);
-  
+
   if (type == 'S' || type == 's') detachAll();
   else if (type == 'A' || type == 'a') { attachAll(); autoMode = true; }
   else if (type == 'C' || type == 'c') centerAll();
@@ -130,6 +121,6 @@ void processCommand(String cmd) {
     autoMode = false; attachAll();
     if (type == 'Y' || type == 'y') targetYaw = us;
     else if (type == 'P' || type == 'p') targetPitch = us;
-    else if (type == 'R' || type == 'r') targetRoll = us;
   }
 }
+
