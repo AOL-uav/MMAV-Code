@@ -125,5 +125,9 @@ void processCommand(String cmd) {
     autoMode = false; attachAll();
     if (type == 'Y' || type == 'y') targetYaw = us;
     else if (type == 'P' || type == 'p') targetPitch = us;
+    else if (type == 'V' || type == 'v') {
+      alpha = constrain(val / 100.0, 0.01, 0.5);
+      Serial.print("SPEED_ALPHA:"); Serial.println(alpha);
+    }
   }
 }

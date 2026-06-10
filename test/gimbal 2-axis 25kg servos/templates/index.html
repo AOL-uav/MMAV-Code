@@ -36,6 +36,11 @@
                 <input type="range" min="30" max="150" value="90" id="pitch-slider" oninput="update('P', this.value)">
             </div>
 
+            <div class="slider-group">
+                <label>Movement Speed (Responsiveness) <span id="speed-val" class="value">15</span></label>
+                <input type="range" min="1" max="50" value="15" id="speed-slider" oninput="update('V', this.value)">
+            </div>
+
             <button onclick="centerAll()" style="margin-bottom: 8px;">Center All</button>
             <button onclick="autoSweep()" style="margin-bottom: 8px; background: #34a853;" id="btn-auto">Start Auto Sweep</button>
             <button onclick="relaxAll()" style="background: #ea4335;">Relax Servos (Kill Power)</button>
