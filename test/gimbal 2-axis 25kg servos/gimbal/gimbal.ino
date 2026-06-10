@@ -15,8 +15,8 @@ bool relaxed = false;
 float curYaw = 1500, curPitch = 1500;
 float targetYaw = 1500, targetPitch = 1500;
 
-// Higher Speed Smoothing (0.15 for faster response)
-const float alpha = 0.15; 
+// Smoothing Factor (Alpha) - Now adjustable via Serial 'V' command
+float alpha = 0.15; 
 
 // UPDATED RANGE LIMITS (Microseconds)
 // Pin 0 (Yaw): Range 60 to 112 degrees (1500 +/- 250us approx)
