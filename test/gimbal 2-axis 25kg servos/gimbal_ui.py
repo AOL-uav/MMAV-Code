@@ -49,20 +49,12 @@ pitch_slider = ttk.Scale(root, from_=60, to=120, orient='horizontal', command=up
 pitch_slider.set(90)
 pitch_slider.pack(fill='x', padx=20)
 
-# Roll Slider
-ttk.Label(root, text="Roll (Pin 2)").pack(pady=5)
-roll_slider = ttk.Scale(root, from_=60, to=120, orient='horizontal', command=update_roll)
-roll_slider.set(90)
-roll_slider.pack(fill='x', padx=20)
-
 # Center Button
 def center_all():
     yaw_slider.set(90)
     pitch_slider.set(90)
-    roll_slider.set(90)
     send_command('Y', 90)
     send_command('P', 90)
-    send_command('R', 90)
 
 ttk.Button(root, text="Center All", command=center_all).pack(pady=20)
 
