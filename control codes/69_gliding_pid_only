@@ -401,8 +401,8 @@ static void writeServos(float leftDeg, float rightDeg, float dt) {
   rightServoDeg = rateLimit(scaleServoTravel(rightDeg, SERVO_RIGHT_GAIN), rightServoDeg, step);
   leftPwmUs  = (uint16_t)pwmFromDeg(maybeReverseDeg(SERVO_LEFT_REVERSE,  leftServoDeg));
   rightPwmUs = (uint16_t)pwmFromDeg(maybeReverseDeg(SERVO_RIGHT_REVERSE, rightServoDeg));
-  servoLeft.writeMicroseconds(400);
-  servoRight.writeMicroseconds(2200);
+  servoLeft.writeMicroseconds(leftPwmUs);
+  servoRight.writeMicroseconds(rightPwmUs);
 }
 
 // ==================================== Record Snapshot ====================================
