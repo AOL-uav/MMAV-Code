@@ -43,21 +43,23 @@ static const int   SD_CS_PIN             = 10;
 static const uint8_t SD_FLUSH_EVERY_N   = 10;   // Flush every N rows on Core 1.
 
 // Servo pins and geometry
-static const int   SERVO_LEFT_PIN        = 4;
-static const int   SERVO_RIGHT_PIN       = 3;
-static const bool  SERVO_LEFT_REVERSE    = true;
-static const bool  SERVO_RIGHT_REVERSE   = false;
-static const float SERVO_LEFT_GAIN       = 1.00f;
-static const float SERVO_RIGHT_GAIN      = 1.00f;
-static const int   SERVO_MIN_US          = 500;
-static const int   SERVO_MAX_US          = 2500;
-static const float SERVO_MIN_DEG         = 0.0f;
-static const float SERVO_MAX_DEG         = 180.0f;
-static const float AOA_NEUTRAL_DEG       = 90.0f;
-static const float SERVO_LEFT_NEUTRAL_DEG  =  90.0f; // raw servo deg for LEFT  wing 0 incidence (jog)
-static const float SERVO_RIGHT_NEUTRAL_DEG =  90.0f; // raw servo deg for RIGHT wing 0 incidence (jog)
-static const float AOA_RATE_LIMIT_DEG_PER_S = 240.0f;
-static const float AOA_CMD_LIMIT_DEG     = 20.0f;
+static const int   SERVO_LEFT_PIN          = 4;
+static const int   SERVO_RIGHT_PIN         = 3;
+static const bool  SERVO_LEFT_REVERSE      = true;
+static const bool  SERVO_RIGHT_REVERSE     = false;
+static const float SERVO_LEFT_GAIN         = 1.00f;
+static const float SERVO_RIGHT_GAIN        = 1.00f;
+static const int   SERVO_MIN_US            = 500;
+static const int   SERVO_MAX_US            = 2500;
+static const float SERVO_MIN_DEG           = 0.0f;
+static const float SERVO_MAX_DEG           = 180.0f;
+static const float AOA_NEUTRAL_DEG         = 90.0f;
+static const float INCIDENCE_TRIM_DEG      = 0.0f;  // symmetric pitch bias on BOTH wings; applies even with control off
+static const float SERVO_LEFT_NEUTRAL_DEG  = 90.0f; // raw servo deg for LEFT  wing 0 incidence 
+static const float SERVO_RIGHT_NEUTRAL_DEG = 90.0f; // raw servo deg for RIGHT wing 0 incidence
+
+static const float AOA_RATE_LIMIT_DEG_PER_S= 240.0f;
+static const float AOA_CMD_LIMIT_DEG       = 20.0f;
 
 // Unit conversions
 static const float RAD2DEG_LOCAL = 57.29577951308232f;
@@ -420,8 +422,8 @@ static bool accelUsable(const ImuSample &s) {
 //   servoRight.writeMicroseconds(rightPwmUs);
 // }
 static void writeServos(float leftDeg, float rightDeg, float dt) {
-  const float incL = leftDeg  - AOA_NEUTRAL_DEG;   // callers pass AOA_NEUTRAL_DEG + incidence
-  const float incR = rightDeg - AOA_NEUTRAL_DEG;
+  const float incL = (leftDeg  - AOA_NEUTRAL_DEG) + INCIDENCE_TRIM_DEG;
+  const float incR = (rightDeg - AOA_NEUTRAL_DEG) + INCIDENCE_TRIM_DEG;
   const float step = AOA_RATE_LIMIT_DEG_PER_S * dt;
   const float l = sideServoOut(incL, SERVO_LEFT_NEUTRAL_DEG,  SERVO_LEFT_GAIN,  SERVO_LEFT_REVERSE);
   const float r = sideServoOut(incR, SERVO_RIGHT_NEUTRAL_DEG, SERVO_RIGHT_GAIN, SERVO_RIGHT_REVERSE);
