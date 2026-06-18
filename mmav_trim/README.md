@@ -1,35 +1,3 @@
-# MMAV Tail-Trim Clean Routine
-
-This cleaned package keeps the reusable workflow for the fuselage-attached tail trim study:
-
-1. **Component-wise modeling**
-   - Coarse mass components: fuselage, wing, optional curled-tail mass.
-   - Panelized aerodynamic geometry: optimized `opt_0615` wing and fuselage-attached curled tail.
-   - One shared body/build frame:
-     - `x_B` aft
-     - `y_B` right
-     - `z_B` up
-     - origin at fuselage nose centerline
-   - Active CG can be prescribed directly as `[x y z]` in body-frame millimeters.
-
-2. **Trim analysis**
-   - Uses the nonlinear VLM/XFOIL-polar solver from `opt_0615` for the main wing.
-   - Includes both:
-     - fixed-speed alpha-sweep diagnostic;
-     - nonlinear algebraic EOM steady-glide trim solve where `V`, `alpha`, and glide angle are solved.
-
-3. **Free fuselage-attached tail design**
-   - Tail is defined by physical dimensions:
-     - attachment point
-     - span
-     - arc chord
-     - curl angle
-     - incidence angle
-   - Optional gap enforcement keeps the centerline tail inside the exposed-wing gap.
-   - Tail design search can use either the fixed-speed diagnostic or the EOM-based trim solver.
-
-## Single source of configuration
-
 Edit this file first:
 
 ```matlab
