@@ -1,0 +1,762 @@
+#include <Arduino.h>
+#include <Arduino_LSM6DSOX.h>
+#include <Servo.h>
+#include <SPI.h>
+#include <SD.h>
+#include <math.h>
+#include <rtos.h>
+
+/*
+  Title: 0620_gliding_pid_comp_only
+  Objective: Achieve glider stabilization w/ PID and comp. filter
+  Authors: Jeff & Jamie & Yooseung
+  Assumptions:
+    - Nano RP2040 Connect built-in LSM6DSOX IMU.
+    - THREE servos: left/right wing AoA (roll, differential) + tail incidence (pitch).
+    - Servo 1 (left wing)  signal D4.
+    - Servo 2 (right wing) signal D3.
+    - Servo 3 (tail)       signal D5.   <-- NEW
+    - External 5V servo power with common GND (all three servos).
+    - External SPI SD module, CS pin D10.
+    - Horizontal tail installed (new as of 6/20th)
+
+  Core 0: IMU read → complementary filter → PID → servo PWM → enqueue record
+  Core 1: dequeue record → write CSV row to SD card
+*/
+
+// ==================== EDIT EACH FLIGHT: SD log filename tag ====================
+static const char LOG_TAG[] = "0620";
+
+// ==================================== Configuration ====================================
+
+// Serial communication settings
+static const uint32_t SERIAL_BAUD    = 115200;
+static const uint32_t SERIAL_WAIT_MS = 1500;
+
+// Control loop and SD logging rates
+static const float    CONTROL_HZ      = 100.0f;
+static const float    SD_LOG_HZ       = 20.0f;
+static const float    DT_NOMINAL      = 1.0f / CONTROL_HZ;
+static const uint32_t CONTROL_DT_US   = (uint32_t)(1000000.0f / CONTROL_HZ);
+static const uint32_t SD_LOG_DT_US    = (uint32_t)(1000000.0f / SD_LOG_HZ);
+
+// SD card settings
+static const float RECORD_START_S        = 0.0f;
+static const float RECORD_END_S          = 3600.0f;
+static const int   SD_CS_PIN             = 10;
+static const uint8_t SD_FLUSH_EVERY_N   = 10;   // Flush every N rows on Core 1.
+
+// Servo pins and geometry — WING servos (roll, differential)
+static const int   SERVO_LEFT_PIN        = 4;
+static const int   SERVO_RIGHT_PIN       = 3;
+static const bool  SERVO_LEFT_REVERSE    = true;
+static const bool  SERVO_RIGHT_REVERSE   = false;
+static const float SERVO_LEFT_GAIN       = 1.00f;
+static const float SERVO_RIGHT_GAIN      = 1.00f;
+static const float SERVO_LEFT_NEUTRAL_DEG  =  95.0f; // raw servo deg for LEFT  wing 0 incidence (jog)
+static const float SERVO_RIGHT_NEUTRAL_DEG =  95.0f; // raw servo deg for RIGHT wing 0 incidence (jog)
+
+// Servo pin and geometry — TAIL servo (pitch incidence)               <-- NEW BLOCK
+static const int   SERVO_TAIL_PIN        = 5;     // D5: free pin, adjacent to D3/D4 wing servos.
+static const bool  SERVO_TAIL_REVERSE    = false; // Flip true if tail moves the wrong direction.
+static const float SERVO_TAIL_GAIN       = 1.00f; // Mechanical/linkage gain, tune like wing gains.
+static const float SERVO_TAIL_NEUTRAL_DEG = 90.0f; // Raw servo deg for tail 0 incidence (jog this in).
+
+// Shared servo PWM/range limits (used by all three servos)
+static const int   SERVO_MIN_US          = 500;
+static const int   SERVO_MAX_US          = 2500;
+static const float SERVO_MIN_DEG         = 0.0f;
+static const float SERVO_MAX_DEG         = 180.0f;
+static const float AOA_NEUTRAL_DEG       = 90.0f;
+static const float AOA_RATE_LIMIT_DEG_PER_S = 120.0f; // Shared slew-rate cap for all three servos.
+
+// Command authority limits (deg of incidence), per axis              <-- RENAMED / NEW
+// Previously a single AOA_CMD_LIMIT_DEG capped both axes before they were mixed
+// onto the wings. Now roll and pitch drive separate actuators, so they get
+// separate authority limits. Both start at 0.0f (i.e. "disabled") to match the
+// previous safe-by-default behavior — raise them once you're ready to fly with
+// active control.
+static const float ROLL_CMD_LIMIT_DEG = 0.0f; // Wing differential authority (roll).
+static const float TAIL_CMD_LIMIT_DEG = 0.0f; // Tail incidence authority (pitch).      <-- NEW
+
+// Unit conversions
+static const float RAD2DEG_LOCAL = 57.29577951308232f;
+static const float DEG2RAD_LOCAL = 0.017453292519943295f;
+
+// IMU calibration
+static const uint16_t CAL_SAMPLES = 500;
+static const uint16_t CAL_DT_MS   = 4;
+
+// IMU noise
+static const float ACCEL_NOISE_G         = 0.0010f;
+static const float ACCEL_ANGLE_NOISE_DEG = 0.055f;
+static const float GYRO_NOISE_DPS_X      = 0.043f;
+static const float GYRO_NOISE_DPS_Y      = 0.239f;
+
+// Complementary filter
+static const float ACC_GATE_LOW_G             = 0.82f;
+static const float ACC_GATE_HIGH_G            = 1.18f;
+static const float COMP_ALPHA                 = 0.980f;
+static const float RATE_LPF_ALPHA             = 0.22f;
+static const float CMD_LPF_ALPHA              = 0.55f;
+static const float LARGE_ANGLE_START_DEG      = 12.0f;
+static const float LARGE_ANGLE_FULL_DEG       = 45.0f;
+static const float LARGE_ANGLE_ACCEL_BLEND_MAX = 0.65f;
+
+// Control targets
+static const float ROLL_TARGET_DEG  = 0.0f;
+static const float PITCH_TARGET_DEG = 0.0f;
+
+// Deadbands
+static const float ANGLE_DEADBAND_DEG  = 2.5f * ACCEL_ANGLE_NOISE_DEG;
+static const float RATE_DEADBAND_P_DPS = 3.0f * GYRO_NOISE_DPS_X;
+static const float RATE_DEADBAND_Q_DPS = 3.0f * GYRO_NOISE_DPS_Y;
+
+// PID gains
+static const float KP_ROLL  = 1.10f;
+static const float KI_ROLL  = 0.00f;
+static const float KD_ROLL  = 0.060f;
+static const float KP_PITCH = 1.10f;
+static const float KI_PITCH = 0.00f;
+static const float KD_PITCH = 0.060f;
+static const float INTEGRATOR_LIMIT_DEG = 5.0f;
+
+// ==================================== Data Structures ====================================
+
+struct ImuSample {
+  float ax, ay, az;   // Accel, g.
+  float gx, gy, gz;   // Gyro, deg/s.
+  bool  valid;
+};
+
+// Snapshot of one control cycle — passed through the inter-core queue.
+// Keep this a plain struct (no vtable, no String) so it is trivially copyable.
+struct ControlRecord {
+  uint32_t ms;
+  float ax, ay, az, aNorm;
+  float gx, gy, gz;
+  float rollAccDeg, pitchAccDeg;
+  float rollCfDeg, pitchCfDeg;
+  float pFiltDps, qFiltDps;
+  float uRollDeg, uPitchDeg;
+  float leftCmdDeg, rightCmdDeg, tailCmdDeg;     // <-- tailCmdDeg added
+  float leftServoDeg, rightServoDeg, tailServoDeg; // <-- tailServoDeg added
+  uint16_t leftPwmUs, rightPwmUs, tailPwmUs;     // <-- tailPwmUs added
+};
+
+// ==================================== Inter-Core Queue ====================================
+//
+// Queue depth: 20 records × sizeof(ControlRecord) ≈ 20 × ~100 B ≈ 2 KB of RAM.
+// (Grew slightly from ~88 B with the tail fields added; still negligible — no
+// need to change QUEUE_DEPTH.)
+// At SD_LOG_HZ = 20 Hz Core 1 consumes one record every 50 ms; the queue gives
+// Core 0 a full second of headroom before it would ever block.
+//
+// IMPORTANT: Mbed RTOS Queue<T,N> stores T* (pointer), not T by value.
+// Core 0 maintains a ring buffer of ControlRecord slots and puts a pointer to
+// the next free slot into the queue.  Core 1 reads the pointer, writes the row,
+// then returns the slot to a second "free-list" queue so Core 0 can reuse it.
+// This avoids dynamic allocation entirely.
+
+static const uint8_t QUEUE_DEPTH = 20;
+
+// The actual storage — lives in Core 0's memory, safe because RP2040 has a
+// unified address space; both cores can dereference the same pointer.
+static ControlRecord recordPool[QUEUE_DEPTH];
+
+// Core 0 → Core 1: pointer to a filled record.
+static rtos::Queue<ControlRecord, QUEUE_DEPTH> filledQueue;
+
+// Core 1 → Core 0: pointer to a slot Core 1 is done with (free list).
+static rtos::Queue<ControlRecord, QUEUE_DEPTH> freeQueue;
+
+// ==================================== Shared Serial Mutex ====================================
+//
+// Both cores print to Serial.  Without a mutex, bytes can interleave mid-line.
+// Use safeSerial_print/println wrappers everywhere.
+
+static rtos::Mutex serialMutex;
+
+// Lightweight wrappers — acquire → print → release.
+// Variadic templates are unavailable in Arduino/Mbed; use overloads for the
+// types actually used in this file.
+
+static void safeSerialPrint(const __FlashStringHelper *s) {
+  serialMutex.lock();
+  Serial.print(s);
+  serialMutex.unlock();
+}
+static void safeSerialPrintln(const __FlashStringHelper *s) {
+  serialMutex.lock();
+  Serial.println(s);
+  serialMutex.unlock();
+}
+static void safeSerialPrint(const char *s) {
+  serialMutex.lock();
+  Serial.print(s);
+  serialMutex.unlock();
+}
+static void safeSerialPrintln(const char *s) {
+  serialMutex.lock();
+  Serial.println(s);
+  serialMutex.unlock();
+}
+static void safeSerialPrintln(float v, int dec = 2) {
+  serialMutex.lock();
+  Serial.println(v, dec);
+  serialMutex.unlock();
+}
+// For formatted multi-token lines, lock once externally:
+//   { rtos::ScopedLock<rtos::Mutex> lk(serialMutex); Serial.print(...); ... }
+
+// ==================================== Core 1 — Logger Task ====================================
+
+static rtos::Thread core1Thread;
+
+static void writeCsvHeader(Print &out) {
+  out.println(F("ms,ax_g,ay_g,az_g,a_norm_g,gx_dps,gy_dps,gz_dps,"
+                "roll_acc_deg,pitch_acc_deg,roll_cf_deg,pitch_cf_deg,"
+                "p_filt_dps,q_filt_dps,u_roll_deg,u_pitch_deg,"
+                "left_cmd_deg,right_cmd_deg,tail_cmd_deg,"
+                "left_servo_deg,right_servo_deg,tail_servo_deg,"
+                "left_pwm,right_pwm,tail_pwm"));
+}
+
+static void writeRecord(Print &out, const ControlRecord &r) {
+  out.print(r.ms);           out.print(',');
+  out.print(r.ax, 6);        out.print(',');
+  out.print(r.ay, 6);        out.print(',');
+  out.print(r.az, 6);        out.print(',');
+  out.print(r.aNorm, 6);     out.print(',');
+  out.print(r.gx, 6);        out.print(',');
+  out.print(r.gy, 6);        out.print(',');
+  out.print(r.gz, 6);        out.print(',');
+  out.print(r.rollAccDeg, 3);  out.print(',');
+  out.print(r.pitchAccDeg, 3); out.print(',');
+  out.print(r.rollCfDeg, 3);   out.print(',');
+  out.print(r.pitchCfDeg, 3);  out.print(',');
+  out.print(r.pFiltDps, 3);    out.print(',');
+  out.print(r.qFiltDps, 3);    out.print(',');
+  out.print(r.uRollDeg, 3);    out.print(',');
+  out.print(r.uPitchDeg, 3);   out.print(',');
+  out.print(r.leftCmdDeg, 3);  out.print(',');
+  out.print(r.rightCmdDeg, 3); out.print(',');
+  out.print(r.tailCmdDeg, 3);  out.print(',');
+  out.print(r.leftServoDeg, 2); out.print(',');
+  out.print(r.rightServoDeg, 2); out.print(',');
+  out.print(r.tailServoDeg, 2);  out.print(',');
+  out.print(r.leftPwmUs);      out.print(',');
+  out.print(r.rightPwmUs);     out.print(',');
+  out.println(r.tailPwmUs);
+}
+
+void core1LoggerTask() {
+  // ── Populate the free list so Core 0 can start immediately ──────────────
+  for (uint8_t i = 0; i < QUEUE_DEPTH; i++) {
+    freeQueue.put(&recordPool[i], osWaitForever);
+  }
+
+  // ── SD initialisation (runs in Core 1 context) ───────────────────────────
+  pinMode(SD_CS_PIN, OUTPUT);
+  digitalWrite(SD_CS_PIN, HIGH);
+  SPI.begin();
+  delay(100);
+
+  bool sdReady = SD.begin(SD_CS_PIN);
+  File logFile;
+
+  if (!sdReady) {
+    safeSerialPrintln(F("[Core 1] ERROR: SD.begin failed — logging disabled."));
+  } else {
+    char name[16];
+
+    // 1. Extract MM and DD from your global LOG_TAG string (e.g., "0615" -> "06" and "15")
+    char monthStr[3] = { LOG_TAG[0], LOG_TAG[1], '\0' };
+    char dayStr[3]   = { LOG_TAG[2], LOG_TAG[3], '\0' };
+
+    // 2. Scan up to 100 possible drop names safely
+    for (int i = 0; i < 100; i++) {
+      // Formats as MM_DD_ii.CSV (e.g., "06_15_00.CSV")
+      // Total characters = 12 (Fits standard FAT 8.3 constraints perfectly)
+      snprintf(name, sizeof(name), "%s_%s_%02d.CSV", monthStr, dayStr, i);
+
+      if (!SD.exists(name)) {
+        logFile = SD.open(name, FILE_WRITE);
+        break;
+      }
+    }
+
+    if (!logFile) {
+      sdReady = false;
+      safeSerialPrintln(F("[Core 1] ERROR: cannot create log file."));
+    } else {
+      writeCsvHeader(logFile);
+      logFile.flush();
+      {
+        rtos::ScopedMutexLock lk(serialMutex);
+        Serial.print(F("[Core 1] Logging to: "));
+        Serial.println(logFile.name());
+      }
+    }
+  }
+
+  uint32_t rowCount  = 0;
+  bool     finished  = false;
+
+  // ── Main logging loop ────────────────────────────────────────────────────
+  while (true) {
+    // Block until Core 0 enqueues a filled record pointer.
+    osEvent evt = filledQueue.get();
+
+    if (evt.status != osEventMessage) {
+      rtos::ThisThread::yield();
+      continue;
+    }
+
+    ControlRecord *rec = reinterpret_cast<ControlRecord *>(evt.value.p);
+
+    if (sdReady && logFile && !finished) {
+      writeRecord(logFile, *rec);
+      rowCount++;
+
+      if (rowCount % SD_FLUSH_EVERY_N == 0) {
+        logFile.flush();
+      }
+
+      if (logFile.getWriteError()) {
+        logFile.print(F("# stop=sd_write_error\n# records="));
+        logFile.println(rowCount);
+        logFile.flush();
+        logFile.close();
+        finished = true;
+        safeSerialPrintln(F("[Core 1] ERROR: SD write error — logging stopped."));
+      }
+    }
+
+    // Return the slot to Core 0's free list.
+    freeQueue.put(rec, osWaitForever);
+
+    rtos::ThisThread::yield();
+  }
+}
+
+// ==================================== Core 0 State ====================================
+
+static Servo    servoLeft;
+static Servo    servoRight;
+static Servo    servoTail;     // <-- NEW
+static ImuSample imu = {};
+
+static bool  estimatorReady  = false;
+static float gyroBiasDps[3]  = {};
+static float rollAccDeg      = 0.0f;
+static float pitchAccDeg     = 0.0f;
+static float rollDeg         = 0.0f;
+static float pitchDeg        = 0.0f;
+static float pFiltDps        = 0.0f;
+static float qFiltDps        = 0.0f;
+static float rFiltDps        = 0.0f;
+static float rollI           = 0.0f;
+static float pitchI          = 0.0f;
+static float uRollDeg        = 0.0f;
+static float uPitchDeg       = 0.0f;
+static float leftCmdDeg      = 0.0f;
+static float rightCmdDeg     = 0.0f;
+static float tailCmdDeg      = 0.0f;   // <-- NEW
+static float leftCmdFiltDeg  = 0.0f;
+static float rightCmdFiltDeg = 0.0f;
+static float tailCmdFiltDeg  = 0.0f;   // <-- NEW
+static float leftServoDeg    = SERVO_LEFT_NEUTRAL_DEG;
+static float rightServoDeg   = SERVO_RIGHT_NEUTRAL_DEG;
+static float tailServoDeg    = SERVO_TAIL_NEUTRAL_DEG;  // <-- NEW
+static uint16_t leftPwmUs    = 1500;
+static uint16_t rightPwmUs   = 1500;
+static uint16_t tailPwmUs    = 1500;   // <-- NEW
+
+static uint32_t nextControlUs    = 0;
+static uint32_t lastControlUs    = 0;
+static uint32_t logClockStartMs  = 0;
+static uint32_t nextSdLogUs      = 0;
+
+static String inputLine;
+
+// ==================================== Helper Functions ====================================
+
+static float sqf(float x)                           { return x * x; }
+static float clampfLocal(float x, float lo, float hi) {
+  if (x < lo) return lo;
+  if (x > hi) return hi;
+  return x;
+}
+static float deadband(float x, float band) {
+  if (fabsf(x) <= band) return 0.0f;
+  return x > 0.0f ? x - band : x + band;
+}
+static float rateLimit(float target, float current, float maxStep) {
+  return current + clampfLocal(target - current, -maxStep, maxStep);
+}
+
+static uint32_t recordStartMs() { return (uint32_t)(RECORD_START_S * 1000.0f + 0.5f); }
+static uint32_t recordEndMs()   { return (uint32_t)(RECORD_END_S   * 1000.0f + 0.5f); }
+
+static int pwmFromDeg(float deg) {
+  const float d = clampfLocal(deg, SERVO_MIN_DEG, SERVO_MAX_DEG);
+  const float s = (d - SERVO_MIN_DEG) / (SERVO_MAX_DEG - SERVO_MIN_DEG);
+  return (int)lroundf(SERVO_MIN_US + s * (SERVO_MAX_US - SERVO_MIN_US));
+}
+
+static int revSign(bool reverse) { return reverse ? -1 : +1; }
+// servo = NEUTRAL[side] + REVSIGN[side] * GAIN[side] * incidence
+static float sideServoOut(float incidence, float neutral, float gain, bool reverse) {
+  return clampfLocal(neutral + revSign(reverse) * gain * incidence,
+                     SERVO_MIN_DEG, SERVO_MAX_DEG);
+}
+
+
+// ==================================== IMU ====================================
+
+static bool readImu(ImuSample &s) {
+  const uint32_t t0 = micros();
+  while (!IMU.accelerationAvailable() || !IMU.gyroscopeAvailable()) {
+    if ((uint32_t)(micros() - t0) > 20000UL) { s.valid = false; return false; }
+  }
+  IMU.readAcceleration(s.ax, s.ay, s.az);
+  IMU.readGyroscope(s.gx, s.gy, s.gz);
+  s.valid = true;
+  return true;
+}
+
+static float accelNormG(const ImuSample &s) {
+  return sqrtf(sqf(s.ax) + sqf(s.ay) + sqf(s.az));
+}
+static float accelRollDeg(const ImuSample &s)  { return atan2f(s.ay, s.az) * RAD2DEG_LOCAL; }
+static float accelPitchDeg(const ImuSample &s) {
+  return atan2f(-s.ax, sqrtf(sqf(s.ay) + sqf(s.az))) * RAD2DEG_LOCAL;
+}
+static bool accelUsable(const ImuSample &s) {
+  const float a = accelNormG(s);
+  return a >= ACC_GATE_LOW_G && a <= ACC_GATE_HIGH_G;
+}
+
+// ==================================== Servos ====================================
+
+// Drives all three servos: wing-left, wing-right (roll differential) and
+// tail (pitch). Each of leftDeg/rightDeg/tailDeg is expressed as
+// AOA_NEUTRAL_DEG + incidence, same convention as before — writeServos()
+// subtracts AOA_NEUTRAL_DEG internally to recover the incidence value, then
+// maps it through each actuator's own neutral/gain/reverse settings.
+static void writeServos(float leftDeg, float rightDeg, float tailDeg, float dt) {
+  const float incL = leftDeg  - AOA_NEUTRAL_DEG;
+  const float incR = rightDeg - AOA_NEUTRAL_DEG;
+  const float incT = tailDeg  - AOA_NEUTRAL_DEG;          // <-- NEW
+  const float step = AOA_RATE_LIMIT_DEG_PER_S * dt;
+  const float l = sideServoOut(incL, SERVO_LEFT_NEUTRAL_DEG,  SERVO_LEFT_GAIN,  SERVO_LEFT_REVERSE);
+  const float r = sideServoOut(incR, SERVO_RIGHT_NEUTRAL_DEG, SERVO_RIGHT_GAIN, SERVO_RIGHT_REVERSE);
+  const float t = sideServoOut(incT, SERVO_TAIL_NEUTRAL_DEG,  SERVO_TAIL_GAIN,  SERVO_TAIL_REVERSE); // <-- NEW
+  leftServoDeg  = rateLimit(l, leftServoDeg, step);
+  rightServoDeg = rateLimit(r, rightServoDeg, step);
+  tailServoDeg  = rateLimit(t, tailServoDeg, step);       // <-- NEW
+  leftPwmUs  = (uint16_t)pwmFromDeg(leftServoDeg);
+  rightPwmUs = (uint16_t)pwmFromDeg(rightServoDeg);
+  tailPwmUs  = (uint16_t)pwmFromDeg(tailServoDeg);         // <-- NEW
+  servoLeft.writeMicroseconds(leftPwmUs);
+  servoRight.writeMicroseconds(rightPwmUs);
+  servoTail.writeMicroseconds(tailPwmUs);                  // <-- NEW
+}
+
+// ==================================== Record Snapshot ====================================
+
+static ControlRecord makeRecord(uint32_t ms) {
+  ControlRecord rec = {};
+  rec.ms           = ms;
+  rec.ax           = imu.ax;      rec.ay = imu.ay;     rec.az = imu.az;
+  rec.aNorm        = accelNormG(imu);
+  rec.gx           = imu.gx;      rec.gy = imu.gy;     rec.gz = imu.gz;
+  rec.rollAccDeg   = rollAccDeg;  rec.pitchAccDeg = pitchAccDeg;
+  rec.rollCfDeg    = rollDeg;     rec.pitchCfDeg  = pitchDeg;
+  rec.pFiltDps     = pFiltDps;    rec.qFiltDps    = qFiltDps;
+  rec.uRollDeg     = uRollDeg;    rec.uPitchDeg   = uPitchDeg;
+  rec.leftCmdDeg   = leftCmdFiltDeg;
+  rec.rightCmdDeg  = rightCmdFiltDeg;
+  rec.tailCmdDeg   = tailCmdFiltDeg;     // <-- NEW
+  rec.leftServoDeg  = leftServoDeg;
+  rec.rightServoDeg = rightServoDeg;
+  rec.tailServoDeg  = tailServoDeg;      // <-- NEW
+  rec.leftPwmUs    = leftPwmUs;
+  rec.rightPwmUs   = rightPwmUs;
+  rec.tailPwmUs    = tailPwmUs;          // <-- NEW
+  return rec;
+}
+
+// ==================================== Complementary Filter ====================================
+
+static void calibrateGyroAndLevel() {
+  safeSerialPrintln(F("[Core 0] Keep board still: gyro calibration"));
+
+  float sumG[3]      = {};
+  float lastRollAcc  = 0.0f;
+  float lastPitchAcc = 0.0f;
+  uint16_t good      = 0;
+
+  for (uint16_t i = 0; i < CAL_SAMPLES; i++) {
+    ImuSample s;
+    if (readImu(s)) {
+      sumG[0] += s.gx; sumG[1] += s.gy; sumG[2] += s.gz;
+      if (accelUsable(s)) {
+        lastRollAcc  = accelRollDeg(s);
+        lastPitchAcc = accelPitchDeg(s);
+        good++;
+      }
+    }
+    delay(CAL_DT_MS);
+  }
+
+  gyroBiasDps[0] = sumG[0] / (float)CAL_SAMPLES;
+  gyroBiasDps[1] = sumG[1] / (float)CAL_SAMPLES;
+  gyroBiasDps[2] = sumG[2] / (float)CAL_SAMPLES;
+
+  rollDeg = lastRollAcc;  pitchDeg = lastPitchAcc;
+  rollAccDeg = lastRollAcc; pitchAccDeg = lastPitchAcc;
+  estimatorReady = (good > CAL_SAMPLES / 2);
+
+  {
+    rtos::ScopedMutexLock lk(serialMutex);
+    Serial.print(F("[Core 0] gyro_bias_dps="));
+    Serial.print(gyroBiasDps[0], 5); Serial.print(',');
+    Serial.print(gyroBiasDps[1], 5); Serial.print(',');
+    Serial.println(gyroBiasDps[2], 5);
+    Serial.print(F("[Core 0] accel_good_samples="));
+    Serial.println(good);
+  }
+}
+
+static void updateComplementary(float dt) {
+  const float pDps = imu.gx - gyroBiasDps[0];
+  const float qDps = imu.gy - gyroBiasDps[1];
+  const float rDps = imu.gz - gyroBiasDps[2];
+
+  pFiltDps += RATE_LPF_ALPHA * (pDps - pFiltDps);
+  qFiltDps += RATE_LPF_ALPHA * (qDps - qFiltDps);
+  rFiltDps += RATE_LPF_ALPHA * (rDps - rFiltDps);
+
+  const float rollRad  = rollDeg  * DEG2RAD_LOCAL;
+  const float pitchRad = pitchDeg * DEG2RAD_LOCAL;
+  const float cosPitch = cosf(pitchRad);
+  const float safeCosPitch = fabsf(cosPitch) < 0.20f
+                             ? (cosPitch >= 0.0f ? 0.20f : -0.20f)
+                             : cosPitch;
+  const float tanPitch = sinf(pitchRad) / safeCosPitch;
+
+  rollDeg  += (pFiltDps +
+               qFiltDps * sinf(rollRad) * tanPitch +
+               rFiltDps * cosf(rollRad) * tanPitch) * dt;
+  pitchDeg += (qFiltDps * cosf(rollRad) - rFiltDps * sinf(rollRad)) * dt;
+
+  rollAccDeg  = accelRollDeg(imu);
+  pitchAccDeg = accelPitchDeg(imu);
+
+  if (accelUsable(imu)) {
+    rollDeg  = COMP_ALPHA * rollDeg  + (1.0f - COMP_ALPHA) * rollAccDeg;
+    pitchDeg = COMP_ALPHA * pitchDeg + (1.0f - COMP_ALPHA) * pitchAccDeg;
+  }
+}
+
+// ==================================== PID + Servos ====================================
+
+static void updatePidAndServos(float dt) {
+  if (!estimatorReady) {
+    leftCmdDeg = rightCmdDeg = tailCmdDeg = 0.0f;
+    leftCmdFiltDeg = rightCmdFiltDeg = tailCmdFiltDeg = 0.0f;   // <-- tail zeroed too
+    writeServos(AOA_NEUTRAL_DEG, AOA_NEUTRAL_DEG, AOA_NEUTRAL_DEG, dt);
+    return;
+  }
+
+  float controlRollDeg  = rollDeg;
+  float controlPitchDeg = pitchDeg;
+
+  if (accelUsable(imu)) {
+    const float largeAngleDeg = fmaxf(fabsf(rollAccDeg), fabsf(pitchAccDeg));
+    const float blend01 = clampfLocal(
+      (largeAngleDeg - LARGE_ANGLE_START_DEG) /
+      (LARGE_ANGLE_FULL_DEG - LARGE_ANGLE_START_DEG),
+      0.0f, 1.0f);
+    const float ab = LARGE_ANGLE_ACCEL_BLEND_MAX * blend01;
+    controlRollDeg  = (1.0f - ab) * rollDeg  + ab * rollAccDeg;
+    controlPitchDeg = (1.0f - ab) * pitchDeg + ab * pitchAccDeg;
+  }
+
+  const float rollErr  = deadband(controlRollDeg  - ROLL_TARGET_DEG,  ANGLE_DEADBAND_DEG);
+  const float pitchErr = deadband(controlPitchDeg - PITCH_TARGET_DEG, ANGLE_DEADBAND_DEG);
+  const float pRate    = deadband(pFiltDps, RATE_DEADBAND_P_DPS);
+  const float qRate    = deadband(qFiltDps, RATE_DEADBAND_Q_DPS);
+
+  rollI  = clampfLocal(rollI  + rollErr  * dt, -INTEGRATOR_LIMIT_DEG, INTEGRATOR_LIMIT_DEG);
+  pitchI = clampfLocal(pitchI + pitchErr * dt, -INTEGRATOR_LIMIT_DEG, INTEGRATOR_LIMIT_DEG);
+
+  // Roll axis -> capped by ROLL_CMD_LIMIT_DEG, drives the wings (differential).
+  uRollDeg  = clampfLocal( KP_ROLL  * rollErr  + KI_ROLL  * rollI  + KD_ROLL  * pRate,
+                           -ROLL_CMD_LIMIT_DEG, ROLL_CMD_LIMIT_DEG);
+  // Pitch axis -> capped by TAIL_CMD_LIMIT_DEG, drives the tail.        <-- changed limit
+  uPitchDeg = clampfLocal(-(KP_PITCH * pitchErr + KI_PITCH * pitchI + KD_PITCH * qRate),
+                           -TAIL_CMD_LIMIT_DEG, TAIL_CMD_LIMIT_DEG);
+
+  // No more left/right mixing of pitch+roll: wings get roll only, tail gets
+  // pitch only. (Previously: leftCmdDeg = uPitchDeg + uRollDeg, etc.)
+  leftCmdDeg  = uRollDeg;
+  rightCmdDeg = -uRollDeg;
+  tailCmdDeg  = uPitchDeg;                                   // <-- NEW
+
+  leftCmdFiltDeg  += CMD_LPF_ALPHA * (leftCmdDeg  - leftCmdFiltDeg);
+  rightCmdFiltDeg += CMD_LPF_ALPHA * (rightCmdDeg - rightCmdFiltDeg);
+  tailCmdFiltDeg  += CMD_LPF_ALPHA * (tailCmdDeg  - tailCmdFiltDeg);   // <-- NEW
+
+  writeServos(AOA_NEUTRAL_DEG + leftCmdFiltDeg,
+              AOA_NEUTRAL_DEG + rightCmdFiltDeg,
+              AOA_NEUTRAL_DEG + tailCmdFiltDeg,                // <-- NEW
+              dt);
+}
+
+// ==================================== SD Enqueue (Core 0 side) ====================================
+//
+// Core 0 does NOT touch the SD card at all.  It grabs a free slot from freeQueue,
+// fills it with makeRecord(), and hands the pointer to Core 1 via filledQueue.
+// If freeQueue is empty (Core 1 is behind), put() with timeout=0 returns osErrorResource
+// and we simply skip this log tick rather than stalling the control loop.
+
+static bool logWindowOpen = false;
+static bool logWindowDone = false;
+
+static void maybeEnqueueRecord() {
+  if (logWindowDone) return;
+
+  const uint32_t elapsedMs = millis() - logClockStartMs;
+  if (elapsedMs < recordStartMs()) return;
+
+  if (!logWindowOpen) {
+    logWindowOpen = true;
+    nextSdLogUs   = micros();
+  }
+
+  if (elapsedMs >= recordEndMs()) {
+    logWindowDone = true;
+    safeSerialPrintln(F("[Core 0] Log window closed (time_end)."));
+    return;
+  }
+
+  const uint32_t nowUs = micros();
+  if ((int32_t)(nowUs - nextSdLogUs) < 0) return;
+
+  // Advance the log tick (handles overruns gracefully).
+  while ((int32_t)(nowUs - nextSdLogUs) >= 0) nextSdLogUs += SD_LOG_DT_US;
+
+  // Grab a free slot — non-blocking (timeout = 0).
+  osEvent slotEvt = freeQueue.get(0);
+  if (slotEvt.status != osEventMessage) {
+    // Core 1 is behind; skip this sample rather than stalling.
+    return;
+  }
+
+  ControlRecord *slot = reinterpret_cast<ControlRecord *>(slotEvt.value.p);
+  *slot = makeRecord(elapsedMs - recordStartMs());
+
+  // Hand filled slot to Core 1.  Non-blocking: if filledQueue is somehow
+  // full, discard rather than block (should not happen with 20-deep queue).
+  osStatus s = filledQueue.put(slot, 0);
+  if (s != osOK) {
+    // Put failed — return slot immediately so it isn't lost.
+    freeQueue.put(slot, osWaitForever);
+  }
+}
+
+// ==================================== Serial Commands ====================================
+
+static void handleCommand(String cmd) {
+  cmd.trim();
+  cmd.toLowerCase();
+  if (cmd.length() == 0) return;
+
+  if (cmd == "z") {
+    rollDeg = pitchDeg = rollI = pitchI = 0.0f;
+    safeSerialPrintln(F("[Core 0] Attitude zeroed."));
+  } else if (cmd == "h") {
+    safeSerialPrintln(F("[Core 0] Commands: z=zero attitude, h=help"));
+  } else {
+    safeSerialPrintln(F("[Core 0] Unknown command."));
+  }
+  // Note: 'd' (dump last SD file) removed — SD is owned by Core 1.
+  // Add a flag + message-passing mechanism if you need it.
+}
+
+static void processSerial() {
+  while (Serial.available() > 0) {
+    const char ch = (char)Serial.read();
+    if (ch == '\n' || ch == '\r') {
+      handleCommand(inputLine);
+      inputLine = "";
+    } else {
+      inputLine += ch;
+    }
+  }
+}
+
+// ==================================== Setup & Loop ====================================
+
+void setup() {
+  Serial.begin(SERIAL_BAUD);
+  const uint32_t t0 = millis();
+  while (!Serial && (uint32_t)(millis() - t0) < SERIAL_WAIT_MS) delay(10);
+
+  {
+    rtos::ScopedMutexLock lk(serialMutex);
+    Serial.print(F("[Core 0] dual-core glider boot, log tag=")); Serial.println(LOG_TAG);
+    Serial.print(F("[Core 0] noise accel_g="));        Serial.print(ACCEL_NOISE_G, 4);
+    Serial.print(F(" accel_angle_deg="));               Serial.print(ACCEL_ANGLE_NOISE_DEG, 3);
+    Serial.print(F(" gyro_dps_x="));                    Serial.print(GYRO_NOISE_DPS_X, 3);
+    Serial.print(F(" gyro_dps_y="));                    Serial.println(GYRO_NOISE_DPS_Y, 3);
+  }
+
+  if (!IMU.begin()) {
+    safeSerialPrintln(F("[Core 0] FATAL: LSM6DSOX not detected."));
+    while (true) delay(1000);
+  }
+
+  servoLeft.attach(SERVO_LEFT_PIN,  SERVO_MIN_US, SERVO_MAX_US);
+  servoRight.attach(SERVO_RIGHT_PIN, SERVO_MIN_US, SERVO_MAX_US);
+  servoTail.attach(SERVO_TAIL_PIN,  SERVO_MIN_US, SERVO_MAX_US);   // <-- NEW
+  writeServos(AOA_NEUTRAL_DEG, AOA_NEUTRAL_DEG, AOA_NEUTRAL_DEG, DT_NOMINAL); // <-- 3rd arg added
+
+  // Start Core 1 logger BEFORE calibration so the free list is populated
+  // before Core 0 ever tries to enqueue a record.
+  core1Thread.start(core1LoggerTask);
+
+  // Give Core 1 a moment to populate freeQueue before the control loop starts.
+  delay(200);
+
+  calibrateGyroAndLevel();
+
+  logClockStartMs = millis();
+  lastControlUs   = micros();
+  nextControlUs   = lastControlUs + CONTROL_DT_US;
+  nextSdLogUs     = lastControlUs;
+}
+
+void loop() {
+  processSerial();
+  // Every fifth control cycle proceeds in SD logging
+  const uint32_t nowUs = micros();
+  if ((int32_t)(nowUs - nextControlUs) < 0) return;
+
+  while ((int32_t)(nowUs - nextControlUs) >= 0) nextControlUs += CONTROL_DT_US;
+
+  float dt = (nowUs - lastControlUs) * 1.0e-6f;
+  lastControlUs = nowUs;
+  if (dt <= 0.0f || dt > 0.1f) dt = DT_NOMINAL;
+
+  if (!readImu(imu)) return;
+
+  updateComplementary(dt);
+  updatePidAndServos(dt);
+
+  // Enqueue a log record for Core 1 — non-blocking, never stalls the PID loop.
+  maybeEnqueueRecord();
+}
