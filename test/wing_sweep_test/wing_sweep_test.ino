@@ -49,7 +49,7 @@ static const uint32_t COOLDOWN_MS = 3000;  // ignore presses for this long after
 // ------------------------- Sweep servo (continuous) -------------------------
 // DEMO VALUES (2026-06-26), tuned by eye on the bench with wings OFF:
 //   speed = offset 200us from neutral (1300 fold / 1700 unfold)
-//   fold ~800ms ~= 90deg, unfold ~1270ms ~= 90deg (unfold direction runs slower)
+//   fold ~1067ms ~= 80deg, unfold ~1693ms ~= 80deg (unfold direction runs slower)
 //
 // LIMITATION - this is a CONTINUOUS-rotation servo, so motion is OPEN-LOOP:
 // travel = speed x time with NO position feedback. The actual angle drifts with
