@@ -160,15 +160,6 @@ void setup() {
 }
 
 void loop() {
-  // Heartbeat so we know the sketch is alive.
-  static uint32_t lastBeat = 0;
-  if (millis() - lastBeat > 100) {
-    lastBeat = millis();
-    Serial.print(F("A2="));
-    Serial.println(digitalRead(BUTTON_PIN));
-  }
-
-  // Debounced, cooldown-gated button edge.
   int read = digitalRead(BUTTON_PIN);
   if (read != btnLastRead) {
     btnLastChange = millis();
@@ -176,21 +167,18 @@ void loop() {
   }
   if (millis() - btnLastChange > DEBOUNCE_MS && read != btnStable) {
     btnStable = read;
-    if (btnStable == LOW) {                 // press edge (release does nothing)
+    if (btnStable == LOW) {
       if (pressCount > 0 && millis() - lastToggleMs < COOLDOWN_MS) {
-        Serial.println(F("# press ignored (cooldown)"));
+        if (Serial) Serial.println(F("# cooldown"));
       } else {
         pressCount++;
         lastToggleMs = millis();
-        Serial.println(F("# TRIGGERING toggle"));
         if (folded) { folded = false; doUnfold(); }
         else        { folded = true;  doFold();   }
         lastToggleMs = millis();
-        Serial.print(F("# state now: "));
-        Serial.println(folded ? F("FOLDED") : F("UNFOLDED"));
+        if (Serial) Serial.println(folded ? F("# FOLDED") : F("# UNFOLDED"));
       }
     }
   }
-
   delay(2);
 }
