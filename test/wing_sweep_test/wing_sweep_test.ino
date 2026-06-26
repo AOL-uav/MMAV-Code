@@ -115,20 +115,19 @@ static void sweep90(int spinUs, int spinMs) {
 }
 
 static void doFold() {
-  if (Serial) Serial.println(F("# FOLD: AoA -> 90deg, then sweep in"));
+  if (Serial) Serial.println(F("# FOLD"));
   digitalWrite(LED_BUILTIN, HIGH);
-  aoaFolded();                                // clear the fold path first
+  aoaFolded();
   delay(AOA_SETTLE_MS);
-  sweep90(SWEEP_FOLD_US, SWEEP_FOLD_MS);       // AoA stays at 90deg through the sweep
-  aoaFolded();                                 // re-assert AoA (D4 shares a PWM slice with sweep D5)
+  sweep90(SWEEP_FOLD_US, SWEEP_FOLD_MS);
   digitalWrite(LED_BUILTIN, LOW);
 }
 
 static void doUnfold() {
-  if (Serial) Serial.println(F("# UNFOLD: sweep out, then AoA -> flat"));
+  if (Serial) Serial.println(F("# UNFOLD"));
   digitalWrite(LED_BUILTIN, HIGH);
-  sweep90(SWEEP_UNFOLD_US, SWEEP_UNFOLD_MS);   // AoA still folded during the sweep
-  aoaFlat();                                   // drop to flat only once swept out
+  sweep90(SWEEP_UNFOLD_US, SWEEP_UNFOLD_MS);
+  aoaFlat();
   digitalWrite(LED_BUILTIN, LOW);
 }
 
