@@ -163,9 +163,9 @@ void setup() {
 void loop() {
   // Heartbeat so we know the sketch is alive.
   static uint32_t lastBeat = 0;
-  if (millis() - lastBeat > 1000) {
+  if (millis() - lastBeat > 100) {
     lastBeat = millis();
-    Serial.print(F("# alive A2="));
+    Serial.print(F("A2="));
     Serial.println(digitalRead(BUTTON_PIN));
   }
 
