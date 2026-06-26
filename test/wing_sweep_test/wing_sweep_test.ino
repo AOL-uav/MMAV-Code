@@ -77,11 +77,9 @@ static const int AOA_MAX_US = 2500;  // attach max
 static const int AOA_LEFT_FLAT_US  = 1575;  // measured flat / 0 incidence (left)
 static const int AOA_RIGHT_FLAT_US = 1500;  // measured flat / 0 incidence (right)
 
-// FOLDED: surfaces rotated to ~90deg so they clear each other. Left servo reversed
-// (folded = LOWER pulse), right normal (folded = HIGHER pulse). TUNE toward the
-// extremes (500 / 2500) until they hit 90deg / clear; back off if a servo strains.
-static const int AOA_LEFT_FOLDED_US  = 600;
-static const int AOA_RIGHT_FOLDED_US = 2400;
+// FOLDED: surfaces held flat (0deg incidence) in storage — same as unfolded flat.
+static const int AOA_LEFT_FOLDED_US  = 1575;
+static const int AOA_RIGHT_FOLDED_US = 1500;
 
 static const int AOA_SETTLE_MS = 600;  // let AoA reach folded before sweeping
 
