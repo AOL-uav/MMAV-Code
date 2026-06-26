@@ -155,13 +155,20 @@ void setup() {
 
   // Boot UNFOLDED: set AoA flat, do NOT spin the sweep servo (no position feedback).
   folded = false;
-  if (Serial) Serial.println(F("# Boot: assuming UNFOLDED. Set wings unfolded by hand. AoA -> flat."));
+  Serial.println(F("# Boot: assuming UNFOLDED. AoA -> flat."));
   aoaFlat();
-
-  if (Serial) Serial.println(F("# Ready. Press the A2 button to toggle fold/unfold."));
+  Serial.println(F("# Ready. Short A2 to GND to fold/unfold."));
 }
 
 void loop() {
+  // Heartbeat so we know the sketch is alive.
+  static uint32_t lastBeat = 0;
+  if (millis() - lastBeat > 1000) {
+    lastBeat = millis();
+    Serial.print(F("# alive A2="));
+    Serial.println(digitalRead(BUTTON_PIN));
+  }
+
   // Debounced, cooldown-gated button edge.
   int read = digitalRead(BUTTON_PIN);
   if (read != btnLastRead) {
@@ -172,24 +179,19 @@ void loop() {
     btnStable = read;
     if (btnStable == LOW) {                 // press edge (release does nothing)
       if (pressCount > 0 && millis() - lastToggleMs < COOLDOWN_MS) {
-        if (Serial) Serial.println(F("# press ignored (cooldown)"));
+        Serial.println(F("# press ignored (cooldown)"));
       } else {
         pressCount++;
         lastToggleMs = millis();
+        Serial.println(F("# TRIGGERING toggle"));
         if (folded) { folded = false; doUnfold(); }
         else        { folded = true;  doFold();   }
-        lastToggleMs = millis();            // restart cooldown AFTER the move completes
-        if (Serial) {
-          Serial.print(F("# state now: "));
-          Serial.println(folded ? F("FOLDED") : F("UNFOLDED"));
-        }
+        lastToggleMs = millis();
+        Serial.print(F("# state now: "));
+        Serial.println(folded ? F("FOLDED") : F("UNFOLDED"));
       }
     }
   }
 
-  // Servos hold their last commanded pulse in hardware, so do NOT re-write the
-  // sweep here. D4 (AoA-left) and D5 (sweep) share an RP2040 PWM slice; hammering
-  // the sweep write in the idle loop glitches that slice and makes the AoA jitter.
-  // Only the button poll runs while idle.
   delay(2);
 }
