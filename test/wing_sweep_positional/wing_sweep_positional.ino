@@ -100,10 +100,9 @@ static void sweepTo(int targetUs) {
 static void doFold() {
   if (Serial) Serial.println(F("# FOLD: AoA folded, then sweep to folded"));
   digitalWrite(LED_BUILTIN, HIGH);
-  aoaFolded();                       // clear the fold path first
+  aoaFolded();
   delay(AOA_SETTLE_MS);
-  sweepTo(SWEEP_FOLDED_US);          // AoA stays folded through the sweep
-  aoaFolded();                       // re-assert AoA (D4 shares a PWM slice with sweep D5)
+  sweepTo(SWEEP_FOLDED_US);
   digitalWrite(LED_BUILTIN, LOW);
 }
 
