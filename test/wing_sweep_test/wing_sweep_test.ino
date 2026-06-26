@@ -60,8 +60,8 @@ static const uint32_t COOLDOWN_MS = 3000;  // ignore presses for this long after
 static const int SWEEP_NEUTRAL_US = 1500;  // stop point; nudge if it creeps while stopped
 static const int SWEEP_FOLD_US    = 1300;  // CW,  below neutral = fold in   (slower: offset 200, was 1000)
 static const int SWEEP_UNFOLD_US  = 1700;  // CCW, above neutral = unfold out (slower: offset 200, was 2000)
-static const int SWEEP_FOLD_MS    = 600;   // ~90deg fold   (scaled from 800ms @120deg)
-static const int SWEEP_UNFOLD_MS  = 953;   // ~90deg unfold (scaled from 1270ms @120deg)
+static const int SWEEP_FOLD_MS    = 714;   // ~90deg fold   (scaled from 635ms @80deg)
+static const int SWEEP_UNFOLD_MS  = 617;   // ~90deg unfold (scaled from 686ms @100deg)
 // (For a guarded blind first bench cycle, temporarily drop these ~30% so the sweep
 //  undershoots 90deg and can't hit a hard stop, then restore to the values above.)
 // If the wing sweeps the WRONG way, swap SWEEP_FOLD_US/SWEEP_UNFOLD_US AND the
