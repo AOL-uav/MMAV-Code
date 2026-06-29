@@ -41,7 +41,7 @@ void loop() {
 
   // 2. Print our telemetry at ~2Hz (every 500ms)
   static unsigned long lastPrint = 0;
-  if (millis() - lastPrint > 5000) { // Let's use 5000ms for now so it's not spammy, adjust to 500ms if needed
+  if (millis() - lastPrint > 200) { // Update at 5Hz for faster IMU feedback
     // Wait, let's make it print every 1 second
     lastPrint = millis();
     
