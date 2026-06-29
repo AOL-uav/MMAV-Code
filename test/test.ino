@@ -111,7 +111,4 @@ void loop() {
   }
 }
 
-// Helper for radians
-double radians(double degrees) {
-  return degrees * 0.017453292519943295769236907684886;
-}
+
