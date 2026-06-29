@@ -1,7 +1,6 @@
 void setup() {
   Serial.begin(115200);
-  Serial1.begin(9600); // Try 9600 baud first
-  
+  Serial1.begin(115200); // Try 115200 baud  
   while (!Serial) {
     delay(10);
   }
