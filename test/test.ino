@@ -1,52 +1,25 @@
-#include <TinyGPSPlus.h>
-
-// The TinyGPSPlus object
-TinyGPSPlus gps;
-
-// The GPS is connected to Serial1
-// Connect GPS TX to Nano RP2040 RX (Pin 0)
-// Connect GPS RX to Nano RP2040 TX (Pin 1)
-// Connect GPS VCC to 3.3V or 5V (depending on your module)
-// Connect GPS GND to GND
-
 void setup() {
   Serial.begin(115200);
-  Serial1.begin(9600); // 9600 is the default baud rate for most Neo-6M / Neo-8M modules
+  Serial1.begin(9600); // Try 9600 baud first
   
-  // Wait for serial monitor to open (optional, but good for debugging)
   while (!Serial) {
     delay(10);
   }
   
-  Serial.println(F("Nano RP2040 GPS Test"));
-  Serial.println(F("Waiting for GPS data..."));
+  Serial.println(F("Raw GPS Echo Test Started"));
+  Serial.println(F("Waiting for NMEA sentences..."));
 }
 
 void loop() {
-  // Read incoming characters from the GPS
+  // Echo everything from GPS to the Serial Monitor
   while (Serial1.available() > 0) {
-    gps.encode(Serial1.read());
-  }
-
-  // Print location when it is updated
-  if (gps.location.isUpdated()) {
-    Serial.print(F("Location: "));
-    Serial.print(gps.location.lat(), 6);
-    Serial.print(F(", "));
-    Serial.println(gps.location.lng(), 6);
-    
-    Serial.print(F("Satellites: "));
-    Serial.println(gps.satellites.value());
-    
-    Serial.print(F("Altitude: "));
-    Serial.print(gps.altitude.meters());
-    Serial.println(F(" m"));
-    Serial.println();
+    Serial.write(Serial1.read());
   }
   
-  // Warning if no data is coming in
-  if (millis() > 5000 && gps.charsProcessed() < 10) {
-    Serial.println(F("No GPS data received: check wiring!"));
-    delay(2000);
+  // Also print a heartbeat every 5 seconds so we know the board isn't frozen
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 5000) {
+    Serial.println(F("[Heartbeat] Still waiting..."));
+    lastPrint = millis();
   }
 }
