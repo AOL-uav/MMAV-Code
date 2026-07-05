@@ -60,8 +60,8 @@ static const uint32_t COOLDOWN_MS = 3000;  // ignore presses for this long after
 static const int SWEEP_NEUTRAL_US = 1500;  // stop point; nudge if it creeps while stopped
 static const int SWEEP_FOLD_US    = 1300;  // CW,  below neutral = fold in   (slower: offset 200, was 1000)
 static const int SWEEP_UNFOLD_US  = 1700;  // CCW, above neutral = unfold out (slower: offset 200, was 2000)
-static const int SWEEP_FOLD_MS    = 800;   // DEMO ~90deg fold   (measured 400ms -> ~45deg, so ~2x)
-static const int SWEEP_UNFOLD_MS  = 1270;  // DEMO ~90deg unfold (measured 350ms -> ~25deg; slower dir)
+static const int SWEEP_FOLD_MS    = 754;   // ~95deg fold
+static const int SWEEP_UNFOLD_MS  = 727;   // ~105deg unfold
 // (For a guarded blind first bench cycle, temporarily drop these ~30% so the sweep
 //  undershoots 90deg and can't hit a hard stop, then restore to the values above.)
 // If the wing sweeps the WRONG way, swap SWEEP_FOLD_US/SWEEP_UNFOLD_US AND the
@@ -77,11 +77,9 @@ static const int AOA_MAX_US = 2500;  // attach max
 static const int AOA_LEFT_FLAT_US  = 1575;  // measured flat / 0 incidence (left)
 static const int AOA_RIGHT_FLAT_US = 1500;  // measured flat / 0 incidence (right)
 
-// FOLDED: surfaces rotated to ~90deg so they clear each other. Left servo reversed
-// (folded = LOWER pulse), right normal (folded = HIGHER pulse). TUNE toward the
-// extremes (500 / 2500) until they hit 90deg / clear; back off if a servo strains.
-static const int AOA_LEFT_FOLDED_US  = 600;
-static const int AOA_RIGHT_FOLDED_US = 2400;
+// FOLDED: ~30deg incidence. Left servo reversed (lower pulse), right normal (higher pulse).
+static const int AOA_LEFT_FOLDED_US  = 1250;
+static const int AOA_RIGHT_FOLDED_US = 1800;
 
 static const int AOA_SETTLE_MS = 600;  // let AoA reach folded before sweeping
 
@@ -117,20 +115,19 @@ static void sweep90(int spinUs, int spinMs) {
 }
 
 static void doFold() {
-  if (Serial) Serial.println(F("# FOLD: AoA -> 90deg, then sweep in"));
+  if (Serial) Serial.println(F("# FOLD"));
   digitalWrite(LED_BUILTIN, HIGH);
-  aoaFolded();                                // clear the fold path first
+  aoaFolded();
   delay(AOA_SETTLE_MS);
-  sweep90(SWEEP_FOLD_US, SWEEP_FOLD_MS);       // AoA stays at 90deg through the sweep
-  aoaFolded();                                 // re-assert AoA (D4 shares a PWM slice with sweep D5)
+  sweep90(SWEEP_FOLD_US, SWEEP_FOLD_MS);
   digitalWrite(LED_BUILTIN, LOW);
 }
 
 static void doUnfold() {
-  if (Serial) Serial.println(F("# UNFOLD: sweep out, then AoA -> flat"));
+  if (Serial) Serial.println(F("# UNFOLD"));
   digitalWrite(LED_BUILTIN, HIGH);
-  sweep90(SWEEP_UNFOLD_US, SWEEP_UNFOLD_MS);   // AoA still folded during the sweep
-  aoaFlat();                                   // drop to flat only once swept out
+  sweep90(SWEEP_UNFOLD_US, SWEEP_UNFOLD_MS);
+  aoaFlat();
   digitalWrite(LED_BUILTIN, LOW);
 }
 
@@ -157,14 +154,12 @@ void setup() {
 
   // Boot UNFOLDED: set AoA flat, do NOT spin the sweep servo (no position feedback).
   folded = false;
-  if (Serial) Serial.println(F("# Boot: assuming UNFOLDED. Set wings unfolded by hand. AoA -> flat."));
+  Serial.println(F("# Boot: assuming UNFOLDED. AoA -> flat."));
   aoaFlat();
-
-  if (Serial) Serial.println(F("# Ready. Press the A2 button to toggle fold/unfold."));
+  Serial.println(F("# Ready. Short A2 to GND to fold/unfold."));
 }
 
 void loop() {
-  // Debounced, cooldown-gated button edge.
   int read = digitalRead(BUTTON_PIN);
   if (read != btnLastRead) {
     btnLastChange = millis();
@@ -172,26 +167,18 @@ void loop() {
   }
   if (millis() - btnLastChange > DEBOUNCE_MS && read != btnStable) {
     btnStable = read;
-    if (btnStable == LOW) {                 // press edge (release does nothing)
+    if (btnStable == LOW) {
       if (pressCount > 0 && millis() - lastToggleMs < COOLDOWN_MS) {
-        if (Serial) Serial.println(F("# press ignored (cooldown)"));
+        if (Serial) Serial.println(F("# cooldown"));
       } else {
         pressCount++;
         lastToggleMs = millis();
         if (folded) { folded = false; doUnfold(); }
         else        { folded = true;  doFold();   }
-        lastToggleMs = millis();            // restart cooldown AFTER the move completes
-        if (Serial) {
-          Serial.print(F("# state now: "));
-          Serial.println(folded ? F("FOLDED") : F("UNFOLDED"));
-        }
+        lastToggleMs = millis();
+        if (Serial) Serial.println(folded ? F("# FOLDED") : F("# UNFOLDED"));
       }
     }
   }
-
-  // Servos hold their last commanded pulse in hardware, so do NOT re-write the
-  // sweep here. D4 (AoA-left) and D5 (sweep) share an RP2040 PWM slice; hammering
-  // the sweep write in the idle loop glitches that slice and makes the AoA jitter.
-  // Only the button poll runs while idle.
   delay(2);
 }
