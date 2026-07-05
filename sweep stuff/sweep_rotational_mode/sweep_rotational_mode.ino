@@ -78,8 +78,10 @@ static const int SWEEP_MOUNT_US    = 700;
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
-static const int AOA_LEFT_FOLDED_US  = 1125;
-static const int AOA_RIGHT_FOLDED_US = 1050;
+
+// Rotational mode: 90 degrees mirrored
+static const int AOA_LEFT_ROTATIONAL_US  = 575;   // 1575 - 1000
+static const int AOA_RIGHT_ROTATIONAL_US = 500;   // 1500 - 1000
 
 enum SweepMode { SWEEP_UNKNOWN, SWEEP_FOLDED, SWEEP_UNFOLDED, SWEEP_MOUNT };
 static SweepMode sweepMode = SWEEP_UNKNOWN;
@@ -1880,10 +1882,13 @@ void setup() {
 void lazyAttach(int sweepTarget, int aoaLeftTarget, int aoaRightTarget) {
   if (!servosAttached) {
      currentSweepUs = sweepTarget;
+     currentAoaLeftUs = aoaLeftTarget;
+     currentAoaRightUs = aoaRightTarget;
+     
      servoMorph.writeMicroseconds(currentSweepUs);
      
-     servoLeft.writeMicroseconds(aoaLeftTarget);
-     servoRight.writeMicroseconds(aoaRightTarget);
+     servoLeft.writeMicroseconds(currentAoaLeftUs);
+     servoRight.writeMicroseconds(currentAoaRightUs);
      
      servoMorph.attach(SERVO_MORPH_PIN, 500, 2500);
      servoLeft.attach(SERVO_LEFT_PIN, 500, 2500);
@@ -1901,7 +1906,7 @@ void slowSweepTo(int targetUs) {
   }
   
   int diff = targetUs - (int)currentSweepUs;
-  int steps = 25; 
+  int steps = 75; // 75 steps * 20ms = 1.5s
   float stepSize = (float)diff / steps;
   
   for (int i = 1; i <= steps; i++) {
@@ -1943,6 +1948,61 @@ void slowSweepTo(int targetUs) {
 }
 
 
+
+void slowSweepAoaTo(int targetLeftUs, int targetRightUs) {
+  if (currentAoaLeftUs == -1.0f) currentAoaLeftUs = targetLeftUs;
+  if (currentAoaRightUs == -1.0f) currentAoaRightUs = targetRightUs;
+  
+  if ((int)currentAoaLeftUs == targetLeftUs && (int)currentAoaRightUs == targetRightUs) {
+    return;
+  }
+  
+  int diffLeft = targetLeftUs - (int)currentAoaLeftUs;
+  int diffRight = targetRightUs - (int)currentAoaRightUs;
+  int steps = 75; // 1.5s
+  float stepSizeLeft = (float)diffLeft / steps;
+  float stepSizeRight = (float)diffRight / steps;
+  
+  for (int i = 1; i <= steps; i++) {
+    servoLeft.writeMicroseconds(currentAoaLeftUs + (int)(stepSizeLeft * i));
+    servoRight.writeMicroseconds(currentAoaRightUs + (int)(stepSizeRight * i));
+    
+    morphPwmUs = (int)currentSweepUs;
+    leftPwmUs = currentAoaLeftUs + (int)(stepSizeLeft * i);
+    rightPwmUs = currentAoaRightUs + (int)(stepSizeRight * i);
+    
+    uint32_t stepStartMs = millis();
+    while (millis() - stepStartMs < 20) {
+      pollGps();
+      const uint32_t nowUs = micros();
+      if ((int32_t)(nowUs - nextControlUs) >= 0) {
+        nextControlUs += CONTROL_DT_US;
+        const uint32_t controlDtUs = nowUs - lastControlUs;
+        lastControlUs = nowUs;
+        float dt = controlDtUs * 1.0e-6f;
+        if (dt <= 0.0f || dt > 0.1f) dt = DT_NOMINAL;
+        const uint32_t controlStartUs = micros();
+        if (!imuFaultLocked && readImu(imu)) {
+          const uint32_t esekfStartUs = micros();
+          predictEsekf(imu, dt);
+          updateEsekfWithAccelerometer(imu);
+          updateEsekfWithGps();
+          const uint32_t esekfUs = micros() - esekfStartUs;
+          eulerFromQuaternion(esekf.q, rollRad, pitchRad, yawRad);
+          const uint32_t controlExecUs = micros() - controlStartUs;
+          maybeEnqueueLog(controlDtUs, controlExecUs, esekfUs);
+        }
+      }
+    }
+  }
+  servoLeft.writeMicroseconds(targetLeftUs);
+  servoRight.writeMicroseconds(targetRightUs);
+  currentAoaLeftUs = targetLeftUs;
+  currentAoaRightUs = targetRightUs;
+  leftPwmUs = targetLeftUs;
+  rightPwmUs = targetRightUs;
+}
+
 void loop() {
   // Run ESEKF/logging for the current tick if not sweeping
   pollGps();
@@ -1972,38 +2032,19 @@ void loop() {
     }
   }
 
-  // 1. Check if Fold is pressed
+  // 1. Check if Fold is pressed (Trigger Rotational Mode)
   if (digitalRead(PIN_FOLD) == LOW && sweepMode != SWEEP_FOLDED) {
-    lazyAttach(SWEEP_FOLDED_US, AOA_LEFT_FOLDED_US, AOA_RIGHT_FOLDED_US); 
-    servoLeft.writeMicroseconds(AOA_LEFT_FOLDED_US);
-    servoRight.writeMicroseconds(AOA_RIGHT_FOLDED_US);
-    currentAoaLeftUs = AOA_LEFT_FOLDED_US;
-    currentAoaRightUs = AOA_RIGHT_FOLDED_US;
+    lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US); 
+    slowSweepTo(SWEEP_UNFOLDED_US);
+    slowSweepAoaTo(AOA_LEFT_ROTATIONAL_US, AOA_RIGHT_ROTATIONAL_US);
+    sweepMode = SWEEP_FOLDED; // Reusing state for rotational
+    while(digitalRead(PIN_FOLD) == LOW) delay(20);
     
-    slowSweepTo(SWEEP_FOLDED_US);
-    sweepMode = SWEEP_FOLDED;
-    
-  // 2. Check if Unfold is pressed
+  // 2. Check if Unfold is pressed (Reset to Default Flat)
   } else if (digitalRead(PIN_UNFOLD) == LOW && sweepMode != SWEEP_UNFOLDED) {
     lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US); 
     slowSweepTo(SWEEP_UNFOLDED_US);
-    
-    servoLeft.writeMicroseconds(AOA_LEFT_FLAT_US);
-    servoRight.writeMicroseconds(AOA_RIGHT_FLAT_US);
-    currentAoaLeftUs = AOA_LEFT_FLAT_US;
-    currentAoaRightUs = AOA_RIGHT_FLAT_US;
+    slowSweepAoaTo(AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
     sweepMode = SWEEP_UNFOLDED;
-
-  // 3. Check if Mount is pressed
-  } else if (digitalRead(PIN_MOUNT) == LOW && sweepMode != SWEEP_MOUNT) {
-    lazyAttach(SWEEP_MOUNT_US, AOA_LEFT_FOLDED_US, AOA_RIGHT_FOLDED_US); 
-    servoLeft.writeMicroseconds(AOA_LEFT_FOLDED_US);
-    servoRight.writeMicroseconds(AOA_RIGHT_FOLDED_US);
-    currentAoaLeftUs = AOA_LEFT_FOLDED_US;
-    currentAoaRightUs = AOA_RIGHT_FOLDED_US;
-    
-    slowSweepTo(SWEEP_MOUNT_US);
-    sweepMode = SWEEP_MOUNT;
   }
 }
-
