@@ -20,6 +20,11 @@ static const int AOA_RIGHT_FLAT_US = 1500;
 static const int AOA_LEFT_FOLDED_US  = 1125;  // ~45 deg offset (1575 - 450)
 static const int AOA_RIGHT_FOLDED_US = 1050;  // reversed offset (1500 - 450)
 
+// Rotational mode: 90 degrees mirrored
+// Assuming ~1000us = 90 degrees.
+static const int AOA_LEFT_ROTATIONAL_US  = 575;   // 1575 - 1000
+static const int AOA_RIGHT_ROTATIONAL_US = 2500;  // 1500 + 1000
+
 Servo sweepServo;
 Servo aoaLeft;
 Servo aoaRight;
@@ -91,19 +96,7 @@ void loop() {
     // Smoothly sweep main wings in over 1 second
     slowSweepTo(SWEEP_FOLDED_US);
     
-    // Wait for 40 seconds
-    for (int i = 0; i < 40; i++) {
-      delay(1000);
-    }
-    
-    // Automatically unfold after 40 seconds
-    slowSweepTo(SWEEP_UNFOLDED_US);
-    
-    // Instantly flatten AoA once the wings are fully swept out
-    aoaLeft.writeMicroseconds(AOA_LEFT_FLAT_US);
-    aoaRight.writeMicroseconds(AOA_RIGHT_FLAT_US);
-    
-    currentState = UNFOLDED;
+    currentState = FOLDED;
     
     // Wait for the fold signal to be removed so it doesn't instantly repeat!
     while (digitalRead(PIN_FOLD) == LOW) {
@@ -123,16 +116,16 @@ void loop() {
     
     currentState = UNFOLDED;
 
-  // 3. Check if Mount is pressed
+  // 3. Check if Mount/Rotational is pressed
   } else if (digitalRead(PIN_MOUNT) == LOW && currentState != MOUNT) {
-    lazyAttach(SWEEP_MOUNT_US, AOA_LEFT_FOLDED_US, AOA_RIGHT_FOLDED_US); 
+    lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_ROTATIONAL_US, AOA_RIGHT_ROTATIONAL_US); 
     
-    // Instantly fold AoA to clear the path
-    aoaLeft.writeMicroseconds(AOA_LEFT_FOLDED_US);
-    aoaRight.writeMicroseconds(AOA_RIGHT_FOLDED_US);
+    // First make sure the main wings are swept out before we rotate 90 degrees
+    slowSweepTo(SWEEP_UNFOLDED_US);
     
-    // Smoothly sweep main wings to mount position over 1 second
-    slowSweepTo(SWEEP_MOUNT_US);
+    // Snap AoA to 90 degrees mirrored
+    aoaLeft.writeMicroseconds(AOA_LEFT_ROTATIONAL_US);
+    aoaRight.writeMicroseconds(AOA_RIGHT_ROTATIONAL_US);
     
     currentState = MOUNT;
   }
