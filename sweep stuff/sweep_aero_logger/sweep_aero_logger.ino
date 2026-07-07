@@ -72,7 +72,7 @@ static const int PIN_MOUNT     = A0;
 static const int PIN_UNFOLD    = A1;
 static const int PIN_FOLD      = A2;
 
-static const int SWEEP_UNFOLDED_US = 2450;
+static const int SWEEP_UNFOLDED_US = 2500;
 static const int SWEEP_FOLDED_US   = 500;
 static const int SWEEP_MOUNT_US    = 700;
 
@@ -1901,7 +1901,7 @@ void slowSweepTo(int targetUs) {
   }
   
   int diff = targetUs - (int)currentSweepUs;
-  int steps = 50; 
+  int steps = 25; 
   float stepSize = (float)diff / steps;
   
   for (int i = 1; i <= steps; i++) {
