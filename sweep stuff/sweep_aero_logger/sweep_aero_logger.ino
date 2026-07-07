@@ -109,8 +109,8 @@ static const uint8_t SD_FLUSH_EVERY_N = 10;
 
 static const int SERVO_LEFT_PIN = 4;
 static const int SERVO_RIGHT_PIN = 3;
-static const int SERVO_MORPH_PIN = 5;
-static const int SERVO_TAIL_PIN = 6;
+static const int SERVO_MORPH_PIN = 6;
+static const int SERVO_TAIL_PIN = 7;
 static const int ARM_PIN = 2;
 static const bool SERVO_LEFT_REVERSE = true;
 static const bool SERVO_RIGHT_REVERSE = false;

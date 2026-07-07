@@ -1,7 +1,7 @@
 #include <Servo.h>
 
 
-static const int SWEEP_PIN     = 5;   // D5  - POSITIONAL sweep servo
+static const int SWEEP_PIN     = 6;   // D5  - POSITIONAL sweep servo
 static const int AOA_LEFT_PIN  = 4;   // D4  - left  wing AoA servo
 static const int AOA_RIGHT_PIN = 3;   // D3  - right wing AoA servo
 static const int PIN_MOUNT     = A0;  // mounting position (to GND)
