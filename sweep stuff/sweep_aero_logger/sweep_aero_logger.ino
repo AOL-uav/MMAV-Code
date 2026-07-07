@@ -15,13 +15,7 @@
 #define ENABLE_CONTROL 1
 
 // ENABLE_ADAPTIVE_B 1: run NLMS online B update.
-// ENABLE_ADAPTIVE_B 0: freeze B at initial diagonal; required for firs/home/kaikeller/Purdue/AOL/MAV/sweep stuff/sweep_aero_logger/sweep_aero_logger.ino:2:10: fatal error: Arduino_LSM6DSOX.h: No such file or directory
- #include <Arduino_LSM6DSOX.h>
-          ^~~~~~~~~~~~~~~~~~~~
-compilation terminated.
-exit status 1
-
-Compilation error: Arduino_LSM6DSOX.h: No such file or directoryt flight.
+// ENABLE_ADAPTIVE_B 0: freeze B at initial diagonal; required for first flight.
 #define ENABLE_ADAPTIVE_B 0
 
 // USE_TAIL_PITCH_CONTROL 0: tail stays at fixed trim; wings provide pitch.
