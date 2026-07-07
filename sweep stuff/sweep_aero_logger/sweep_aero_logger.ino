@@ -1876,15 +1876,16 @@ void setup() {
 
 void lazyAttach(int sweepTarget, int aoaLeftTarget, int aoaRightTarget) {
   if (!servosAttached) {
+     servoMorph.attach(SERVO_MORPH_PIN, 500, 2500);
+     servoLeft.attach(SERVO_LEFT_PIN, 500, 2500);
+     servoRight.attach(SERVO_RIGHT_PIN, 500, 2500);
+
      currentSweepUs = sweepTarget;
      servoMorph.writeMicroseconds(currentSweepUs);
      
      servoLeft.writeMicroseconds(aoaLeftTarget);
      servoRight.writeMicroseconds(aoaRightTarget);
      
-     servoMorph.attach(SERVO_MORPH_PIN, 500, 2500);
-     servoLeft.attach(SERVO_LEFT_PIN, 500, 2500);
-     servoRight.attach(SERVO_RIGHT_PIN, 500, 2500);
      servosAttached = true;
   }
 }
