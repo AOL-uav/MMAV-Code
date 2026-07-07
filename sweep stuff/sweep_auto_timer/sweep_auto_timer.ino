@@ -13,7 +13,7 @@ static const int PIN_FOLD      = A2;  // folds wings (to GND)
 // You can tweak these 3 values until they line up exactly with your physical needs!
 static const int SWEEP_UNFOLDED_US = 2400;  // wing OUT (flight) (was 2500)
 static const int SWEEP_FOLDED_US   = 500;   // wing FOLDED/stowed (Normal fold)
-static const int SWEEP_MOUNT_US    = 550;   // Offset position for mounting
+static const int SWEEP_MOUNT_US    = 600;   // Offset position for mounting
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;

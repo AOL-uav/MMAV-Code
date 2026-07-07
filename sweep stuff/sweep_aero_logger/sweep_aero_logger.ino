@@ -74,7 +74,7 @@ static const int PIN_MOUNT     = A0;
 
 static const int SWEEP_UNFOLDED_US = 2400;
 static const int SWEEP_FOLDED_US   = 500;
-static const int SWEEP_MOUNT_US    = 550;
+static const int SWEEP_MOUNT_US    = 600;
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
