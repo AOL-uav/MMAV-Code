@@ -71,7 +71,7 @@ static const char LOG_TAG[] = "0619";
 static const int PIN_UNFOLD    = A1;
 static const int PIN_FOLD      = A2;
 
-static const int SWEEP_UNFOLDED_US = 2145;
+static const int SWEEP_UNFOLDED_US = 2175;
 static const int SWEEP_FOLDED_US   = 500;
 
 static const int AOA_LEFT_FLAT_US  = 1575;
