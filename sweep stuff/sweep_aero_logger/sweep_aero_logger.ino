@@ -68,18 +68,20 @@ static const char LOG_TAG[] = "0619";
 
 
 // ========================= Sweep Constants =========================
+static const int PIN_MOUNT     = A0;
 static const int PIN_UNFOLD    = A1;
 static const int PIN_FOLD      = A2;
 
-static const int SWEEP_UNFOLDED_US = 2200;
+static const int SWEEP_UNFOLDED_US = 2500;
 static const int SWEEP_FOLDED_US   = 500;
+static const int SWEEP_MOUNT_US    = 700;
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
 static const int AOA_LEFT_FOLDED_US  = 1125;
 static const int AOA_RIGHT_FOLDED_US = 1050;
 
-enum SweepMode { SWEEP_UNKNOWN, SWEEP_FOLDED, SWEEP_UNFOLDED };
+enum SweepMode { SWEEP_UNKNOWN, SWEEP_FOLDED, SWEEP_UNFOLDED, SWEEP_MOUNT };
 static SweepMode sweepMode = SWEEP_UNKNOWN;
 static bool servosAttached = false;
 static float currentSweepUs = -1.0f;
@@ -1836,6 +1838,7 @@ void setup() {
   }
 
 #if !BENCH_MODE
+  pinMode(PIN_MOUNT, INPUT_PULLUP);
   pinMode(PIN_UNFOLD, INPUT_PULLUP);
   pinMode(PIN_FOLD, INPUT_PULLUP);
   
@@ -1898,7 +1901,7 @@ void slowSweepTo(int targetUs) {
   }
   
   int diff = targetUs - (int)currentSweepUs;
-  int steps = 50; 
+  int steps = 25; 
   float stepSize = (float)diff / steps;
   
   for (int i = 1; i <= steps; i++) {
@@ -1990,6 +1993,17 @@ void loop() {
     currentAoaLeftUs = AOA_LEFT_FLAT_US;
     currentAoaRightUs = AOA_RIGHT_FLAT_US;
     sweepMode = SWEEP_UNFOLDED;
+
+  // 3. Check if Mount is pressed
+  } else if (digitalRead(PIN_MOUNT) == LOW && sweepMode != SWEEP_MOUNT) {
+    lazyAttach(SWEEP_MOUNT_US, AOA_LEFT_FOLDED_US, AOA_RIGHT_FOLDED_US); 
+    servoLeft.writeMicroseconds(AOA_LEFT_FOLDED_US);
+    servoRight.writeMicroseconds(AOA_RIGHT_FOLDED_US);
+    currentAoaLeftUs = AOA_LEFT_FOLDED_US;
+    currentAoaRightUs = AOA_RIGHT_FOLDED_US;
+    
+    slowSweepTo(SWEEP_MOUNT_US);
+    sweepMode = SWEEP_MOUNT;
   }
 }
 
