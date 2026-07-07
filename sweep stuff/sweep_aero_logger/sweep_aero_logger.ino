@@ -1901,7 +1901,7 @@ void slowSweepTo(int targetUs) {
   }
   
   int diff = targetUs - (int)currentSweepUs;
-  int steps = 25; 
+  int steps = 50; 
   float stepSize = (float)diff / steps;
   
   for (int i = 1; i <= steps; i++) {
