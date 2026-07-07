@@ -68,13 +68,13 @@ static const char LOG_TAG[] = "0619";
 
 
 // ========================= Sweep Constants =========================
-static const int PIN_MOUNT     = A0;
 static const int PIN_UNFOLD    = A1;
 static const int PIN_FOLD      = A2;
+static const int PIN_MOUNT     = A0;
 
-static const int SWEEP_UNFOLDED_US = 2500;
+static const int SWEEP_UNFOLDED_US = 2475;
 static const int SWEEP_FOLDED_US   = 500;
-static const int SWEEP_MOUNT_US    = 700;
+static const int SWEEP_MOUNT_US    = 600;
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
@@ -111,8 +111,8 @@ static const uint8_t SD_FLUSH_EVERY_N = 10;
 
 static const int SERVO_LEFT_PIN = 4;
 static const int SERVO_RIGHT_PIN = 3;
-static const int SERVO_MORPH_PIN = 5;
-static const int SERVO_TAIL_PIN = 6;
+static const int SERVO_MORPH_PIN = 6;
+static const int SERVO_TAIL_PIN = 7;
 static const int ARM_PIN = 2;
 static const bool SERVO_LEFT_REVERSE = true;
 static const bool SERVO_RIGHT_REVERSE = false;
@@ -1838,9 +1838,9 @@ void setup() {
   }
 
 #if !BENCH_MODE
-  pinMode(PIN_MOUNT, INPUT_PULLUP);
   pinMode(PIN_UNFOLD, INPUT_PULLUP);
   pinMode(PIN_FOLD, INPUT_PULLUP);
+  pinMode(PIN_MOUNT, INPUT_PULLUP);
   
   sweepMode = SWEEP_UNKNOWN;
 
@@ -1879,15 +1879,18 @@ void setup() {
 
 void lazyAttach(int sweepTarget, int aoaLeftTarget, int aoaRightTarget) {
   if (!servosAttached) {
-     currentSweepUs = sweepTarget;
+     servoMorph.attach(SERVO_MORPH_PIN, 500, 2500);
+     servoLeft.attach(SERVO_LEFT_PIN, 500, 2500);
+     servoRight.attach(SERVO_RIGHT_PIN, 500, 2500);
+
+     // Assume the servo is currently at neutral (1500us) so it slowly sweeps from there
+     // on the very first button press, rather than snapping instantly.
+     currentSweepUs = 1500;
      servoMorph.writeMicroseconds(currentSweepUs);
      
      servoLeft.writeMicroseconds(aoaLeftTarget);
      servoRight.writeMicroseconds(aoaRightTarget);
      
-     servoMorph.attach(SERVO_MORPH_PIN, 500, 2500);
-     servoLeft.attach(SERVO_LEFT_PIN, 500, 2500);
-     servoRight.attach(SERVO_RIGHT_PIN, 500, 2500);
      servosAttached = true;
   }
 }
@@ -1993,7 +1996,7 @@ void loop() {
     currentAoaLeftUs = AOA_LEFT_FLAT_US;
     currentAoaRightUs = AOA_RIGHT_FLAT_US;
     sweepMode = SWEEP_UNFOLDED;
-
+    
   // 3. Check if Mount is pressed
   } else if (digitalRead(PIN_MOUNT) == LOW && sweepMode != SWEEP_MOUNT) {
     lazyAttach(SWEEP_MOUNT_US, AOA_LEFT_FOLDED_US, AOA_RIGHT_FOLDED_US); 

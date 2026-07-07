@@ -1,7 +1,7 @@
 #include <Servo.h>
 
 
-static const int SWEEP_PIN     = 5;   // D5  - POSITIONAL sweep servo
+static const int SWEEP_PIN     = 6;   // D5  - POSITIONAL sweep servo
 static const int AOA_LEFT_PIN  = 4;   // D4  - left  wing AoA servo
 static const int AOA_RIGHT_PIN = 3;   // D3  - right wing AoA servo
 static const int PIN_MOUNT     = A0;  // mounting position (to GND)
@@ -11,9 +11,9 @@ static const int PIN_FOLD      = A2;  // folds wings (to GND)
 // We set the absolute minimum 500 as the "mount" position so it goes as far as physically possible.
 // We set 700 as the normal "folded" position so it stops a little shy of the absolute limit.
 // You can tweak these 3 values until they line up exactly with your physical needs!
-static const int SWEEP_UNFOLDED_US = 2200;  // wing OUT (flight) (was 2500)
+static const int SWEEP_UNFOLDED_US = 2475;  // wing OUT (flight) (was 2500)
 static const int SWEEP_FOLDED_US   = 500;   // wing FOLDED/stowed (Normal fold)
-static const int SWEEP_MOUNT_US    = 700;   // Offset position for mounting
+static const int SWEEP_MOUNT_US    = 600;   // Offset position for mounting
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
