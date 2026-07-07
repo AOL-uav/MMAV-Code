@@ -1880,7 +1880,9 @@ void lazyAttach(int sweepTarget, int aoaLeftTarget, int aoaRightTarget) {
      servoLeft.attach(SERVO_LEFT_PIN, 500, 2500);
      servoRight.attach(SERVO_RIGHT_PIN, 500, 2500);
 
-     currentSweepUs = sweepTarget;
+     // Assume the servo is currently at neutral (1500us) so it slowly sweeps from there
+     // on the very first button press, rather than snapping instantly.
+     currentSweepUs = 1500;
      servoMorph.writeMicroseconds(currentSweepUs);
      
      servoLeft.writeMicroseconds(aoaLeftTarget);
