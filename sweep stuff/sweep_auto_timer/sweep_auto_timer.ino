@@ -11,8 +11,8 @@ static const int PIN_FOLD      = A2;  // folds wings (to GND)
 // We set the absolute minimum 500 as the "mount" position so it goes as far as physically possible.
 // We set 700 as the normal "folded" position so it stops a little shy of the absolute limit.
 // You can tweak these 3 values until they line up exactly with your physical needs!
-static const int SWEEP_UNFOLDED_US = 2190;  // wing OUT (flight) (was 2500)
-static const int SWEEP_FOLDED_US   = 500;   // wing FOLDED/stowed (Normal fold)
+static const int SWEEP_UNFOLDED_US = 2250;  // wing OUT (flight) (was 2500)
+static const int SWEEP_FOLDED_US   = 400;   // wing FOLDED/stowed (Normal fold)
 static const int SWEEP_MOUNT_US    = 700;   // Offset position for mounting
 
 static const int AOA_LEFT_FLAT_US  = 1575;
@@ -51,9 +51,9 @@ void lazyAttach(int sweepTarget, int aoaLeftTarget, int aoaRightTarget) {
      aoaLeft.writeMicroseconds(aoaLeftTarget);
      aoaRight.writeMicroseconds(aoaRightTarget);
      
-     sweepServo.attach(SWEEP_PIN, 500, 2500);
-     aoaLeft.attach(AOA_LEFT_PIN, 500, 2500);
-     aoaRight.attach(AOA_RIGHT_PIN, 500, 2500);
+     sweepServo.attach(SWEEP_PIN, 400, 2500);
+     aoaLeft.attach(AOA_LEFT_PIN, 400, 2500);
+     aoaRight.attach(AOA_RIGHT_PIN, 400, 2500);
      isAttached = true;
   }
 }

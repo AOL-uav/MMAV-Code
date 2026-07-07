@@ -12,7 +12,7 @@ static const int PIN_UNFOLD    = A1;  // unfolds wings (to GND)
 static const int PIN_FOLD      = A2;  // folds wings (to GND)
 
 static const int SWEEP_UNFOLDED_US = 2500;
-static const int SWEEP_FOLDED_US   = 500;
+static const int SWEEP_FOLDED_US   = 400;
 static const int SWEEP_MOUNT_US    = 700;
 
 static const int AOA_LEFT_FLAT_US  = 1575;
@@ -146,9 +146,9 @@ void lazyAttach(int sweepTarget, int aoaLeftTarget, int aoaRightTarget) {
      aoaLeft.writeMicroseconds(currentAoaLeftUs);
      aoaRight.writeMicroseconds(currentAoaRightUs);
      
-     sweepServo.attach(SWEEP_PIN, 500, 2500);
-     aoaLeft.attach(AOA_LEFT_PIN, 500, 2500);
-     aoaRight.attach(AOA_RIGHT_PIN, 500, 2500);
+     sweepServo.attach(SWEEP_PIN, 400, 2500);
+     aoaLeft.attach(AOA_LEFT_PIN, 400, 2500);
+     aoaRight.attach(AOA_RIGHT_PIN, 400, 2500);
      isAttached = true;
   }
 }
