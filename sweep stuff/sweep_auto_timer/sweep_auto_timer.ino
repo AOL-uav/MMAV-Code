@@ -11,7 +11,7 @@ static const int PIN_FOLD      = A2;  // folds wings (to GND)
 // We set the absolute minimum 500 as the "mount" position so it goes as far as physically possible.
 // We set 700 as the normal "folded" position so it stops a little shy of the absolute limit.
 // You can tweak these 3 values until they line up exactly with your physical needs!
-static const int SWEEP_UNFOLDED_US = 2400;  // wing OUT (flight) (was 2500)
+static const int SWEEP_UNFOLDED_US = 2475;  // wing OUT (flight) (was 2500)
 static const int SWEEP_FOLDED_US   = 500;   // wing FOLDED/stowed (Normal fold)
 static const int SWEEP_MOUNT_US    = 600;   // Offset position for mounting
 
