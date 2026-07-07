@@ -72,7 +72,7 @@ static const int PIN_UNFOLD    = A1;
 static const int PIN_FOLD      = A2;
 
 static const int SWEEP_UNFOLDED_US = 2250;
-static const int SWEEP_FOLDED_US   = 400;
+static const int SWEEP_FOLDED_US   = 500;
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
@@ -118,7 +118,7 @@ static const bool SERVO_MORPH_REVERSE = false;
 static const bool SERVO_TAIL_REVERSE = false;
 static const float SERVO_LEFT_GAIN = 1.00f;
 static const float SERVO_RIGHT_GAIN = 1.00f;
-static const int SERVO_MIN_US = 400;
+static const int SERVO_MIN_US = 500;
 static const int SERVO_MAX_US = 2500;
 static const float SERVO_MIN_DEG = 0.0f;
 static const float SERVO_MAX_DEG = 180.0f;
@@ -1876,9 +1876,9 @@ void setup() {
 
 void lazyAttach(int sweepTarget, int aoaLeftTarget, int aoaRightTarget) {
   if (!servosAttached) {
-     servoMorph.attach(SERVO_MORPH_PIN, 400, 2500);
-     servoLeft.attach(SERVO_LEFT_PIN, 400, 2500);
-     servoRight.attach(SERVO_RIGHT_PIN, 400, 2500);
+     servoMorph.attach(SERVO_MORPH_PIN, 500, 2500);
+     servoLeft.attach(SERVO_LEFT_PIN, 500, 2500);
+     servoRight.attach(SERVO_RIGHT_PIN, 500, 2500);
 
      // Assume the servo is currently at neutral (1500us) so it slowly sweeps from there
      // on the very first button press, rather than snapping instantly.
