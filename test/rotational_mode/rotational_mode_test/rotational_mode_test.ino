@@ -1372,10 +1372,12 @@ static void printFrequencyStatus(
 }
 
 static void loggerTask() {
+  // Populate the free list so Core 0 can start immediately
   for (uint8_t i = 0; i < QUEUE_DEPTH; i++) {
     freeQueue.put(&recordPool[i], osWaitForever);
   }
 
+  // SD initialisation (runs in Core 1 context)
   pinMode(SD_CS_PIN, OUTPUT);
   digitalWrite(SD_CS_PIN, HIGH);
   SPI.begin();
@@ -1383,84 +1385,69 @@ static void loggerTask() {
 
   bool sdReady = SD.begin(SD_CS_PIN);
   File logFile;
+
   if (!sdReady) {
     safeSerialPrintln(F("[Core 1] ERROR: SD.begin failed - logging disabled."));
   } else {
-    char filename[16];
+    char name[16];
     for (int i = 0; i < 100; i++) {
-      snprintf(filename, sizeof(filename), "%s_%02d.CSV", LOG_TAG, i);
-      if (!SD.exists(filename)) {
-        logFile = SD.open(filename, FILE_WRITE);
+      snprintf(name, sizeof(name), "%s_%02d.CSV", LOG_TAG, i);
+      if (!SD.exists(name)) {
+        logFile = SD.open(name, FILE_WRITE);
         break;
       }
     }
-    if (logFile) {
+
+    if (!logFile) {
+      sdReady = false;
+      safeSerialPrintln(F("[Core 1] ERROR: cannot create log file."));
+    } else {
       writeCsvHeader(logFile);
       logFile.flush();
       serialMutex.lock();
       Serial.print(F("[Core 1] Logging to: "));
       Serial.println(logFile.name());
       serialMutex.unlock();
-    } else {
-      sdReady = false;
-      safeSerialPrintln(F("[Core 1] ERROR: cannot create log file."));
     }
   }
 
   uint32_t rowCount = 0;
-  uint32_t lastStatusMs = millis();
-  uint32_t lastControlCount = controlCount;
-  uint32_t lastMissed = missedPeriodCount;
-  uint32_t lastDropped = logDroppedCount;
+  bool finished = false;
 
+  // Main logging loop
   while (true) {
-    osEvent event = filledQueue.get(100);
-    if (event.status == osEventMessage) {
-      ControlRecord *record =
-          reinterpret_cast<ControlRecord *>(event.value.p);
+    // Block until Core 0 enqueues a filled record pointer.
+    osEvent evt = filledQueue.get();
 
-      if (record->kind == RECORD_STOP) {
-        if (sdReady && logFile) {
-          logFile.print(F("# stop=time_end\n# records="));
-          logFile.println(rowCount);
-          logFile.flush();
-          logFile.close();
-          safeSerialPrintln(F("[Core 1] Log file closed (time_end)."));
-        }
-        freeQueue.put(record, osWaitForever);
-        sdReady = false;
-      } else {
-        if (sdReady && logFile) {
-          writeRecord(logFile, *record);
-          rowCount++;
-          if ((rowCount % SD_FLUSH_EVERY_N) == 0) logFile.flush();
-          if (logFile.getWriteError()) {
-            logFile.print(F("# stop=sd_write_error\n# records="));
-            logFile.println(rowCount);
-            logFile.flush();
-            logFile.close();
-            sdReady = false;
-            safeSerialPrintln(F("[Core 1] ERROR: SD write error - logging stopped."));
-          }
-        }
-        freeQueue.put(record, osWaitForever);
+    if (evt.status != osEventMessage) {
+      rtos::ThisThread::yield();
+      continue;
+    }
+
+    ControlRecord *rec = reinterpret_cast<ControlRecord *>(evt.value.p);
+
+    if (sdReady && logFile && !finished) {
+      writeRecord(logFile, *rec);
+      rowCount++;
+
+      if (rowCount % SD_FLUSH_EVERY_N == 0) {
+        logFile.flush();
+      }
+
+      if (logFile.getWriteError()) {
+        logFile.print(F("# stop=sd_write_error\n# records="));
+        logFile.println(rowCount);
+        logFile.flush();
+        logFile.close();
+        finished = true;
+        safeSerialPrintln(F("[Core 1] ERROR: SD write error - logging stopped."));
       }
     }
 
-    const uint32_t nowMs = millis();
-    const uint32_t statusElapsedMs = nowMs - lastStatusMs;
-    if (statusElapsedMs >= 1000) {
-      const uint32_t currentControlCount = controlCount;
-      printFrequencyStatus(
-          statusElapsedMs,
-          currentControlCount - lastControlCount,
-          lastMissed,
-          lastDropped);
-      lastStatusMs = nowMs;
-      lastControlCount = currentControlCount;
-      lastMissed = missedPeriodCount;
-      lastDropped = logDroppedCount;
-    }
+    // Return the slot to Core 0's free list.
+    freeQueue.put(rec, osWaitForever);
+
+    rtos::ThisThread::yield();
   }
 }
 
@@ -1521,39 +1508,18 @@ static ControlRecord makeRecord(
   return record;
 }
 
-static bool takeFreeRecord(ControlRecord *&slot) {
-  osEvent event = freeQueue.get(0);
-  if (event.status != osEventMessage) return false;
-  slot = reinterpret_cast<ControlRecord *>(event.value.p);
-  return true;
-}
-
 static void maybeEnqueueLog(
-    uint32_t controlDtUs,
-    uint32_t controlExecUs,
-    uint32_t esekfUs) {
-  if (logWindowDone) {
-    if (!logStopQueued) {
-      ControlRecord *stopRecord = nullptr;
-      if (takeFreeRecord(stopRecord)) {
-        *stopRecord = {};
-        stopRecord->kind = RECORD_STOP;
-        if (filledQueue.put(stopRecord, 0) == osOK) {
-          logStopQueued = true;
-        } else {
-          freeQueue.put(stopRecord, osWaitForever);
-        }
-      }
-    }
-    return;
-  }
+    uint32_t controlDtUs, uint32_t controlExecUs, uint32_t esekfUs) {
+  if (logWindowDone) return;
 
   const uint32_t elapsedMs = millis() - logClockStartMs;
   if (elapsedMs < recordStartMs()) return;
+
   if (!logWindowOpen) {
     logWindowOpen = true;
     nextLogUs = micros();
   }
+
   if (elapsedMs >= recordEndMs()) {
     logWindowDone = true;
     safeSerialPrintln(F("[Core 0] Log window closed (time_end)."));
@@ -1564,21 +1530,14 @@ static void maybeEnqueueLog(
   if ((int32_t)(nowUs - nextLogUs) < 0) return;
   while ((int32_t)(nowUs - nextLogUs) >= 0) nextLogUs += SD_LOG_DT_US;
 
-  ControlRecord *slot = nullptr;
-  if (!takeFreeRecord(slot)) {
-    logDroppedCount++;
-    return;
-  }
+  osEvent slotEvt = freeQueue.get(0);
+  if (slotEvt.status != osEventMessage) return;
 
-  *slot = makeRecord(
-      elapsedMs - recordStartMs(),
-      controlDtUs,
-      controlExecUs,
-      esekfUs);
-  if (filledQueue.put(slot, 0) != osOK) {
-    logDroppedCount++;
-    freeQueue.put(slot, osWaitForever);
-  }
+  ControlRecord *slot = reinterpret_cast<ControlRecord *>(slotEvt.value.p);
+  *slot = makeRecord(elapsedMs - recordStartMs(), controlDtUs, controlExecUs, esekfUs);
+
+  osStatus s = filledQueue.put(slot, 0);
+  if (s != osOK) freeQueue.put(slot, osWaitForever);
 }
 
 // ========================= Setup and loop =========================
