@@ -1383,7 +1383,14 @@ static void loggerTask() {
   SPI.begin();
   delay(100);
 
-  bool sdReady = SD.begin(SD_CS_PIN);
+  bool sdReady = false;
+  for (int retries = 0; retries < 5; retries++) {
+    if (SD.begin(SD_CS_PIN)) {
+      sdReady = true;
+      break;
+    }
+    delay(400); // Wait for SD to power up, sometimes GPS brownouts cause failures
+  }
   File logFile;
 
   if (!sdReady) {
