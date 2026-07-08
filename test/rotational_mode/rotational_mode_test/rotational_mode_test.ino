@@ -1557,11 +1557,7 @@ void setup() {
     delay(10);
   }
 
-  // Optional GPS: configure a default GY-NEO6MV2 without requiring u-center.
-  // If the module is absent, these UART writes are harmless and boot continues.
-  Serial1.begin(GPS_BAUD);
-  gps.lastFusedTowMs = 0xFFFFFFFFUL;
-  delay(300);
+
 
   serialMutex.lock();
   Serial.print(F("[Core 0] ESEKF + SMC boot, log tag="));
@@ -1622,6 +1618,12 @@ void setup() {
     while (!readImu(initialSample)) delay(10);
     resetEsekfFromAccel(initialSample);
   }
+
+  // Initialize GPS Serial AFTER SD card is initialized to prevent UART interrupts
+  // from disrupting the fragile SD.begin() SPI communication.
+  Serial1.begin(GPS_BAUD);
+  gps.lastFusedTowMs = 0xFFFFFFFFUL;
+  delay(300);
 
   logClockStartMs = millis();
   lastControlUs = micros();
