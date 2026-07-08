@@ -1943,7 +1943,7 @@ void slowSweepTo(int targetUs) {
 }
 
 
-
+void loop() {
   // Run ESEKF/logging for the current tick if not sweeping
   pollGps();
   const uint32_t nowUs = micros();
