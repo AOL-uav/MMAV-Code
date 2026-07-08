@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <TinyGPSPlus.h>
 #include <Arduino_LSM6DSOX.h>
 #include <Servo.h>
 #include <SPI.h>
@@ -327,6 +328,7 @@ static void safeSerialPrint(const __FlashStringHelper *s) {
 
 // ========================= Global state =========================
 
+static TinyGPSPlus tinyGps;
 static Servo servoLeft;
 static Servo servoRight;
 static Servo servoMorph;
@@ -573,244 +575,28 @@ static void injectSmallAngle(float q[4], const float dtheta[3]) {
   quatNormalize(q);
 }
 
-// ========================= GPS NEO-6M UBX parser =========================
-
-/*
-  KEY GPS NOTE:
-
-  GPS is optional. Serial1 is polled without waiting. No characters, a stale
-  packet, or a packet without a valid 3D fix simply leaves gps.fix false.
-  The ESEKF then continues as an IMU-only estimator and no error is printed.
-
-  NEO-6 firmware does not provide the newer 92-byte NAV-PVT packet. The same
-  information is assembled from three messages sharing the same GPS iTOW:
-    NAV-POSLLH (0x01 0x02): latitude, longitude, altitude, position accuracy
-    NAV-SOL    (0x01 0x06): fix validity and satellite count
-    NAV-VELNED (0x01 0x12): north/east/down velocity
-*/
-enum UbxState : uint8_t {
-  UBX_SYNC1,
-  UBX_SYNC2,
-  UBX_CLASS,
-  UBX_ID,
-  UBX_LEN1,
-  UBX_LEN2,
-  UBX_PAYLOAD,
-  UBX_CK_A,
-  UBX_CK_B
-};
-
-static UbxState ubxState = UBX_SYNC1;
-static uint8_t ubxClass = 0;
-static uint8_t ubxId = 0;
-static uint16_t ubxLength = 0;
-static uint16_t ubxIndex = 0;
-static uint8_t ubxChecksumA = 0;
-static uint8_t ubxChecksumB = 0;
-static uint8_t ubxPayload[100];
-
-static void ubxChecksumAdd(uint8_t value) {
-  ubxChecksumA += value;
-  ubxChecksumB += ubxChecksumA;
-}
-
-static uint16_t readU16Le(const uint8_t *p) {
-  return (uint16_t)p[0] | ((uint16_t)p[1] << 8);
-}
-
-static uint32_t readU32Le(const uint8_t *p) {
-  return (uint32_t)p[0] |
-         ((uint32_t)p[1] << 8) |
-         ((uint32_t)p[2] << 16) |
-         ((uint32_t)p[3] << 24);
-}
-
-static int32_t readI32Le(const uint8_t *p) {
-  return (int32_t)readU32Le(p);
-}
-
-static void refreshGpsEpoch() {
-  const bool sameEpoch =
-      gps.positionTowMs == gps.solutionTowMs &&
-      gps.velocityTowMs == gps.solutionTowMs;
-  if (!gps.fix || !sameEpoch || gps.solutionTowMs == gps.lastFusedTowMs) return;
-
-  gps.iTowMs = gps.solutionTowMs;
-  gps.lastFusedTowMs = gps.solutionTowMs;
-  gps.receivedMs = millis();
-  gps.fresh = true;
-  gpsEpochCount++;
-}
-
-static void handleNavPosllh() {
-  if (ubxLength != 28) return;
-
-  gps.positionTowMs = readU32Le(&ubxPayload[0]);
-  gps.longitudeDeg = readI32Le(&ubxPayload[4]) * 1.0e-7;
-  gps.latitudeDeg = readI32Le(&ubxPayload[8]) * 1.0e-7;
-  gps.altitudeM = readI32Le(&ubxPayload[16]) * 1.0e-3f;
-  gps.hAccM = readU32Le(&ubxPayload[20]) * 1.0e-3f;
-  gps.vAccM = readU32Le(&ubxPayload[24]) * 1.0e-3f;
-  refreshGpsEpoch();
-}
-
-static void handleNavSol() {
-  if (ubxLength != 52) return;
-
-  gps.solutionTowMs = readU32Le(&ubxPayload[0]);
-  gps.fixType = ubxPayload[10];
-  const uint8_t flags = ubxPayload[11];
-  gps.satellites = ubxPayload[47];
-  gps.fix = ((flags & 0x01U) != 0U) && gps.fixType >= 3;
-  if (!gps.fix) gps.fresh = false;
-  refreshGpsEpoch();
-}
-
-static void handleNavVelned() {
-  if (ubxLength != 36) return;
-
-  gps.velocityTowMs = readU32Le(&ubxPayload[0]);
-  // NEO-6 NAV-VELNED velocities are signed cm/s.
-  gps.velocityNed[0] = readI32Le(&ubxPayload[4]) * 0.01f;
-  gps.velocityNed[1] = readI32Le(&ubxPayload[8]) * 0.01f;
-  gps.velocityNed[2] = readI32Le(&ubxPayload[12]) * 0.01f;
-  refreshGpsEpoch();
-}
-
-static void handleUbxPacket() {
-  if (ubxClass != 0x01) return;
-  if (ubxId == 0x02) {
-    handleNavPosllh();
-  } else if (ubxId == 0x06) {
-    handleNavSol();
-  } else if (ubxId == 0x12) {
-    handleNavVelned();
-  }
-}
-
-static void parseUbxByte(uint8_t value) {
-  switch (ubxState) {
-    case UBX_SYNC1:
-      if (value == 0xB5) ubxState = UBX_SYNC2;
-      break;
-    case UBX_SYNC2:
-      ubxState = (value == 0x62) ? UBX_CLASS : UBX_SYNC1;
-      break;
-    case UBX_CLASS:
-      ubxClass = value;
-      ubxChecksumA = 0;
-      ubxChecksumB = 0;
-      ubxChecksumAdd(value);
-      ubxState = UBX_ID;
-      break;
-    case UBX_ID:
-      ubxId = value;
-      ubxChecksumAdd(value);
-      ubxState = UBX_LEN1;
-      break;
-    case UBX_LEN1:
-      ubxLength = value;
-      ubxChecksumAdd(value);
-      ubxState = UBX_LEN2;
-      break;
-    case UBX_LEN2:
-      ubxLength |= ((uint16_t)value << 8);
-      ubxChecksumAdd(value);
-      ubxIndex = 0;
-      if (ubxLength > sizeof(ubxPayload)) {
-        ubxState = UBX_SYNC1;
-      } else {
-        ubxState = (ubxLength == 0) ? UBX_CK_A : UBX_PAYLOAD;
-      }
-      break;
-    case UBX_PAYLOAD:
-      ubxPayload[ubxIndex++] = value;
-      ubxChecksumAdd(value);
-      if (ubxIndex >= ubxLength) ubxState = UBX_CK_A;
-      break;
-    case UBX_CK_A:
-      ubxState = (value == ubxChecksumA) ? UBX_CK_B : UBX_SYNC1;
-      break;
-    case UBX_CK_B:
-      if (value == ubxChecksumB) handleUbxPacket();
-      ubxState = UBX_SYNC1;
-      break;
-  }
-}
-
-static void sendUbx(
-    uint8_t messageClass,
-    uint8_t messageId,
-    const uint8_t *payload,
-    uint16_t payloadLength) {
-  uint8_t checksumA = 0;
-  uint8_t checksumB = 0;
-
-  Serial1.write(0xB5);
-  Serial1.write(0x62);
-
-  const uint8_t header[4] = {
-    messageClass,
-    messageId,
-    (uint8_t)(payloadLength & 0xFFU),
-    (uint8_t)(payloadLength >> 8)
-  };
-  for (uint8_t i = 0; i < sizeof(header); i++) {
-    Serial1.write(header[i]);
-    checksumA += header[i];
-    checksumB += checksumA;
-  }
-  for (uint16_t i = 0; i < payloadLength; i++) {
-    Serial1.write(payload[i]);
-    checksumA += payload[i];
-    checksumB += checksumA;
-  }
-  Serial1.write(checksumA);
-  Serial1.write(checksumB);
-  Serial1.flush();
-}
-
-static void configureUbxMessage(
-    uint8_t targetClass,
-    uint8_t targetId,
-    uint8_t rate) {
-  const uint8_t payload[3] = {targetClass, targetId, rate};
-  sendUbx(0x06, 0x01, payload, sizeof(payload));  // UBX-CFG-MSG
-  delay(15);
-}
-
-static void configureNeo6m() {
-  // Configure a 200 ms measurement period: 5 Hz measurement and navigation.
-  const uint8_t ratePayload[6] = {
-    (uint8_t)(GPS_MEASUREMENT_PERIOD_MS & 0xFFU),
-    (uint8_t)(GPS_MEASUREMENT_PERIOD_MS >> 8),
-    0x01, 0x00,  // navRate = 1
-    0x01, 0x00   // timeRef = GPS time
-  };
-  sendUbx(0x06, 0x08, ratePayload, sizeof(ratePayload));  // UBX-CFG-RATE
-  delay(30);
-
-  // Disable common default NMEA sentences to preserve the 9600-baud budget.
-  for (uint8_t nmeaId = 0x00; nmeaId <= 0x05; nmeaId++) {
-    configureUbxMessage(0xF0, nmeaId, 0);
-  }
-
-  // Enable the NEO-6 messages required to assemble one ESEKF GPS update.
-  configureUbxMessage(0x01, 0x02, 1);  // NAV-POSLLH
-  configureUbxMessage(0x01, 0x06, 1);  // NAV-SOL
-  configureUbxMessage(0x01, 0x12, 1);  // NAV-VELNED
-}
+// ========================= GPS TinyGPSPlus parser =========================
 
 static void pollGps() {
   while (Serial1.available() > 0) {
-    gps.bytesSeen = true;
-    parseUbxByte((uint8_t)Serial1.read());
+    tinyGps.encode(Serial1.read());
   }
 
-  if (gps.fix &&
-      (uint32_t)(millis() - gps.receivedMs) > GPS_FIX_STALE_MS) {
-    gps.fix = false;
-    gps.fresh = false;
+  if (tinyGps.location.isUpdated()) {
+    gps.fix = tinyGps.location.isValid();
+    gps.fresh = true;
+    gps.satellites = tinyGps.satellites.value();
+    gps.latitudeDeg = tinyGps.location.lat();
+    gps.longitudeDeg = tinyGps.location.lng();
+    gps.altitudeM = tinyGps.altitude.meters();
+    gps.hAccM = tinyGps.hdop.value() / 100.0f; // Approx conversion
+    gps.vAccM = gps.hAccM * 1.5f;
+
+    float speed = tinyGps.speed.mps();
+    float courseRad = tinyGps.course.deg() * DEG_TO_RAD_F;
+    gps.velocityNed[0] = speed * cosf(courseRad);
+    gps.velocityNed[1] = speed * sinf(courseRad);
+    gps.velocityNed[2] = 0.0f; // NMEA doesn't give reliable vertical velocity usually
   }
 }
 
@@ -1810,7 +1596,6 @@ void setup() {
   Serial1.begin(GPS_BAUD);
   gps.lastFusedTowMs = 0xFFFFFFFFUL;
   delay(300);
-  configureNeo6m();
 
   serialMutex.lock();
   Serial.print(F("[Core 0] ESEKF + SMC boot, log tag="));
@@ -2047,4 +1832,45 @@ void loop() {
     slowSweepAoaTo(AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
     sweepMode = SWEEP_UNFOLDED;
   }
+
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 200) { 
+    lastPrint = millis();
+    
+    Serial.println(F("========= TELEMETRY ========="));
+
+    if (imu.valid) {
+      Serial.print(F("Accel (m/s2): X=")); Serial.print(imu.accel[0], 3);
+      Serial.print(F(", Y=")); Serial.print(imu.accel[1], 3);
+      Serial.print(F(", Z=")); Serial.println(imu.accel[2], 3);
+
+      Serial.print(F("Gyro (rad/s): X=")); Serial.print(imu.gyro[0], 3);
+      Serial.print(F(", Y=")); Serial.print(imu.gyro[1], 3);
+      Serial.print(F(", Z=")); Serial.println(imu.gyro[2], 3);
+    }
+    
+    if (gps.fix) {
+      Serial.print(F("Global Pos:  Lat=")); Serial.print(gps.latitudeDeg, 6);
+      Serial.print(F(", Lon=")); Serial.print(gps.longitudeDeg, 6);
+      Serial.print(F(", Alt=")); Serial.print(gps.altitudeM, 2);
+      Serial.println(F(" m"));
+      
+      float speed = sqrtf(gps.velocityNed[0]*gps.velocityNed[0] + gps.velocityNed[1]*gps.velocityNed[1]);
+      Serial.print(F("Velocity:    Speed=")); Serial.print(speed, 2);
+      Serial.println(F(" m/s"));
+      
+      if (gpsOriginSet) {
+        float gpsPosition[3];
+        gpsToLocalNeu(gpsPosition);
+        Serial.print(F("Local XYZ:   X(North)=")); Serial.print(gpsPosition[0], 2);
+        Serial.print(F("m, Y(East)=")); Serial.print(gpsPosition[1], 2);
+        Serial.print(F("m, Z(Up)=")); Serial.print(gpsPosition[2], 2);
+        Serial.println(F("m"));
+      }
+    } else {
+      Serial.println(F("GPS: No valid fix yet (waiting for satellites...)"));
+    }
+    Serial.println(F("=============================\n"));
+  }
+
 }
