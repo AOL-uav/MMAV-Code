@@ -4,7 +4,7 @@
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial && millis() < 5000);
+  delay(2000);
   
   Serial.println("Starting SD brute force test...");
   
