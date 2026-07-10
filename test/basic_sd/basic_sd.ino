@@ -6,6 +6,11 @@ const int chipSelect = 10;
 
 void setup() {
   Serial.begin(115200);
+  while (!Serial && millis() < 3000); // wait up to 3 seconds for serial port to connect
+  
+  pinMode(chipSelect, OUTPUT);
+  digitalWrite(chipSelect, HIGH);
+  delay(100);
 }
 
 void loop() {
