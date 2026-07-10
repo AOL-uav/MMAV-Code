@@ -7,9 +7,16 @@ void setup() {
   while (!Serial && millis() < 5000);
   
   Serial.println("Initializing SD card...");
+  pinMode(10, OUTPUT);
+  digitalWrite(10, HIGH);
+  SPI.begin();
+  delay(100);
   if (!SD.begin(10)) {
     Serial.println("Initialization failed!");
-    while (1);
+    while (1) {
+      Serial.println("Init failed...");
+      delay(1000);
+    }
   }
   Serial.println("Initialization done.");
 
