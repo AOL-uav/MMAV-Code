@@ -21,7 +21,7 @@ void setup() {
     SPI.begin();
     delay(50);
     
-    if (SD.begin(cs)) {
+    if (SD.begin(1000000, cs)) {
       Serial.println("SUCCESS on CS = " + String(cs));
       success = true;
       break;
