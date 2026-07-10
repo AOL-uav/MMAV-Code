@@ -2,24 +2,37 @@
 #include <SPI.h>
 #include <SD.h>
 
-const int chipSelect = 10;
-
 void setup() {
   Serial.begin(115200);
-  while (!Serial && millis() < 3000); // wait up to 3 seconds for serial port to connect
-  
-  pinMode(chipSelect, OUTPUT);
-  digitalWrite(chipSelect, HIGH);
+  while (!Serial && millis() < 3000);
+  Serial.println("--- SD Card CS Scanner ---");
+
+  bool found = false;
+  for (int pin = 0; pin < 30; pin++) {
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, HIGH);
+  }
   delay(100);
+
+  for (int pin = 0; pin < 30; pin++) {
+    Serial.print("Testing pin ");
+    Serial.print(pin);
+    Serial.print("... ");
+    if (SD.begin(pin)) {
+      Serial.println("SUCCESS!");
+      found = true;
+      break;
+    } else {
+      Serial.println("failed.");
+    }
+  }
+
+  if (!found) {
+    Serial.println("Could not find SD card on any pin.");
+  }
 }
 
 void loop() {
-  Serial.println("Initializing SD card...");
-
-  if (!SD.begin(chipSelect)) {
-    Serial.println("initialization failed!");
-  } else {
-    Serial.println("initialization done.");
-  }
-  delay(2000);
+  delay(1000);
 }
+
