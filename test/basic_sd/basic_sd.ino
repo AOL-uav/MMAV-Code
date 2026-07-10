@@ -127,7 +127,7 @@ void setup()
   Serial.println(BOARD_NAME);
   Serial.println(RP2040_SD_VERSION);
   
-void loop() {
+
   Serial.print("Initializing SD card with SS = ");  Serial.println(PIN_SD_SS);
   Serial.print("SCK = ");   Serial.println(PIN_SD_SCK);
   Serial.print("MOSI = ");  Serial.println(PIN_SD_MOSI);
