@@ -1401,8 +1401,8 @@ static void loggerTask() {
   } else {
     globalSdReady = true;
     char name[16];
-    for (int i = 0; i < 100; i++) {
-      snprintf(name, sizeof(name), "%s_%02d.CSV", LOG_TAG, i);
+    for (int i = 0; i < 999; i++) {
+      snprintf(name, sizeof(name), "%s_%03d.CSV", LOG_TAG, i);
       if (!SD.exists(name)) {
         logFile = SD.open(name, FILE_WRITE);
         break;
@@ -1411,6 +1411,8 @@ static void loggerTask() {
 
     if (!logFile) {
       sdReady = false;
+      globalSdReady = false;
+      globalSdFailed = true;
       safeSerialPrintln(F("[Core 1] ERROR: cannot create log file."));
     } else {
       writeCsvHeader(logFile);
