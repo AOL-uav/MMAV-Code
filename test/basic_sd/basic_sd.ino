@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include <SD.h>
+#include "SdFat.h"
 
-const int chipSelect = 10;
+SdFs sd;
+bool initSuccess = false;
+bool tried = false;
 
 void setup() {
   Serial.begin(115200);
@@ -11,7 +13,7 @@ void setup() {
 void loop() {
   Serial.println("Initializing SD card...");
 
-  if (!SD.begin(chipSelect)) {
+  if (!sd.begin(10)) {
     Serial.println("initialization failed!");
   } else {
     Serial.println("initialization done.");
