@@ -3,7 +3,8 @@
 
 void setup() {
   Serial.begin(115200);
-  delay(2000);
+}
+
 void loop() {
   Serial.println("Raw SPI SD CMD0 Test...");
   
