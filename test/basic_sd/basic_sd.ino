@@ -4,6 +4,7 @@
 void setup() {
   Serial.begin(115200);
   delay(2000);
+void loop() {
   Serial.println("Raw SPI SD CMD0 Test...");
   
   pinMode(10, OUTPUT);
@@ -43,8 +44,6 @@ void setup() {
   } else {
     Serial.println("SPI failed or SD card did not respond properly.");
   }
-}
-
-void loop() {
-  delay(1000);
+  
+  delay(2000);
 }
