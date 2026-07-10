@@ -65,7 +65,7 @@
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "0707";
+static const char LOG_TAG[] = "07010";
 
 
 // ========================= Sweep Constants =========================
