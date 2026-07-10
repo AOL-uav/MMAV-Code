@@ -8,6 +8,9 @@ void setup() {
   
   pinMode(10, OUTPUT);
   digitalWrite(10, HIGH);
+  pinMode(12, INPUT_PULLUP);
+  pinMode(11, OUTPUT);
+  digitalWrite(11, HIGH);
   SPI.begin();
   
   // 80 dummy clocks with CS high to initialize SD
