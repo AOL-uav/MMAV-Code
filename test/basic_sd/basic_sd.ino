@@ -1,39 +1,44 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include <SD.h>
 
 void setup() {
   Serial.begin(115200);
   delay(2000);
+  Serial.println("Raw SPI SD CMD0 Test...");
   
-  Serial.println("Starting SD brute force test...");
+  pinMode(10, OUTPUT);
+  digitalWrite(10, HIGH);
+  SPI.begin();
   
-  int cs_pins[] = {10, 5, 4, 8, 9, 7};
-  bool success = false;
+  // 80 dummy clocks with CS high to initialize SD
+  SPI.beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE0));
+  for (int i = 0; i < 10; i++) SPI.transfer(0xFF);
   
-  for (int i = 0; i < 6; i++) {
-    int cs = cs_pins[i];
-    Serial.print("Trying CS = ");
-    Serial.println(cs);
-    
-    pinMode(cs, OUTPUT);
-    digitalWrite(cs, HIGH);
-    SPI.begin();
-    delay(50);
-    
-    if (SD.begin(1000000, cs)) {
-      Serial.println("SUCCESS on CS = " + String(cs));
-      success = true;
-      break;
-    } else {
-      Serial.println("Failed on CS = " + String(cs));
-    }
-    SPI.end();
-    delay(50);
+  // Send CMD0 (GO_IDLE_STATE)
+  digitalWrite(10, LOW);
+  SPI.transfer(0x40 | 0); // CMD0
+  SPI.transfer(0x00);
+  SPI.transfer(0x00);
+  SPI.transfer(0x00);
+  SPI.transfer(0x00);
+  SPI.transfer(0x95);     // CRC for CMD0
+  
+  // Read response
+  uint8_t res = 0xFF;
+  for (int i = 0; i < 10; i++) {
+    res = SPI.transfer(0xFF);
+    if (res != 0xFF) break;
   }
+  digitalWrite(10, HIGH);
+  SPI.endTransaction();
   
-  if (!success) {
-    Serial.println("All CS pins failed.");
+  Serial.print("CMD0 Response: 0x");
+  Serial.println(res, HEX);
+  
+  if (res == 0x01) {
+    Serial.println("Hardware SPI is ALIVE and SD card responded!");
+  } else {
+    Serial.println("SPI failed or SD card did not respond properly.");
   }
 }
 
