@@ -1,23 +1,20 @@
 #include <Arduino.h>
+#include <SPI.h>
+#include <SD.h>
+
+const int chipSelect = 10;
 
 void setup() {
   Serial.begin(115200);
 }
 
 void loop() {
-  Serial.println("\n--- Pin Mappings ---");
-  Serial.print("D10: "); Serial.println(D10);
-  Serial.print("D11: "); Serial.println(D11);
-  Serial.print("D12: "); Serial.println(D12);
-  Serial.print("D13: "); Serial.println(D13);
-  Serial.print("MISO: "); Serial.println(MISO);
-  Serial.print("MOSI: "); Serial.println(MOSI);
-  Serial.print("SCK: "); Serial.println(SCK);
-  Serial.print("SS: "); Serial.println(SS);
+  Serial.println("Initializing SD card...");
+
+  if (!SD.begin(chipSelect)) {
+    Serial.println("initialization failed!");
+  } else {
+    Serial.println("initialization done.");
+  }
   delay(2000);
 }
-
-
-
-
-
