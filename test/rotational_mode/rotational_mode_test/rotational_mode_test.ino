@@ -332,6 +332,8 @@ static TinyGPSPlus tinyGps;
 static Servo servoLeft;
 static Servo servoRight;
 static Servo servoMorph;
+volatile bool globalSdReady = false;
+volatile bool globalSdFailed = false;
 static Servo servoTail;
 static ImuSample imu = {};
 static GpsSample gps = {};
@@ -1394,8 +1396,10 @@ static void loggerTask() {
   File logFile;
 
   if (!sdReady) {
+    globalSdFailed = true;
     safeSerialPrintln(F("[Core 1] ERROR: SD.begin failed - logging disabled."));
   } else {
+    globalSdReady = true;
     char name[16];
     for (int i = 0; i < 100; i++) {
       snprintf(name, sizeof(name), "%s_%02d.CSV", LOG_TAG, i);
@@ -1823,6 +1827,10 @@ void loop() {
       Serial.print(F(", Z=")); Serial.println(gz, 1);
     }
 
+    Serial.print(F("SD Status:   "));
+    if (globalSdFailed) Serial.println(F("FAILED"));
+    else if (globalSdReady) Serial.println(F("OK"));
+    else Serial.println(F("INIT..."));
     if (tinyGps.location.isValid()) {
       double lat = tinyGps.location.lat();
       double lon = tinyGps.location.lng();
