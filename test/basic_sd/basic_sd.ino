@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include <SD.h>
+#include <RP2040_SD.h>
 
 void setup() {
   Serial.begin(115200);
