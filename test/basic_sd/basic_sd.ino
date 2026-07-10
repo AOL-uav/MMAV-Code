@@ -6,32 +6,37 @@ void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 5000);
   
-  Serial.println("Initializing SD card...");
-  pinMode(10, OUTPUT);
-  digitalWrite(10, HIGH);
-  SPI.begin();
-  delay(100);
-  if (!SD.begin(10)) {
-    Serial.println("Initialization failed!");
-    while (1) {
-      Serial.println("Init failed...");
-      delay(1000);
+  Serial.println("Starting SD brute force test...");
+  
+  int cs_pins[] = {10, 5, 4, 8, 9, 7};
+  bool success = false;
+  
+  for (int i = 0; i < 6; i++) {
+    int cs = cs_pins[i];
+    Serial.print("Trying CS = ");
+    Serial.println(cs);
+    
+    pinMode(cs, OUTPUT);
+    digitalWrite(cs, HIGH);
+    SPI.begin();
+    delay(50);
+    
+    if (SD.begin(cs)) {
+      Serial.println("SUCCESS on CS = " + String(cs));
+      success = true;
+      break;
+    } else {
+      Serial.println("Failed on CS = " + String(cs));
     }
+    SPI.end();
+    delay(50);
   }
-  Serial.println("Initialization done.");
-
-  File myFile = SD.open("test.txt", FILE_WRITE);
-  if (myFile) {
-    Serial.print("Writing to test.txt...");
-    myFile.println("testing 1, 2, 3.");
-    myFile.close();
-    Serial.println("done.");
-  } else {
-    Serial.println("error opening test.txt");
+  
+  if (!success) {
+    Serial.println("All CS pins failed.");
   }
 }
 
 void loop() {
   delay(1000);
-  Serial.println("Looping...");
 }
