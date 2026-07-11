@@ -1833,20 +1833,7 @@ void loop() {
     Serial.print(F("IMU Fault:   ")); Serial.println(imuFaultLocked ? F("YES") : F("NO"));
     Serial.print(F("ESEKF Fault: ")); Serial.println(esekfFaultLocked ? F("YES") : F("NO"));
     
-    if (globalSdReady) {
-      File root = SD.open("/");
-      if (root) {
-        int count = 0;
-        while (true) {
-          File entry = root.openNextFile();
-          if (!entry) break;
-          count++;
-          entry.close();
-        }
-        root.close();
-        Serial.print(F("SD Files:    ")); Serial.println(count);
-      }
-    }
+
 Serial.print(F("SD Status:   "));
     if (globalSdFailed) Serial.println(F("FAILED"));
     else if (globalSdReady) Serial.println(F("OK"));
