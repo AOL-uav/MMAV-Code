@@ -1385,7 +1385,23 @@ static void loggerTask() {
   SPI.begin();
   delay(100);
 
-  bool sdReady = false;
+  
+  pinMode(12, INPUT_PULLUP);
+  pinMode(11, INPUT_PULLUP);
+  pinMode(13, INPUT_PULLUP);
+  delay(10);
+  int misoState = digitalRead(12);
+  int mosiState = digitalRead(11);
+  int sckState = digitalRead(13);
+  
+  safeSerialPrintln(F("==========================="));
+  safeSerialPrintln(F("SPI PIN DIAGNOSTICS:"));
+  safeSerialPrint(F("MISO (12) State (expected HIGH): ")); safeSerialPrintln(misoState == HIGH ? F("HIGH") : F("LOW (SHORTED OR SINKING)"));
+  safeSerialPrint(F("MOSI (11) State (expected HIGH): ")); safeSerialPrintln(mosiState == HIGH ? F("HIGH") : F("LOW (SHORTED OR SINKING)"));
+  safeSerialPrint(F("SCK (13) State (expected HIGH): ")); safeSerialPrintln(sckState == HIGH ? F("HIGH") : F("LOW (SHORTED OR SINKING)"));
+  safeSerialPrintln(F("==========================="));
+  delay(1000);
+bool sdReady = false;
   for (int retries = 0; retries < 5; retries++) {
     if (SD.begin(SD_CS_PIN)) {
       sdReady = true;
