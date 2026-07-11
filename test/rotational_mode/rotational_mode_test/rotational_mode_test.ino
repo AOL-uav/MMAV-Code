@@ -1627,7 +1627,7 @@ void setup() {
 
   // Initialize GPS Serial AFTER SD card is initialized to prevent UART interrupts
   // from disrupting the fragile SD.begin() SPI communication.
-  Serial1.begin(GPS_BAUD);
+  // Serial1.begin(GPS_BAUD);
   gps.lastFusedTowMs = 0xFFFFFFFFUL;
   delay(300);
 
