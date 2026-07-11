@@ -1862,6 +1862,13 @@ void loop() {
         Serial.print(F("SD Files:    ")); Serial.println(count);
       }
     }
+
+    int misoState = digitalRead(12);
+    int mosiState = digitalRead(11);
+    int sckState = digitalRead(13);
+    Serial.print(F("SPI PINS: MISO=")); Serial.print(misoState);
+    Serial.print(F(" MOSI=")); Serial.print(mosiState);
+    Serial.print(F(" SCK=")); Serial.println(sckState);
 Serial.print(F("SD Status:   "));
     if (globalSdFailed) Serial.println(F("FAILED"));
     else if (globalSdReady) Serial.println(F("OK"));
