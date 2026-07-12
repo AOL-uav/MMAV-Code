@@ -32,7 +32,7 @@
     - If logging falls behind, a log sample is dropped instead of delaying control.
 
   Estimator:
-    - 15-state error-state EKF:u
+    - 15-state error-state EKF:
       dx = [dtheta(3), dv(3), dp(3), dbg(3), dba(3)]
     - IMU prediction at 80 Hz.
     - Accelerometer roll/pitch correction only when acceleration is near 1 g.
