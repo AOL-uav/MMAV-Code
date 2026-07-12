@@ -3,7 +3,7 @@ import time
 import os
 
 # Configuration
-PORT = '/dev/ttyACM0'
+PORT = 'COM11'
 BAUD = 115200
 OUTPUT_DIR = '/home/kaikeller/Purdue/AOL/MAV/SD-Logging/outputs'
 

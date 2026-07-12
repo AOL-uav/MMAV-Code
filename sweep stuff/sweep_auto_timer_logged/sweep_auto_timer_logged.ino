@@ -64,7 +64,7 @@
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "0619";
+static const char LOG_TAG[] = "0707";
 
 
 // ========================= Sweep Constants =========================
@@ -1943,7 +1943,7 @@ void slowSweepTo(int targetUs) {
 }
 
 
-
+void loop() {
   // Run ESEKF/logging for the current tick if not sweeping
   pollGps();
   const uint32_t nowUs = micros();

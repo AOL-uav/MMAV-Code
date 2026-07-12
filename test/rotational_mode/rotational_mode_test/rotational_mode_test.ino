@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <TinyGPSPlus.h>
 #include <Arduino_LSM6DSOX.h>
 #include <Servo.h>
 #include <SPI.h>
@@ -64,7 +65,7 @@
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "0619";
+static const char LOG_TAG[] = "0711";
 
 
 // ========================= Sweep Constants =========================
@@ -95,7 +96,7 @@ static int targetSweepUs = -1;
 
 static const uint32_t SERIAL_BAUD = 115200;
 static const uint32_t SERIAL_WAIT_MS = 1500;
-static const uint32_t GPS_BAUD = 9600;
+static const uint32_t GPS_BAUD = 115200;
 static const uint16_t GPS_MEASUREMENT_PERIOD_MS = 200;
 
 static const float CONTROL_HZ = 80.0f;
@@ -327,9 +328,12 @@ static void safeSerialPrint(const __FlashStringHelper *s) {
 
 // ========================= Global state =========================
 
+static TinyGPSPlus tinyGps;
 static Servo servoLeft;
 static Servo servoRight;
 static Servo servoMorph;
+volatile bool globalSdReady = false;
+volatile bool globalSdFailed = false;
 static Servo servoTail;
 static ImuSample imu = {};
 static GpsSample gps = {};
@@ -573,244 +577,28 @@ static void injectSmallAngle(float q[4], const float dtheta[3]) {
   quatNormalize(q);
 }
 
-// ========================= GPS NEO-6M UBX parser =========================
-
-/*
-  KEY GPS NOTE:
-
-  GPS is optional. Serial1 is polled without waiting. No characters, a stale
-  packet, or a packet without a valid 3D fix simply leaves gps.fix false.
-  The ESEKF then continues as an IMU-only estimator and no error is printed.
-
-  NEO-6 firmware does not provide the newer 92-byte NAV-PVT packet. The same
-  information is assembled from three messages sharing the same GPS iTOW:
-    NAV-POSLLH (0x01 0x02): latitude, longitude, altitude, position accuracy
-    NAV-SOL    (0x01 0x06): fix validity and satellite count
-    NAV-VELNED (0x01 0x12): north/east/down velocity
-*/
-enum UbxState : uint8_t {
-  UBX_SYNC1,
-  UBX_SYNC2,
-  UBX_CLASS,
-  UBX_ID,
-  UBX_LEN1,
-  UBX_LEN2,
-  UBX_PAYLOAD,
-  UBX_CK_A,
-  UBX_CK_B
-};
-
-static UbxState ubxState = UBX_SYNC1;
-static uint8_t ubxClass = 0;
-static uint8_t ubxId = 0;
-static uint16_t ubxLength = 0;
-static uint16_t ubxIndex = 0;
-static uint8_t ubxChecksumA = 0;
-static uint8_t ubxChecksumB = 0;
-static uint8_t ubxPayload[100];
-
-static void ubxChecksumAdd(uint8_t value) {
-  ubxChecksumA += value;
-  ubxChecksumB += ubxChecksumA;
-}
-
-static uint16_t readU16Le(const uint8_t *p) {
-  return (uint16_t)p[0] | ((uint16_t)p[1] << 8);
-}
-
-static uint32_t readU32Le(const uint8_t *p) {
-  return (uint32_t)p[0] |
-         ((uint32_t)p[1] << 8) |
-         ((uint32_t)p[2] << 16) |
-         ((uint32_t)p[3] << 24);
-}
-
-static int32_t readI32Le(const uint8_t *p) {
-  return (int32_t)readU32Le(p);
-}
-
-static void refreshGpsEpoch() {
-  const bool sameEpoch =
-      gps.positionTowMs == gps.solutionTowMs &&
-      gps.velocityTowMs == gps.solutionTowMs;
-  if (!gps.fix || !sameEpoch || gps.solutionTowMs == gps.lastFusedTowMs) return;
-
-  gps.iTowMs = gps.solutionTowMs;
-  gps.lastFusedTowMs = gps.solutionTowMs;
-  gps.receivedMs = millis();
-  gps.fresh = true;
-  gpsEpochCount++;
-}
-
-static void handleNavPosllh() {
-  if (ubxLength != 28) return;
-
-  gps.positionTowMs = readU32Le(&ubxPayload[0]);
-  gps.longitudeDeg = readI32Le(&ubxPayload[4]) * 1.0e-7;
-  gps.latitudeDeg = readI32Le(&ubxPayload[8]) * 1.0e-7;
-  gps.altitudeM = readI32Le(&ubxPayload[16]) * 1.0e-3f;
-  gps.hAccM = readU32Le(&ubxPayload[20]) * 1.0e-3f;
-  gps.vAccM = readU32Le(&ubxPayload[24]) * 1.0e-3f;
-  refreshGpsEpoch();
-}
-
-static void handleNavSol() {
-  if (ubxLength != 52) return;
-
-  gps.solutionTowMs = readU32Le(&ubxPayload[0]);
-  gps.fixType = ubxPayload[10];
-  const uint8_t flags = ubxPayload[11];
-  gps.satellites = ubxPayload[47];
-  gps.fix = ((flags & 0x01U) != 0U) && gps.fixType >= 3;
-  if (!gps.fix) gps.fresh = false;
-  refreshGpsEpoch();
-}
-
-static void handleNavVelned() {
-  if (ubxLength != 36) return;
-
-  gps.velocityTowMs = readU32Le(&ubxPayload[0]);
-  // NEO-6 NAV-VELNED velocities are signed cm/s.
-  gps.velocityNed[0] = readI32Le(&ubxPayload[4]) * 0.01f;
-  gps.velocityNed[1] = readI32Le(&ubxPayload[8]) * 0.01f;
-  gps.velocityNed[2] = readI32Le(&ubxPayload[12]) * 0.01f;
-  refreshGpsEpoch();
-}
-
-static void handleUbxPacket() {
-  if (ubxClass != 0x01) return;
-  if (ubxId == 0x02) {
-    handleNavPosllh();
-  } else if (ubxId == 0x06) {
-    handleNavSol();
-  } else if (ubxId == 0x12) {
-    handleNavVelned();
-  }
-}
-
-static void parseUbxByte(uint8_t value) {
-  switch (ubxState) {
-    case UBX_SYNC1:
-      if (value == 0xB5) ubxState = UBX_SYNC2;
-      break;
-    case UBX_SYNC2:
-      ubxState = (value == 0x62) ? UBX_CLASS : UBX_SYNC1;
-      break;
-    case UBX_CLASS:
-      ubxClass = value;
-      ubxChecksumA = 0;
-      ubxChecksumB = 0;
-      ubxChecksumAdd(value);
-      ubxState = UBX_ID;
-      break;
-    case UBX_ID:
-      ubxId = value;
-      ubxChecksumAdd(value);
-      ubxState = UBX_LEN1;
-      break;
-    case UBX_LEN1:
-      ubxLength = value;
-      ubxChecksumAdd(value);
-      ubxState = UBX_LEN2;
-      break;
-    case UBX_LEN2:
-      ubxLength |= ((uint16_t)value << 8);
-      ubxChecksumAdd(value);
-      ubxIndex = 0;
-      if (ubxLength > sizeof(ubxPayload)) {
-        ubxState = UBX_SYNC1;
-      } else {
-        ubxState = (ubxLength == 0) ? UBX_CK_A : UBX_PAYLOAD;
-      }
-      break;
-    case UBX_PAYLOAD:
-      ubxPayload[ubxIndex++] = value;
-      ubxChecksumAdd(value);
-      if (ubxIndex >= ubxLength) ubxState = UBX_CK_A;
-      break;
-    case UBX_CK_A:
-      ubxState = (value == ubxChecksumA) ? UBX_CK_B : UBX_SYNC1;
-      break;
-    case UBX_CK_B:
-      if (value == ubxChecksumB) handleUbxPacket();
-      ubxState = UBX_SYNC1;
-      break;
-  }
-}
-
-static void sendUbx(
-    uint8_t messageClass,
-    uint8_t messageId,
-    const uint8_t *payload,
-    uint16_t payloadLength) {
-  uint8_t checksumA = 0;
-  uint8_t checksumB = 0;
-
-  Serial1.write(0xB5);
-  Serial1.write(0x62);
-
-  const uint8_t header[4] = {
-    messageClass,
-    messageId,
-    (uint8_t)(payloadLength & 0xFFU),
-    (uint8_t)(payloadLength >> 8)
-  };
-  for (uint8_t i = 0; i < sizeof(header); i++) {
-    Serial1.write(header[i]);
-    checksumA += header[i];
-    checksumB += checksumA;
-  }
-  for (uint16_t i = 0; i < payloadLength; i++) {
-    Serial1.write(payload[i]);
-    checksumA += payload[i];
-    checksumB += checksumA;
-  }
-  Serial1.write(checksumA);
-  Serial1.write(checksumB);
-  Serial1.flush();
-}
-
-static void configureUbxMessage(
-    uint8_t targetClass,
-    uint8_t targetId,
-    uint8_t rate) {
-  const uint8_t payload[3] = {targetClass, targetId, rate};
-  sendUbx(0x06, 0x01, payload, sizeof(payload));  // UBX-CFG-MSG
-  delay(15);
-}
-
-static void configureNeo6m() {
-  // Configure a 200 ms measurement period: 5 Hz measurement and navigation.
-  const uint8_t ratePayload[6] = {
-    (uint8_t)(GPS_MEASUREMENT_PERIOD_MS & 0xFFU),
-    (uint8_t)(GPS_MEASUREMENT_PERIOD_MS >> 8),
-    0x01, 0x00,  // navRate = 1
-    0x01, 0x00   // timeRef = GPS time
-  };
-  sendUbx(0x06, 0x08, ratePayload, sizeof(ratePayload));  // UBX-CFG-RATE
-  delay(30);
-
-  // Disable common default NMEA sentences to preserve the 9600-baud budget.
-  for (uint8_t nmeaId = 0x00; nmeaId <= 0x05; nmeaId++) {
-    configureUbxMessage(0xF0, nmeaId, 0);
-  }
-
-  // Enable the NEO-6 messages required to assemble one ESEKF GPS update.
-  configureUbxMessage(0x01, 0x02, 1);  // NAV-POSLLH
-  configureUbxMessage(0x01, 0x06, 1);  // NAV-SOL
-  configureUbxMessage(0x01, 0x12, 1);  // NAV-VELNED
-}
+// ========================= GPS TinyGPSPlus parser =========================
 
 static void pollGps() {
   while (Serial1.available() > 0) {
-    gps.bytesSeen = true;
-    parseUbxByte((uint8_t)Serial1.read());
+    tinyGps.encode(Serial1.read());
   }
 
-  if (gps.fix &&
-      (uint32_t)(millis() - gps.receivedMs) > GPS_FIX_STALE_MS) {
-    gps.fix = false;
-    gps.fresh = false;
+  if (tinyGps.location.isUpdated()) {
+    gps.fix = tinyGps.location.isValid();
+    gps.fresh = true;
+    gps.satellites = tinyGps.satellites.value();
+    gps.latitudeDeg = tinyGps.location.lat();
+    gps.longitudeDeg = tinyGps.location.lng();
+    gps.altitudeM = tinyGps.altitude.meters();
+    gps.hAccM = tinyGps.hdop.value() / 100.0f; // Approx conversion
+    gps.vAccM = gps.hAccM * 1.5f;
+
+    float speed = tinyGps.speed.mps();
+    float courseRad = tinyGps.course.deg() * DEG_TO_RAD_F;
+    gps.velocityNed[0] = speed * cosf(courseRad);
+    gps.velocityNed[1] = speed * sinf(courseRad);
+    gps.velocityNed[2] = 0.0f; // NMEA doesn't give reliable vertical velocity usually
   }
 }
 
@@ -1586,95 +1374,94 @@ static void printFrequencyStatus(
 }
 
 static void loggerTask() {
+  // Populate the free list so Core 0 can start immediately
   for (uint8_t i = 0; i < QUEUE_DEPTH; i++) {
     freeQueue.put(&recordPool[i], osWaitForever);
   }
 
+  // SD initialisation (runs in Core 1 context)
   pinMode(SD_CS_PIN, OUTPUT);
   digitalWrite(SD_CS_PIN, HIGH);
   SPI.begin();
   delay(100);
 
-  bool sdReady = SD.begin(SD_CS_PIN);
+
+bool sdReady = false;
+  for (int retries = 0; retries < 5; retries++) {
+    if (SD.begin(SD_CS_PIN)) {
+      sdReady = true;
+      break;
+    }
+    delay(400); // Wait for SD to power up, sometimes GPS brownouts cause failures
+  }
   File logFile;
+
   if (!sdReady) {
+    globalSdFailed = true;
     safeSerialPrintln(F("[Core 1] ERROR: SD.begin failed - logging disabled."));
   } else {
-    char filename[16];
-    for (int i = 0; i < 100; i++) {
-      snprintf(filename, sizeof(filename), "%s_%02d.CSV", LOG_TAG, i);
-      if (!SD.exists(filename)) {
-        logFile = SD.open(filename, FILE_WRITE);
+    globalSdReady = true;
+    char name[16];
+    for (int i = 0; i < 999; i++) {
+      snprintf(name, sizeof(name), "%s_%03d.CSV", LOG_TAG, i);
+      if (!SD.exists(name)) {
+        logFile = SD.open(name, FILE_WRITE);
         break;
       }
     }
-    if (logFile) {
+
+    if (!logFile) {
+      sdReady = false;
+      globalSdReady = false;
+      globalSdFailed = true;
+      safeSerialPrintln(F("[Core 1] ERROR: cannot create log file."));
+    } else {
       writeCsvHeader(logFile);
       logFile.flush();
       serialMutex.lock();
       Serial.print(F("[Core 1] Logging to: "));
       Serial.println(logFile.name());
       serialMutex.unlock();
-    } else {
-      sdReady = false;
-      safeSerialPrintln(F("[Core 1] ERROR: cannot create log file."));
     }
   }
 
   uint32_t rowCount = 0;
-  uint32_t lastStatusMs = millis();
-  uint32_t lastControlCount = controlCount;
-  uint32_t lastMissed = missedPeriodCount;
-  uint32_t lastDropped = logDroppedCount;
+  bool finished = false;
 
+  // Main logging loop
   while (true) {
-    osEvent event = filledQueue.get(100);
-    if (event.status == osEventMessage) {
-      ControlRecord *record =
-          reinterpret_cast<ControlRecord *>(event.value.p);
+    // Block until Core 0 enqueues a filled record pointer.
+    osEvent evt = filledQueue.get();
 
-      if (record->kind == RECORD_STOP) {
-        if (sdReady && logFile) {
-          logFile.print(F("# stop=time_end\n# records="));
-          logFile.println(rowCount);
-          logFile.flush();
-          logFile.close();
-          safeSerialPrintln(F("[Core 1] Log file closed (time_end)."));
-        }
-        freeQueue.put(record, osWaitForever);
-        sdReady = false;
-      } else {
-        if (sdReady && logFile) {
-          writeRecord(logFile, *record);
-          rowCount++;
-          if ((rowCount % SD_FLUSH_EVERY_N) == 0) logFile.flush();
-          if (logFile.getWriteError()) {
-            logFile.print(F("# stop=sd_write_error\n# records="));
-            logFile.println(rowCount);
-            logFile.flush();
-            logFile.close();
-            sdReady = false;
-            safeSerialPrintln(F("[Core 1] ERROR: SD write error - logging stopped."));
-          }
-        }
-        freeQueue.put(record, osWaitForever);
+    if (evt.status != osEventMessage) {
+      rtos::ThisThread::yield();
+      continue;
+    }
+
+    ControlRecord *rec = reinterpret_cast<ControlRecord *>(evt.value.p);
+
+    if (sdReady && logFile && !finished) {
+      writeRecord(logFile, *rec);
+      rowCount++;
+
+      if (rowCount % SD_FLUSH_EVERY_N == 0) {
+        logFile.flush();
+      }
+
+      if (logFile.getWriteError()) {
+        logFile.print(F("# stop=sd_write_error\n# records="));
+        logFile.println(rowCount);
+        logFile.flush();
+        logFile.close();
+        finished = true;
+        safeSerialPrintln(F("[Core 1] ERROR: SD write error - logging stopped."));
       }
     }
 
-    const uint32_t nowMs = millis();
-    const uint32_t statusElapsedMs = nowMs - lastStatusMs;
-    if (statusElapsedMs >= 1000) {
-      const uint32_t currentControlCount = controlCount;
-      printFrequencyStatus(
-          statusElapsedMs,
-          currentControlCount - lastControlCount,
-          lastMissed,
-          lastDropped);
-      lastStatusMs = nowMs;
-      lastControlCount = currentControlCount;
-      lastMissed = missedPeriodCount;
-      lastDropped = logDroppedCount;
-    }
+    // Return the slot to Core 0's free list.
+    freeQueue.put(rec, osWaitForever);
+
+    rtos::ThisThread::yield();
   }
 }
 
@@ -1735,39 +1522,18 @@ static ControlRecord makeRecord(
   return record;
 }
 
-static bool takeFreeRecord(ControlRecord *&slot) {
-  osEvent event = freeQueue.get(0);
-  if (event.status != osEventMessage) return false;
-  slot = reinterpret_cast<ControlRecord *>(event.value.p);
-  return true;
-}
-
 static void maybeEnqueueLog(
-    uint32_t controlDtUs,
-    uint32_t controlExecUs,
-    uint32_t esekfUs) {
-  if (logWindowDone) {
-    if (!logStopQueued) {
-      ControlRecord *stopRecord = nullptr;
-      if (takeFreeRecord(stopRecord)) {
-        *stopRecord = {};
-        stopRecord->kind = RECORD_STOP;
-        if (filledQueue.put(stopRecord, 0) == osOK) {
-          logStopQueued = true;
-        } else {
-          freeQueue.put(stopRecord, osWaitForever);
-        }
-      }
-    }
-    return;
-  }
+    uint32_t controlDtUs, uint32_t controlExecUs, uint32_t esekfUs) {
+  if (logWindowDone) return;
 
   const uint32_t elapsedMs = millis() - logClockStartMs;
   if (elapsedMs < recordStartMs()) return;
+
   if (!logWindowOpen) {
     logWindowOpen = true;
     nextLogUs = micros();
   }
+
   if (elapsedMs >= recordEndMs()) {
     logWindowDone = true;
     safeSerialPrintln(F("[Core 0] Log window closed (time_end)."));
@@ -1778,21 +1544,14 @@ static void maybeEnqueueLog(
   if ((int32_t)(nowUs - nextLogUs) < 0) return;
   while ((int32_t)(nowUs - nextLogUs) >= 0) nextLogUs += SD_LOG_DT_US;
 
-  ControlRecord *slot = nullptr;
-  if (!takeFreeRecord(slot)) {
-    logDroppedCount++;
-    return;
-  }
+  osEvent slotEvt = freeQueue.get(0);
+  if (slotEvt.status != osEventMessage) return;
 
-  *slot = makeRecord(
-      elapsedMs - recordStartMs(),
-      controlDtUs,
-      controlExecUs,
-      esekfUs);
-  if (filledQueue.put(slot, 0) != osOK) {
-    logDroppedCount++;
-    freeQueue.put(slot, osWaitForever);
-  }
+  ControlRecord *slot = reinterpret_cast<ControlRecord *>(slotEvt.value.p);
+  *slot = makeRecord(elapsedMs - recordStartMs(), controlDtUs, controlExecUs, esekfUs);
+
+  osStatus s = filledQueue.put(slot, 0);
+  if (s != osOK) freeQueue.put(slot, osWaitForever);
 }
 
 // ========================= Setup and loop =========================
@@ -1805,12 +1564,7 @@ void setup() {
     delay(10);
   }
 
-  // Optional GPS: configure a default GY-NEO6MV2 without requiring u-center.
-  // If the module is absent, these UART writes are harmless and boot continues.
-  Serial1.begin(GPS_BAUD);
-  gps.lastFusedTowMs = 0xFFFFFFFFUL;
-  delay(300);
-  configureNeo6m();
+
 
   serialMutex.lock();
   Serial.print(F("[Core 0] ESEKF + SMC boot, log tag="));
@@ -1871,6 +1625,12 @@ void setup() {
     while (!readImu(initialSample)) delay(10);
     resetEsekfFromAccel(initialSample);
   }
+
+  // Initialize GPS Serial AFTER SD card is initialized to prevent UART interrupts
+  // from disrupting the fragile SD.begin() SPI communication.
+  Serial1.begin(GPS_BAUD);
+  gps.lastFusedTowMs = 0xFFFFFFFFUL;
+  delay(300);
 
   logClockStartMs = millis();
   lastControlUs = micros();
@@ -2047,4 +1807,63 @@ void loop() {
     slowSweepAoaTo(AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
     sweepMode = SWEEP_UNFOLDED;
   }
+
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 200) { 
+    lastPrint = millis();
+    
+    Serial.println(F("========= TELEMETRY ========="));
+
+    float ax = 0, ay = 0, az = 0;
+    if (IMU.accelerationAvailable()) {
+      IMU.readAcceleration(ax, ay, az);
+      Serial.print(F("Accel (g):   X=")); Serial.print(ax, 3);
+      Serial.print(F(", Y=")); Serial.print(ay, 3);
+      Serial.print(F(", Z=")); Serial.println(az, 3);
+    }
+    
+    float gx = 0, gy = 0, gz = 0;
+    if (IMU.gyroscopeAvailable()) {
+      IMU.readGyroscope(gx, gy, gz);
+      Serial.print(F("Gyro (dps):  X=")); Serial.print(gx, 1);
+      Serial.print(F(", Y=")); Serial.print(gy, 1);
+      Serial.print(F(", Z=")); Serial.println(gz, 1);
+    }
+
+    Serial.print(F("IMU Fault:   ")); Serial.println(imuFaultLocked ? F("YES") : F("NO"));
+    Serial.print(F("ESEKF Fault: ")); Serial.println(esekfFaultLocked ? F("YES") : F("NO"));
+    
+
+Serial.print(F("SD Status:   "));
+    if (globalSdFailed) Serial.println(F("FAILED"));
+    else if (globalSdReady) Serial.println(F("OK"));
+    else Serial.println(F("INIT..."));
+    if (tinyGps.location.isValid()) {
+      double lat = tinyGps.location.lat();
+      double lon = tinyGps.location.lng();
+      double alt = tinyGps.altitude.meters();
+      
+      Serial.print(F("Global Pos:  Lat=")); Serial.print(lat, 6);
+      Serial.print(F(", Lon=")); Serial.print(lon, 6);
+      Serial.print(F(", Alt=")); Serial.print(alt, 2);
+      Serial.println(F(" m"));
+      
+      Serial.print(F("Velocity:    Speed=")); Serial.print(tinyGps.speed.mps(), 2);
+      Serial.print(F(" m/s, Course=")); Serial.print(tinyGps.course.deg(), 2);
+      Serial.println(F(" deg"));
+      
+      if (gpsOriginSet) {
+        float gpsPosition[3];
+        gpsToLocalNeu(gpsPosition);
+        Serial.print(F("Local XYZ:   X(North)=")); Serial.print(gpsPosition[0], 2);
+        Serial.print(F("m, Y(East)=")); Serial.print(gpsPosition[1], 2);
+        Serial.print(F("m, Z(Up)=")); Serial.print(gpsPosition[2], 2);
+        Serial.println(F("m"));
+      }
+    } else {
+      Serial.println(F("GPS: No valid fix yet (waiting for satellites...)"));
+    }
+    Serial.println(F("=============================\n"));
+  }
+
 }
