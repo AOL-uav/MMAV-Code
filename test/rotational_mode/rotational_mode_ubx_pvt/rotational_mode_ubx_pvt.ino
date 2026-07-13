@@ -1720,6 +1720,7 @@ void setup() {
   Serial1.begin(GPS_BAUD);
   gps.lastFusedTowMs = 0xFFFFFFFFUL;
   delay(300);
+  configureUbxReceiver();
 
   logClockStartMs = millis();
   lastControlUs = micros();
