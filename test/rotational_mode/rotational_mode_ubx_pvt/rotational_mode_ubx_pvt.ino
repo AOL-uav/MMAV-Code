@@ -1928,19 +1928,15 @@ Serial.print(F("SD Status:   "));
     if (globalSdFailed) Serial.println(F("FAILED"));
     else if (globalSdReady) Serial.println(F("OK"));
     else Serial.println(F("INIT..."));
-    if (tinyGps.location.isValid()) {
-      double lat = tinyGps.location.lat();
-      double lon = tinyGps.location.lng();
-      double alt = tinyGps.altitude.meters();
-      
-      Serial.print(F("Global Pos:  Lat=")); Serial.print(lat, 6);
-      Serial.print(F(", Lon=")); Serial.print(lon, 6);
-      Serial.print(F(", Alt=")); Serial.print(alt, 2);
+    if (gps.fix) {
+      Serial.print(F("Global Pos:  Lat=")); Serial.print(gps.latitudeDeg, 6);
+      Serial.print(F(", Lon=")); Serial.print(gps.longitudeDeg, 6);
+      Serial.print(F(", Alt=")); Serial.print(gps.altitudeM, 2);
       Serial.println(F(" m"));
       
-      Serial.print(F("Velocity:    Speed=")); Serial.print(tinyGps.speed.mps(), 2);
-      Serial.print(F(" m/s, Course=")); Serial.print(tinyGps.course.deg(), 2);
-      Serial.println(F(" deg"));
+      Serial.print(F("Velocity NED: N=")); Serial.print(gps.velocityNed[0], 2);
+      Serial.print(F(" E=")); Serial.print(gps.velocityNed[1], 2);
+      Serial.print(F(" D=")); Serial.println(gps.velocityNed[2], 2);
       
       if (gpsOriginSet) {
         float gpsPosition[3];
