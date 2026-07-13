@@ -51,7 +51,7 @@
     GPS VCC -> module breakout rated supply
     GPS TX  -> board D1 / RX
     GPS RX  -> board D0 / TX
-    UART    -> 9600 baud
+    UART    -> 115200 baud
 
   At startup the code configures the receiver for 5 Hz navigation, disables
   common NMEA messages, and enables the three UBX messages used by the ESEKF.
