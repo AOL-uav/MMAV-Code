@@ -96,7 +96,7 @@ static int targetSweepUs = -1;
 
 static const uint32_t SERIAL_BAUD = 115200;
 static const uint32_t SERIAL_WAIT_MS = 1500;
-static const uint32_t GPS_BAUD = 115200;
+static const uint32_t GPS_BAUD = 9600;
 static const uint16_t GPS_MEASUREMENT_PERIOD_MS = 200;
 
 static const float CONTROL_HZ = 80.0f;
