@@ -402,6 +402,8 @@ static volatile uint32_t maxControlDtUs = 0;
 static volatile uint32_t maxControlExecUs = 0;
 static volatile uint32_t maxEsekfUs = 0;
 static volatile uint32_t gpsEpochCount = 0;
+static volatile uint32_t gpsUartByteCount = 0;
+static volatile uint32_t ubxPacketCount = 0;
 static volatile uint32_t esekfResetCount = 0;
 
 // Scratch matrices are global to avoid large temporary arrays on the stack.
@@ -619,6 +621,7 @@ static void refreshGpsEpoch() {
 }
 
 static void handleUbxPacket() {
+  ubxPacketCount++;
   if (ubxClass != 0x01) return;  // UBX-NAV
   if (ubxId == 0x02 && ubxLength == 28) {  // NAV-POSLLH
     gps.positionTowMs = readU32Le(&ubxPayload[0]);
@@ -707,6 +710,7 @@ static void configureNeo6m() {
 static void pollGps() {
   while (Serial1.available() > 0) {
     gps.bytesSeen = true;
+    gpsUartByteCount++;
     parseUbxByte((uint8_t)Serial1.read());
   }
   if (gps.fix && (uint32_t)(millis() - gps.receivedMs) > GPS_FIX_STALE_MS) {
@@ -1952,6 +1956,9 @@ Serial.print(F("SD Status:   "));
     if (globalSdFailed) Serial.println(F("FAILED"));
     else if (globalSdReady) Serial.println(F("OK"));
     else Serial.println(F("INIT..."));
+    Serial.print(F("GPS UART:   bytes=")); Serial.print(gpsUartByteCount);
+    Serial.print(F(", ubx_packets=")); Serial.print(ubxPacketCount);
+    Serial.print(F(", epochs=")); Serial.println(gpsEpochCount);
     if (gps.fix) {
       double lat = gps.latitudeDeg;
       double lon = gps.longitudeDeg;
