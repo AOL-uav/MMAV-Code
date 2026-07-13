@@ -1838,6 +1838,9 @@ Serial.print(F("SD Status:   "));
     if (globalSdFailed) Serial.println(F("FAILED"));
     else if (globalSdReady) Serial.println(F("OK"));
     else Serial.println(F("INIT..."));
+    Serial.print(F("GPS NMEA:   chars=")); Serial.print(tinyGps.charsProcessed());
+    Serial.print(F(", valid_sentences=")); Serial.print(tinyGps.passedChecksum());
+    Serial.print(F(", bad_checksums=")); Serial.println(tinyGps.failedChecksum());
     if (tinyGps.location.isValid()) {
       double lat = tinyGps.location.lat();
       double lon = tinyGps.location.lng();
