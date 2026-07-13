@@ -65,7 +65,7 @@
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "0707";
+static const char LOG_TAG[] = "0711";
 
 
 // ========================= Sweep Constants =========================
@@ -1385,7 +1385,8 @@ static void loggerTask() {
   SPI.begin();
   delay(100);
 
-  bool sdReady = false;
+
+bool sdReady = false;
   for (int retries = 0; retries < 5; retries++) {
     if (SD.begin(SD_CS_PIN)) {
       sdReady = true;
@@ -1401,8 +1402,8 @@ static void loggerTask() {
   } else {
     globalSdReady = true;
     char name[16];
-    for (int i = 0; i < 100; i++) {
-      snprintf(name, sizeof(name), "%s_%02d.CSV", LOG_TAG, i);
+    for (int i = 0; i < 999; i++) {
+      snprintf(name, sizeof(name), "%s_%03d.CSV", LOG_TAG, i);
       if (!SD.exists(name)) {
         logFile = SD.open(name, FILE_WRITE);
         break;
@@ -1411,6 +1412,8 @@ static void loggerTask() {
 
     if (!logFile) {
       sdReady = false;
+      globalSdReady = false;
+      globalSdFailed = true;
       safeSerialPrintln(F("[Core 1] ERROR: cannot create log file."));
     } else {
       writeCsvHeader(logFile);
@@ -1827,7 +1830,11 @@ void loop() {
       Serial.print(F(", Z=")); Serial.println(gz, 1);
     }
 
-    Serial.print(F("SD Status:   "));
+    Serial.print(F("IMU Fault:   ")); Serial.println(imuFaultLocked ? F("YES") : F("NO"));
+    Serial.print(F("ESEKF Fault: ")); Serial.println(esekfFaultLocked ? F("YES") : F("NO"));
+    
+
+Serial.print(F("SD Status:   "));
     if (globalSdFailed) Serial.println(F("FAILED"));
     else if (globalSdReady) Serial.println(F("OK"));
     else Serial.println(F("INIT..."));
