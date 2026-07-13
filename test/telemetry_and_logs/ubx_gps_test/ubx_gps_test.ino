@@ -25,6 +25,7 @@ static uint8_t checksumA = 0, checksumB = 0;
 static uint8_t payload[100];
 
 static uint32_t uartBytes = 0, ubxPackets = 0;
+static uint32_t navPosllhPackets = 0, navSolPackets = 0, navVelnedPackets = 0;
 static uint32_t positionTow = 0, solutionTow = 0, velocityTow = 0;
 static bool validFix = false;
 static uint8_t fixType = 0, satellites = 0;
@@ -51,6 +52,7 @@ static void handlePacket() {
   if (messageClass != 0x01) return;  // UBX-NAV
 
   if (messageId == 0x02 && payloadLength == 28) {  // NAV-POSLLH
+    navPosllhPackets++;
     positionTow = readU32Le(&payload[0]);
     longitudeDeg = readI32Le(&payload[4]) * 1.0e-7;
     latitudeDeg = readI32Le(&payload[8]) * 1.0e-7;
@@ -58,11 +60,13 @@ static void handlePacket() {
     hAccM = readU32Le(&payload[20]) * 1.0e-3f;
     vAccM = readU32Le(&payload[24]) * 1.0e-3f;
   } else if (messageId == 0x06 && payloadLength == 52) {  // NAV-SOL
+    navSolPackets++;
     solutionTow = readU32Le(&payload[0]);
     fixType = payload[10];
     satellites = payload[47];
     validFix = (payload[11] & 0x01U) != 0U && fixType >= 3;
   } else if (messageId == 0x12 && payloadLength == 36) {  // NAV-VELNED
+    navVelnedPackets++;
     velocityTow = readU32Le(&payload[0]);
     velocityNed[0] = readI32Le(&payload[4]) * 0.01f;
     velocityNed[1] = readI32Le(&payload[8]) * 0.01f;
@@ -159,6 +163,9 @@ void loop() {
 
   Serial.print(F("uart_bytes=")); Serial.print(uartBytes);
   Serial.print(F(", ubx_packets=")); Serial.print(ubxPackets);
+  Serial.print(F(", posllh=")); Serial.print(navPosllhPackets);
+  Serial.print(F(", sol=")); Serial.print(navSolPackets);
+  Serial.print(F(", velned=")); Serial.print(navVelnedPackets);
   Serial.print(F(", fix=")); Serial.print(validFix ? F("yes") : F("no"));
   Serial.print(F(", fix_type=")); Serial.print(fixType);
   Serial.print(F(", satellites=")); Serial.print(satellites);
