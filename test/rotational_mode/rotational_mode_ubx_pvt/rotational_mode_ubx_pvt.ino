@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <TinyGPSPlus.h>
 #include <Arduino_LSM6DSOX.h>
 #include <Servo.h>
 #include <SPI.h>
@@ -328,7 +327,6 @@ static void safeSerialPrint(const __FlashStringHelper *s) {
 
 // ========================= Global state =========================
 
-static TinyGPSPlus tinyGps;
 static Servo servoLeft;
 static Servo servoRight;
 static Servo servoMorph;
@@ -577,28 +575,119 @@ static void injectSmallAngle(float q[4], const float dtheta[3]) {
   quatNormalize(q);
 }
 
-// ========================= GPS TinyGPSPlus parser =========================
+// ========================= UBX GPS parser =========================
+// Supports legacy NEO-6 NAV-POSLLH/SOL/VELNED and newer NAV-PVT receivers.
 
-static void pollGps() {
-  while (Serial1.available() > 0) {
-    tinyGps.encode(Serial1.read());
+enum UbxState : uint8_t { UBX_SYNC1, UBX_SYNC2, UBX_CLASS, UBX_ID, UBX_LEN1,
+                          UBX_LEN2, UBX_PAYLOAD, UBX_CK_A, UBX_CK_B };
+static UbxState ubxState = UBX_SYNC1;
+static uint8_t ubxClass = 0, ubxId = 0, ubxChecksumA = 0, ubxChecksumB = 0;
+static uint16_t ubxLength = 0, ubxIndex = 0;
+static uint8_t ubxPayload[100];
+
+static uint32_t readU32Le(const uint8_t *p) {
+  return (uint32_t)p[0] | ((uint32_t)p[1] << 8) |
+         ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+}
+static int32_t readI32Le(const uint8_t *p) { return (int32_t)readU32Le(p); }
+static void ubxChecksumAdd(uint8_t value) {
+  ubxChecksumA += value;
+  ubxChecksumB += ubxChecksumA;
+}
+
+static void refreshGpsEpoch() {
+  const bool sameEpoch = gps.positionTowMs == gps.solutionTowMs &&
+                         gps.velocityTowMs == gps.solutionTowMs;
+  if (!gps.fix || !sameEpoch || gps.solutionTowMs == gps.lastFusedTowMs) return;
+  gps.iTowMs = gps.solutionTowMs;
+  gps.lastFusedTowMs = gps.solutionTowMs;
+  gps.receivedMs = millis();
+  gps.fresh = true;
+  gpsEpochCount++;
+}
+
+static void handleUbxPacket() {
+  if (ubxClass != 0x01) return;
+  if (ubxId == 0x02 && ubxLength == 28) {  // NAV-POSLLH
+    gps.positionTowMs = readU32Le(&ubxPayload[0]);
+    gps.longitudeDeg = readI32Le(&ubxPayload[4]) * 1.0e-7;
+    gps.latitudeDeg = readI32Le(&ubxPayload[8]) * 1.0e-7;
+    gps.altitudeM = readI32Le(&ubxPayload[16]) * 1.0e-3f;
+    gps.hAccM = readU32Le(&ubxPayload[20]) * 1.0e-3f;
+    gps.vAccM = readU32Le(&ubxPayload[24]) * 1.0e-3f;
+  } else if (ubxId == 0x06 && ubxLength == 52) {  // NAV-SOL
+    gps.solutionTowMs = readU32Le(&ubxPayload[0]);
+    gps.fixType = ubxPayload[10];
+    gps.satellites = ubxPayload[47];
+    gps.fix = (ubxPayload[11] & 0x01U) && gps.fixType >= 3;
+    if (!gps.fix) gps.fresh = false;
+  } else if (ubxId == 0x12 && ubxLength == 36) {  // NAV-VELNED
+    gps.velocityTowMs = readU32Le(&ubxPayload[0]);
+    gps.velocityNed[0] = readI32Le(&ubxPayload[4]) * 0.01f;
+    gps.velocityNed[1] = readI32Le(&ubxPayload[8]) * 0.01f;
+    gps.velocityNed[2] = readI32Le(&ubxPayload[12]) * 0.01f;
+  } else if (ubxId == 0x07 && ubxLength == 92) {  // NAV-PVT
+    const uint32_t iTow = readU32Le(&ubxPayload[0]);
+    gps.positionTowMs = gps.solutionTowMs = gps.velocityTowMs = iTow;
+    gps.fixType = ubxPayload[20];
+    gps.satellites = ubxPayload[23];
+    gps.fix = (ubxPayload[21] & 0x01U) && gps.fixType >= 3;
+    gps.longitudeDeg = readI32Le(&ubxPayload[24]) * 1.0e-7;
+    gps.latitudeDeg = readI32Le(&ubxPayload[28]) * 1.0e-7;
+    gps.altitudeM = readI32Le(&ubxPayload[36]) * 1.0e-3f;
+    gps.hAccM = readU32Le(&ubxPayload[40]) * 1.0e-3f;
+    gps.vAccM = readU32Le(&ubxPayload[44]) * 1.0e-3f;
+    gps.velocityNed[0] = readI32Le(&ubxPayload[48]) * 1.0e-3f;
+    gps.velocityNed[1] = readI32Le(&ubxPayload[52]) * 1.0e-3f;
+    gps.velocityNed[2] = readI32Le(&ubxPayload[56]) * 1.0e-3f;
+    if (!gps.fix) gps.fresh = false;
   }
+  refreshGpsEpoch();
+}
 
-  if (tinyGps.location.isUpdated()) {
-    gps.fix = tinyGps.location.isValid();
-    gps.fresh = true;
-    gps.satellites = tinyGps.satellites.value();
-    gps.latitudeDeg = tinyGps.location.lat();
-    gps.longitudeDeg = tinyGps.location.lng();
-    gps.altitudeM = tinyGps.altitude.meters();
-    gps.hAccM = tinyGps.hdop.value() / 100.0f; // Approx conversion
-    gps.vAccM = gps.hAccM * 1.5f;
+static void parseUbxByte(uint8_t value) {
+  switch (ubxState) {
+    case UBX_SYNC1: ubxState = value == 0xB5 ? UBX_SYNC2 : UBX_SYNC1; break;
+    case UBX_SYNC2: ubxState = value == 0x62 ? UBX_CLASS : UBX_SYNC1; break;
+    case UBX_CLASS: ubxClass = value; ubxChecksumA = ubxChecksumB = 0; ubxChecksumAdd(value); ubxState = UBX_ID; break;
+    case UBX_ID: ubxId = value; ubxChecksumAdd(value); ubxState = UBX_LEN1; break;
+    case UBX_LEN1: ubxLength = value; ubxChecksumAdd(value); ubxState = UBX_LEN2; break;
+    case UBX_LEN2: ubxLength |= (uint16_t)value << 8; ubxChecksumAdd(value); ubxIndex = 0; ubxState = ubxLength > sizeof(ubxPayload) ? UBX_SYNC1 : (ubxLength ? UBX_PAYLOAD : UBX_CK_A); break;
+    case UBX_PAYLOAD: ubxPayload[ubxIndex++] = value; ubxChecksumAdd(value); if (ubxIndex >= ubxLength) ubxState = UBX_CK_A; break;
+    case UBX_CK_A: ubxState = value == ubxChecksumA ? UBX_CK_B : UBX_SYNC1; break;
+    case UBX_CK_B: if (value == ubxChecksumB) handleUbxPacket(); ubxState = UBX_SYNC1; break;
+  }
+}
 
-    float speed = tinyGps.speed.mps();
-    float courseRad = tinyGps.course.deg() * DEG_TO_RAD_F;
-    gps.velocityNed[0] = speed * cosf(courseRad);
-    gps.velocityNed[1] = speed * sinf(courseRad);
-    gps.velocityNed[2] = 0.0f; // NMEA doesn't give reliable vertical velocity usually
+static void sendUbx(uint8_t cls, uint8_t id, const uint8_t *data, uint16_t length) {
+  uint8_t ckA = 0, ckB = 0;
+  const uint8_t header[4] = {cls, id, (uint8_t)length, (uint8_t)(length >> 8)};
+  Serial1.write(0xB5); Serial1.write(0x62);
+  for (uint8_t value : header) { Serial1.write(value); ckA += value; ckB += ckA; }
+  for (uint16_t i = 0; i < length; ++i) { Serial1.write(data[i]); ckA += data[i]; ckB += ckA; }
+  Serial1.write(ckA); Serial1.write(ckB); Serial1.flush();
+}
+static void configureUbxMessage(uint8_t cls, uint8_t id, uint8_t rate) {
+  const uint8_t data[3] = {cls, id, rate};
+  sendUbx(0x06, 0x01, data, sizeof(data));
+  delay(15);
+}
+static void configureUbxReceiver() {
+  const uint8_t rate[6] = {(uint8_t)GPS_MEASUREMENT_PERIOD_MS,
+      (uint8_t)(GPS_MEASUREMENT_PERIOD_MS >> 8), 1, 0, 1, 0};
+  sendUbx(0x06, 0x08, rate, sizeof(rate));
+  delay(30);
+  for (uint8_t nmeaId = 0; nmeaId <= 5; ++nmeaId) configureUbxMessage(0xF0, nmeaId, 0);
+  configureUbxMessage(0x01, 0x02, 1);  // NAV-POSLLH
+  configureUbxMessage(0x01, 0x06, 1);  // NAV-SOL (legacy)
+  configureUbxMessage(0x01, 0x12, 1);  // NAV-VELNED
+  configureUbxMessage(0x01, 0x07, 1);  // NAV-PVT (this receiver)
+}
+static void pollGps() {
+  while (Serial1.available() > 0) { gps.bytesSeen = true; parseUbxByte((uint8_t)Serial1.read()); }
+  if (gps.fix && (uint32_t)(millis() - gps.receivedMs) > GPS_FIX_STALE_MS) {
+    gps.fix = false;
+    gps.fresh = false;
   }
 }
 
