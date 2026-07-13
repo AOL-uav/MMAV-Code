@@ -5,7 +5,7 @@ import os
 # Configuration
 PORT = 'COM11'
 BAUD = 115200
-OUTPUT_DIR = '/home/kaikeller/Purdue/AOL/MAV/SD-Logging/outputs'
+OUTPUT_DIR = 'C:/Users/Kai/OneDrive - purdue.edu/Purdue/AOL/MAV-2026/github stuff/SD-Logging/outputs'
 
 def fetch_log():
     if not os.path.exists(OUTPUT_DIR):
