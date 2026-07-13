@@ -1673,7 +1673,7 @@ void setup() {
   Serial.print(F("[Core 0] tail_pitch_control="));
   Serial.println(USE_TAIL_PITCH_CONTROL ? 1 : 0);
   Serial.println(F(
-      "[Core 0] GPS optional: NEO-6M UBX POSLLH/SOL/VELNED, Serial1 9600"));
+      "[Core 0] GPS optional: UBX POSLLH/SOL/VELNED/PVT, Serial1 115200"));
   Serial.println(F("[Core 0] GPS guidance: log/ESEKF only, no landing target loop"));
   serialMutex.unlock();
 
