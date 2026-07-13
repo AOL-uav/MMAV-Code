@@ -9,7 +9,8 @@
 #include <Arduino.h>
 
 static const uint32_t USB_BAUD = 115200;
-static const uint32_t GPS_BAUD = 9600;
+// Match the UART rate used by the working rotational-mode firmware.
+static const uint32_t GPS_BAUD = 115200;
 static const uint16_t GPS_PERIOD_MS = 200;  // 5 Hz
 
 enum UbxState : uint8_t {
@@ -141,7 +142,9 @@ void setup() {
   Serial1.begin(GPS_BAUD);
   delay(300);
   configureReceiver();
-  Serial.println(F("UBX GPS test started at 9600 baud."));
+  Serial.print(F("UBX GPS test started at "));
+  Serial.print(GPS_BAUD);
+  Serial.println(F(" baud."));
 }
 
 void loop() {
