@@ -1,5 +1,5 @@
 /*
-  UBX GPS bench test for a u-blox NEO-6M / GY-NEO6MV2.
+  UBX GPS bench test for a u-blox NEO-6M-class / GY-NEO6MV2 receiver.
 
   This is intentionally GPS-only: it does not include or control servos.
   Wiring: GPS TX -> Nano D1/RX, GPS RX -> Nano D0/TX, and common GND.
@@ -25,7 +25,8 @@ static uint8_t checksumA = 0, checksumB = 0;
 static uint8_t payload[100];
 
 static uint32_t uartBytes = 0, ubxPackets = 0;
-static uint32_t navPosllhPackets = 0, navSolPackets = 0, navVelnedPackets = 0;
+static uint32_t navPosllhPackets = 0, navSolPackets = 0, navVelnedPackets = 0,
+                navPvtPackets = 0;
 static uint32_t otherUbxPackets = 0;
 static uint8_t lastOtherClass = 0, lastOtherId = 0;
 static uint16_t lastOtherLength = 0;
@@ -55,7 +56,8 @@ static void handlePacket() {
   const bool isExpectedNav = messageClass == 0x01 &&
       ((messageId == 0x02 && payloadLength == 28) ||
        (messageId == 0x06 && payloadLength == 52) ||
-       (messageId == 0x12 && payloadLength == 36));
+       (messageId == 0x12 && payloadLength == 36) ||
+       (messageId == 0x07 && payloadLength == 92));
   if (!isExpectedNav) {
     otherUbxPackets++;
     lastOtherClass = messageClass;
@@ -84,6 +86,22 @@ static void handlePacket() {
     velocityNed[0] = readI32Le(&payload[4]) * 0.01f;
     velocityNed[1] = readI32Le(&payload[8]) * 0.01f;
     velocityNed[2] = readI32Le(&payload[12]) * 0.01f;
+  } else if (messageId == 0x07 && payloadLength == 92) {  // NAV-PVT
+    // NAV-PVT replaces several legacy NAV messages on newer u-blox receivers.
+    navPvtPackets++;
+    const uint32_t iTow = readU32Le(&payload[0]);
+    solutionTow = positionTow = velocityTow = iTow;
+    fixType = payload[20];
+    satellites = payload[23];
+    validFix = (payload[21] & 0x01U) != 0U && fixType >= 3;
+    longitudeDeg = readI32Le(&payload[24]) * 1.0e-7;
+    latitudeDeg = readI32Le(&payload[28]) * 1.0e-7;
+    altitudeM = readI32Le(&payload[36]) * 1.0e-3f;  // Height above mean sea level.
+    hAccM = readU32Le(&payload[40]) * 1.0e-3f;
+    vAccM = readU32Le(&payload[44]) * 1.0e-3f;
+    velocityNed[0] = readI32Le(&payload[48]) * 1.0e-3f;
+    velocityNed[1] = readI32Le(&payload[52]) * 1.0e-3f;
+    velocityNed[2] = readI32Le(&payload[56]) * 1.0e-3f;
   }
 }
 
@@ -150,6 +168,7 @@ static void configureReceiver() {
   configureMessage(0x01, 0x02, 1);  // NAV-POSLLH
   configureMessage(0x01, 0x06, 1);  // NAV-SOL
   configureMessage(0x01, 0x12, 1);  // NAV-VELNED
+  configureMessage(0x01, 0x07, 1);  // NAV-PVT (newer u-blox receivers)
 }
 
 void setup() {
@@ -179,6 +198,7 @@ void loop() {
   Serial.print(F(", posllh=")); Serial.print(navPosllhPackets);
   Serial.print(F(", sol=")); Serial.print(navSolPackets);
   Serial.print(F(", velned=")); Serial.print(navVelnedPackets);
+  Serial.print(F(", pvt=")); Serial.print(navPvtPackets);
   Serial.print(F(", other=")); Serial.print(otherUbxPackets);
   Serial.print(F(", last_other=0x")); Serial.print(lastOtherClass, HEX);
   Serial.print(F(":0x")); Serial.print(lastOtherId, HEX);
