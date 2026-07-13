@@ -26,6 +26,9 @@ static uint8_t payload[100];
 
 static uint32_t uartBytes = 0, ubxPackets = 0;
 static uint32_t navPosllhPackets = 0, navSolPackets = 0, navVelnedPackets = 0;
+static uint32_t otherUbxPackets = 0;
+static uint8_t lastOtherClass = 0, lastOtherId = 0;
+static uint16_t lastOtherLength = 0;
 static uint32_t positionTow = 0, solutionTow = 0, velocityTow = 0;
 static bool validFix = false;
 static uint8_t fixType = 0, satellites = 0;
@@ -49,7 +52,17 @@ static void checksumAdd(uint8_t value) {
 
 static void handlePacket() {
   ubxPackets++;
-  if (messageClass != 0x01) return;  // UBX-NAV
+  const bool isExpectedNav = messageClass == 0x01 &&
+      ((messageId == 0x02 && payloadLength == 28) ||
+       (messageId == 0x06 && payloadLength == 52) ||
+       (messageId == 0x12 && payloadLength == 36));
+  if (!isExpectedNav) {
+    otherUbxPackets++;
+    lastOtherClass = messageClass;
+    lastOtherId = messageId;
+    lastOtherLength = payloadLength;
+    return;
+  }
 
   if (messageId == 0x02 && payloadLength == 28) {  // NAV-POSLLH
     navPosllhPackets++;
@@ -166,6 +179,10 @@ void loop() {
   Serial.print(F(", posllh=")); Serial.print(navPosllhPackets);
   Serial.print(F(", sol=")); Serial.print(navSolPackets);
   Serial.print(F(", velned=")); Serial.print(navVelnedPackets);
+  Serial.print(F(", other=")); Serial.print(otherUbxPackets);
+  Serial.print(F(", last_other=0x")); Serial.print(lastOtherClass, HEX);
+  Serial.print(F(":0x")); Serial.print(lastOtherId, HEX);
+  Serial.print(F("/")); Serial.print(lastOtherLength);
   Serial.print(F(", fix=")); Serial.print(validFix ? F("yes") : F("no"));
   Serial.print(F(", fix_type=")); Serial.print(fixType);
   Serial.print(F(", satellites=")); Serial.print(satellites);
