@@ -81,8 +81,8 @@ static const char LOG_TAG[] = "SW5D";
 // Values and wiring follow sweep_aero_logger.  180 degrees spans 2000 us,
 // so five degrees is approximately 56 us.
 static const int SWEEP_UNFOLDED_US = 2475;
-static const int SWEEP_BACK_US = 56;
-static const int SWEEP_TARGET_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;  // 2419
+static const int SWEEP_BACK_US = 111;  // 10 degrees of the 180-degree sweep range
+static const int SWEEP_TARGET_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;  // 2364
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
@@ -1691,12 +1691,6 @@ void setup() {
   }
 
 #if !BENCH_MODE
-  pinMode(PIN_MOUNT, INPUT_PULLUP);
-  pinMode(PIN_UNFOLD, INPUT_PULLUP);
-  pinMode(PIN_FOLD, INPUT_PULLUP);
-  
-  sweepMode = SWEEP_UNKNOWN;
-
 #endif
 
 
@@ -1734,11 +1728,24 @@ void setup() {
   lastControlUs = micros();
   nextControlUs = lastControlUs + CONTROL_DT_US;
   nextLogUs = lastControlUs;
+
+  // Attach the sweep-aero servos and visibly command both AoA servos to their
+  // fixed 5-degree positions.  Then make the one-time 10-degree sweep-back
+  // from unfolded and hold all three commands for the rest of the test.
+  lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_TARGET_US, AOA_RIGHT_TARGET_US);
+  delay(500);
+  slowSweepTo(SWEEP_TARGET_US);
+  sweepMode = SWEEP_UNFOLDED;
+  safeSerialPrintln(F("[Core 0] Fixed test: sweep back 10 deg; AoA servos held at 5 deg."));
 }
 
 
 void lazyAttach(int sweepTarget, int aoaLeftTarget, int aoaRightTarget) {
   if (!servosAttached) {
+     servoMorph.attach(SERVO_MORPH_PIN, 500, 2500);
+     servoLeft.attach(SERVO_LEFT_PIN, 500, 2500);
+     servoRight.attach(SERVO_RIGHT_PIN, 500, 2500);
+
      currentSweepUs = sweepTarget;
      currentAoaLeftUs = aoaLeftTarget;
      currentAoaRightUs = aoaRightTarget;
@@ -1747,10 +1754,6 @@ void lazyAttach(int sweepTarget, int aoaLeftTarget, int aoaRightTarget) {
      
      servoLeft.writeMicroseconds(currentAoaLeftUs);
      servoRight.writeMicroseconds(currentAoaRightUs);
-     
-     servoMorph.attach(SERVO_MORPH_PIN, 500, 2500);
-     servoLeft.attach(SERVO_LEFT_PIN, 500, 2500);
-     servoRight.attach(SERVO_RIGHT_PIN, 500, 2500);
      servosAttached = true;
   }
 }
@@ -1890,20 +1893,18 @@ void loop() {
     }
   }
 
-  // 1. Check if Fold is pressed (Trigger Rotational Mode)
-  if (digitalRead(PIN_FOLD) == LOW && sweepMode != SWEEP_FOLDED) {
-    lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US); 
-    slowSweepTo(SWEEP_UNFOLDED_US);
-    slowSweepAoaTo(AOA_LEFT_ROTATIONAL_US, AOA_RIGHT_ROTATIONAL_US);
-    sweepMode = SWEEP_FOLDED; // Reusing state for rotational
-    while(digitalRead(PIN_FOLD) == LOW) delay(20);
-    
-  // 2. Check if Unfold is pressed (Reset to Default Flat)
-  } else if (digitalRead(PIN_UNFOLD) == LOW && sweepMode != SWEEP_UNFOLDED) {
-    lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US); 
-    slowSweepTo(SWEEP_UNFOLDED_US);
-    slowSweepAoaTo(AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
-    sweepMode = SWEEP_UNFOLDED;
+  // This is deliberately a no-button, fixed-position test.  Re-send the
+  // commands in case a servo browns out or its signal lead is reconnected.
+  if (servosAttached) {
+    servoMorph.writeMicroseconds(SWEEP_TARGET_US);
+    servoLeft.writeMicroseconds(AOA_LEFT_TARGET_US);
+    servoRight.writeMicroseconds(AOA_RIGHT_TARGET_US);
+    currentSweepUs = SWEEP_TARGET_US;
+    currentAoaLeftUs = AOA_LEFT_TARGET_US;
+    currentAoaRightUs = AOA_RIGHT_TARGET_US;
+    morphPwmUs = SWEEP_TARGET_US;
+    leftPwmUs = AOA_LEFT_TARGET_US;
+    rightPwmUs = AOA_RIGHT_TARGET_US;
   }
 
   static unsigned long lastPrint = 0;
