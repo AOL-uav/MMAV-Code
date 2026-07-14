@@ -77,7 +77,7 @@
 static const char LOG_TAG[] = "SW5D";
 
 
-// ========================= Fixed 5-degree test position =========================
+// ========================= Fixed test position =========================
 // Values and wiring follow sweep_aero_logger.  180 degrees spans 2000 us,
 // so five degrees is approximately 56 us.
 static const int SWEEP_UNFOLDED_US = 2475;
@@ -1689,10 +1689,6 @@ void setup() {
     safeSerialPrintln(F("[Core 0] ERROR: onboard LSM6DSOX IMU not detected. ESEKF disabled."));
     imuFaultLocked = true;
   }
-
-#if !BENCH_MODE
-#endif
-
 
   loggerThread.start(loggerTask);
   delay(200);
