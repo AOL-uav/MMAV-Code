@@ -10,9 +10,8 @@
 // BENCH_MODE 0: require ARM_PIN to be released once, then pulled low to arm.
 #define BENCH_MODE 0
 
-// ENABLE_CONTROL 0: estimator/GPS/SD logging only; servos remain neutral.
-// ENABLE_CONTROL 1: allow SMC after the selected arming condition is met.
-#define ENABLE_CONTROL 1
+// This is a fixed-position logging test: do not run the flight controller.
+#define ENABLE_CONTROL 0
 
 // ENABLE_ADAPTIVE_B 1: run NLMS online B update.
 // ENABLE_ADAPTIVE_B 0: freeze B at initial diagonal; required for first flight.
@@ -23,7 +22,18 @@
 #define USE_TAIL_PITCH_CONTROL 0
 
 /*
-  613_gliding_esekf_smc
+  rotational_mode_sweepback_5deg
+
+  Fixed-position rotational-mode test using the sweep-aero wiring:
+    left AoA servo  -> D4
+    right AoA servo -> D3
+    sweep servo     -> D6
+
+  On boot the wings start unfolded, sweep back by 5 degrees, and then hold
+  that sweep position.  Both AoA servos are held at the 5-degree command.
+  The UBX GPS/ESEKF/SD logger is retained from rotational_mode_ubx_pvt:
+  GPS position, N/E/D velocity (including vertical velocity gps_vd), fix
+  metadata, IMU, and estimator data are written to the SD card at 20 Hz.
 
   Based on the execution architecture used by 69_gliding_pid_only:
     - The flight-control path never writes to the SD card.
@@ -64,24 +74,22 @@
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "0713";
+static const char LOG_TAG[] = "SW5D";
 
 
-// ========================= Sweep Constants =========================
-static const int PIN_MOUNT     = A0;
-static const int PIN_UNFOLD    = A1;
-static const int PIN_FOLD      = A2;
-
-static const int SWEEP_UNFOLDED_US = 2500;
-static const int SWEEP_FOLDED_US   = 500;
-static const int SWEEP_MOUNT_US    = 700;
+// ========================= Fixed 5-degree test position =========================
+// Values and wiring follow sweep_aero_logger.  180 degrees spans 2000 us,
+// so five degrees is approximately 56 us.
+static const int SWEEP_UNFOLDED_US = 2475;
+static const int SWEEP_BACK_US = 56;
+static const int SWEEP_TARGET_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;  // 2419
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
-
-// Rotational mode: 90 degrees mirrored
-static const int AOA_LEFT_ROTATIONAL_US  = 575;   // 1575 - 1000
-static const int AOA_RIGHT_ROTATIONAL_US = 500;   // 1500 - 1000
+static const int AOA_5_DEG_US = 56;
+// The AoA direction follows the existing rotational-mode convention.
+static const int AOA_LEFT_TARGET_US = AOA_LEFT_FLAT_US - AOA_5_DEG_US;   // 1519
+static const int AOA_RIGHT_TARGET_US = AOA_RIGHT_FLAT_US - AOA_5_DEG_US; // 1444
 
 enum SweepMode { SWEEP_UNKNOWN, SWEEP_FOLDED, SWEEP_UNFOLDED, SWEEP_MOUNT };
 static SweepMode sweepMode = SWEEP_UNKNOWN;
@@ -113,8 +121,8 @@ static const uint8_t SD_FLUSH_EVERY_N = 10;
 
 static const int SERVO_LEFT_PIN = 4;
 static const int SERVO_RIGHT_PIN = 3;
-static const int SERVO_MORPH_PIN = 5;
-static const int SERVO_TAIL_PIN = 6;
+static const int SERVO_MORPH_PIN = 6;  // Sweep servo, from sweep_aero_logger
+static const int SERVO_TAIL_PIN = 7;   // Unused in this fixed-position test
 static const int ARM_PIN = 2;
 static const bool SERVO_LEFT_REVERSE = true;
 static const bool SERVO_RIGHT_REVERSE = false;
