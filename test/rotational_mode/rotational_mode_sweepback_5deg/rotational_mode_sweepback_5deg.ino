@@ -81,12 +81,12 @@ static const char LOG_TAG[] = "SW5D";
 // Values and wiring follow sweep_aero_logger.  180 degrees spans 2000 us,
 // so five degrees is approximately 56 us.
 static const int SWEEP_UNFOLDED_US = 2475;
-static const int SWEEP_BACK_US = ;  // 10 degrees of the 180-degree sweep range
+static const int SWEEP_BACK_US = 200;  // 10 degrees of the 180-degree sweep range
 static const int SWEEP_TARGET_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;  // 2364
 
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
-static const int AOA_5_DEG_US = 56;
+static const int AOA_5_DEG_US = 150;
 // The AoA direction follows the existing rotational-mode convention.
 static const int AOA_LEFT_TARGET_US = AOA_LEFT_FLAT_US - AOA_5_DEG_US;   // 1519
 static const int AOA_RIGHT_TARGET_US = AOA_RIGHT_FLAT_US - AOA_5_DEG_US; // 1444
