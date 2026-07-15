@@ -5,17 +5,12 @@
 #include <SD.h>
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
-#include <ArduinoOTA.h>
-#include <InternalStorage.h>
 
 const char* ssid = "Kai's A55";
 const char* pass = "Mika12345.";
 WiFiUDP Udp;
 const char* udpAddress = "255.255.255.255";
 const int udpPort = 5000;
-
-rtos::Thread otaThread;
-void otaTask();
 
 #include <math.h>
 #include <rtos.h>
@@ -1737,8 +1732,6 @@ void setup() {
   }
   if(WiFi.status() == WL_CONNECTED) {
       Serial.println("\nWiFi connected.");
-      ArduinoOTA.begin(WiFi.localIP(), "Nano-Telemetry", "mika123", InternalStorage);
-      otaThread.start(otaTask);
       Udp.begin(udpPort);
   } else {
       Serial.println("\nWiFi failed, continuing without wireless.");
@@ -2044,12 +2037,4 @@ Serial.print(F("SD Status:   "));
     Serial.println(F("=============================\n"));
   }
 
-}
-
-void otaTask() {
-  while (true) {
-    ArduinoOTA.poll();
-    rtos::ThisThread::yield();
-    delay(20);
-  }
 }
