@@ -1,20 +1,18 @@
 import os
-import re
 
 src = r"C:\Users\Kai\Downloads\rotational_mode_ubx_pvt_tuned_SDlog50Hz.ino"
 dst_dir = r"C:\Users\Kai\OneDrive - purdue.edu\Purdue\AOL\MAV-2026\github stuff\test\telemetry_wifi_ota"
 dst = os.path.join(dst_dir, "telemetry_wifi_ota.ino")
 
-os.makedirs(dst_dir, exist_ok=True)
-
 with open(src, "r", encoding="utf-8") as f:
     code = f.read()
 
-# 1. Add headers and globals
+# 1. Add headers and globals (only declarations, no function definitions to avoid Arduino preprocessor bugs)
 header_addition = """#include <SD.h>
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
+#include <InternalStorage.h>
 
 const char* ssid = "Kai's A55";
 const char* pass = "Mika12345.";
@@ -23,13 +21,7 @@ const char* udpAddress = "255.255.255.255";
 const int udpPort = 5000;
 
 rtos::Thread otaThread;
-void otaTask() {
-  while (true) {
-    ArduinoOTA.poll();
-    rtos::ThisThread::yield();
-    delay(20);
-  }
-}
+void otaTask();
 """
 code = code.replace("#include <SD.h>", header_addition)
 
@@ -52,8 +44,7 @@ setup_addition = """void setup() {
   }
   if(WiFi.status() == WL_CONNECTED) {
       Serial.println("\\nWiFi connected.");
-      ArduinoOTA.setHostname("Nano-Telemetry");
-      ArduinoOTA.begin();
+      ArduinoOTA.begin(WiFi.localIP(), "Nano-Telemetry", "mika123", InternalStorage);
       otaThread.start(otaTask);
       Udp.begin(udpPort);
   } else {
@@ -79,6 +70,18 @@ udp_addition = """      writeRecord(logFile, *rec);
       }
 """
 code = code.replace("      writeRecord(logFile, *rec);", udp_addition)
+
+# 4. Append otaTask implementation at the end of the file
+ota_impl = """
+void otaTask() {
+  while (true) {
+    ArduinoOTA.poll();
+    rtos::ThisThread::yield();
+    delay(20);
+  }
+}
+"""
+code += ota_impl
 
 with open(dst, "w", encoding="utf-8") as f:
     f.write(code)

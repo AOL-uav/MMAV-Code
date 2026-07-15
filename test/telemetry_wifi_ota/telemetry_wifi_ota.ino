@@ -6,6 +6,7 @@
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
+#include <InternalStorage.h>
 
 const char* ssid = "Kai's A55";
 const char* pass = "Mika12345.";
@@ -14,13 +15,7 @@ const char* udpAddress = "255.255.255.255";
 const int udpPort = 5000;
 
 rtos::Thread otaThread;
-void otaTask() {
-  while (true) {
-    ArduinoOTA.poll();
-    rtos::ThisThread::yield();
-    delay(20);
-  }
-}
+void otaTask();
 
 #include <math.h>
 #include <rtos.h>
@@ -1742,8 +1737,7 @@ void setup() {
   }
   if(WiFi.status() == WL_CONNECTED) {
       Serial.println("\nWiFi connected.");
-      ArduinoOTA.setHostname("Nano-Telemetry");
-      ArduinoOTA.begin();
+      ArduinoOTA.begin(WiFi.localIP(), "Nano-Telemetry", "mika123", InternalStorage);
       otaThread.start(otaTask);
       Udp.begin(udpPort);
   } else {
@@ -2050,4 +2044,12 @@ Serial.print(F("SD Status:   "));
     Serial.println(F("=============================\n"));
   }
 
+}
+
+void otaTask() {
+  while (true) {
+    ArduinoOTA.poll();
+    rtos::ThisThread::yield();
+    delay(20);
+  }
 }
