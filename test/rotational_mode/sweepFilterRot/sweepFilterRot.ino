@@ -1971,6 +1971,10 @@ Serial.print(F("SD Status:   "));
     if (globalSdFailed) Serial.println(F("FAILED"));
     else if (globalSdReady) Serial.println(F("OK"));
     else Serial.println(F("INIT..."));
+    
+    Serial.print(F("GPS Status:  Fix=")); Serial.print(gps.fix ? F("YES") : F("NO"));
+    Serial.print(F(", Sats=")); Serial.print(gps.satellites);
+    Serial.print(F(", BytesReceived=")); Serial.println(gps.bytesSeen ? F("YES") : F("NO"));
     if (gps.fix) {
       Serial.print(F("Global Pos:  Lat=")); Serial.print(gps.latitudeDeg, 6);
       Serial.print(F(", Lon=")); Serial.print(gps.longitudeDeg, 6);
