@@ -10,8 +10,9 @@
 // BENCH_MODE 0: require ARM_PIN to be released once, then pulled low to arm.
 #define BENCH_MODE 0
 
-// This is a fixed-position logging test: do not run the flight controller.
-#define ENABLE_CONTROL 0
+// ENABLE_CONTROL 0: estimator/GPS/SD logging only; servos remain neutral.
+// ENABLE_CONTROL 1: allow SMC after the selected arming condition is met.
+#define ENABLE_CONTROL 1
 
 // ENABLE_ADAPTIVE_B 1: run NLMS online B update.
 // ENABLE_ADAPTIVE_B 0: freeze B at initial diagonal; required for first flight.
@@ -22,18 +23,17 @@
 #define USE_TAIL_PITCH_CONTROL 0
 
 /*
-  rotational_mode_sweepback_5deg
+  613_gliding_esekf_smc  (+ ESEKF fixes & tuning, 2026-07-13)
 
-  Fixed-position rotational-mode test using the sweep-aero wiring:
-    left AoA servo  -> D4
-    right AoA servo -> D3
-    sweep servo     -> D6
-
-  On boot the wings start unfolded, sweep back by 5 degrees, and then hold
-  that sweep position.  Both AoA servos are held at the 5-degree command.
-  The UBX GPS/ESEKF/SD logger is retained from rotational_mode_ubx_pvt:
-  GPS position, N/E/D velocity (including vertical velocity gps_vd), fix
-  metadata, IMU, and estimator data are written to the SD card at 20 Hz.
+  ESEKF changes applied on top of the UBX driver update — see
+  flight_analysis_2026-07-11/firmware_fixes.md for derivation:
+    - ACCEL_NOISE_MPS2 0.18 -> 0.46 (RTK-replay tuned)
+    - Rate gate on accel-leveling (0.25 rad/s): prevents attitude corruption
+      in banked turns (synthetic validation: 14.9 -> 3.0 deg roll RMSE)
+    - GPS velocity noise = max(reported sAcc, 0.25 m/s); sAcc now parsed
+      from NAV-VELNED/NAV-PVT
+    - Log columns appended: gps_fix_type, gps_hacc_m, gps_vacc_m,
+      gps_sacc_mps, gps_origin_set (for post-flight retuning/diagnosis)
 
   Based on the execution architecture used by 69_gliding_pid_only:
     - The flight-control path never writes to the SD card.
@@ -74,14 +74,14 @@
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "";
+static const char LOG_TAG[] = "0715";
 
 
 // ========================= Fixed test position =========================
 // Values and wiring follow sweep_aero_logger.  180 degrees spans 2000 us,
 // so five degrees is approximately 56 us.
 static const int SWEEP_UNFOLDED_US = 2475;
-static const int SWEEP_BACK_US = 200;  // 10 degrees of the 180-degree sweep range
+static const int SWEEP_BACK_US = 100;  // 10 degrees of the 180-degree sweep range
 static const int SWEEP_TARGET_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;  // 2364
 
 static const int AOA_LEFT_FLAT_US  = 1575;
@@ -112,6 +112,7 @@ static const uint32_t CONTROL_DT_US =
     (uint32_t)(1000000.0f / CONTROL_HZ);
 
 static const float SD_LOG_HZ = 20.0f;
+                                       // check the log_dropped column stays 0.
 static const uint32_t SD_LOG_DT_US =
     (uint32_t)(1000000.0f / SD_LOG_HZ);
 static const float RECORD_START_S = 0.0f;
@@ -164,15 +165,21 @@ static const float RAD_TO_DEG_F = 57.29577951308232f;
 static const int ESEKF_N = 15;
 
 static const float GYRO_NOISE_RADPS = 0.015f;
-static const float ACCEL_NOISE_MPS2 = 0.18f;
+static const float ACCEL_NOISE_MPS2 = 0.46f;   // TUNED 2026-07-13 (was 0.18):
+                                               // validated by RTK replay over 8 flights
 static const float GYRO_BIAS_RW_RADPS = 0.0008f;
 static const float ACCEL_BIAS_RW_MPS2 = 0.006f;
 static const float ACCEL_LEVEL_NOISE_RAD = 3.0f * DEG_TO_RAD_F;
 static const float ACCEL_GATE_LOW_MPS2 = 0.82f * G_MPS2;
 static const float ACCEL_GATE_HIGH_MPS2 = 1.18f * G_MPS2;
+// Skip accel-leveling while maneuvering: in a coordinated turn |a|~g/cos(bank)
+// passes the norm gate while measuring pseudo-gravity, corrupting attitude
+// (synthetic validation: roll RMSE 14.9 deg -> 3.0 deg with this gate).
+static const float ESEKF_LEVEL_RATE_GATE_RADPS = 0.25f;
 static const float GPS_POSITION_NOISE_FLOOR_M = 1.5f;
 static const float GPS_VERTICAL_NOISE_FLOOR_M = 2.5f;
-static const float GPS_VELOCITY_NOISE_MPS = 0.35f;
+static const float GPS_VELOCITY_NOISE_MPS = 0.25f;  // floor under reported sAcc
+                                                    // (UBX Doppler; validated ~0.25-0.35)
 static const uint32_t GPS_FIX_STALE_MS = 1500;
 static const uint8_t GPS_ORIGIN_MIN_SATS = 6;
 static const float GPS_ORIGIN_MAX_HACC_M = 3.0f;
@@ -242,6 +249,7 @@ struct GpsSample {
   float altitudeM;
   float hAccM;
   float vAccM;
+  float sAccMps;
   float velocityNed[3];
 };
 
@@ -295,6 +303,11 @@ struct ControlRecord {
   uint16_t tailPwmUs;
   bool gpsFix;
   uint8_t gpsSatellites;
+  uint8_t gpsFixType;
+  float gpsHAccM;
+  float gpsVAccM;
+  float gpsSAccMps;
+  bool gpsOriginSet;
   double gpsLatitudeDeg;
   double gpsLongitudeDeg;
   float gpsAltitudeM;
@@ -634,6 +647,7 @@ static void handleUbxPacket() {
     gps.velocityNed[0] = readI32Le(&ubxPayload[4]) * 0.01f;
     gps.velocityNed[1] = readI32Le(&ubxPayload[8]) * 0.01f;
     gps.velocityNed[2] = readI32Le(&ubxPayload[12]) * 0.01f;
+    gps.sAccMps = readU32Le(&ubxPayload[28]) * 0.01f;
   } else if (ubxId == 0x07 && ubxLength == 92) {  // NAV-PVT
     const uint32_t iTow = readU32Le(&ubxPayload[0]);
     gps.positionTowMs = gps.solutionTowMs = gps.velocityTowMs = iTow;
@@ -648,6 +662,7 @@ static void handleUbxPacket() {
     gps.velocityNed[0] = readI32Le(&ubxPayload[48]) * 1.0e-3f;
     gps.velocityNed[1] = readI32Le(&ubxPayload[52]) * 1.0e-3f;
     gps.velocityNed[2] = readI32Le(&ubxPayload[56]) * 1.0e-3f;
+    gps.sAccMps = readU32Le(&ubxPayload[68]) * 1.0e-3f;
     if (!gps.fix) gps.fresh = false;
   }
   refreshGpsEpoch();
@@ -697,6 +712,10 @@ static void pollGps() {
     gps.fix = false;
     gps.fresh = false;
   }
+
+  // Match the board's working Blink sketch: HIGH turns the orange built-in LED on.
+  // Orange on only while the receiver has a valid, non-stale 3D fix.
+  digitalWrite(LED_BUILTIN, gps.fix ? HIGH : LOW);
 }
 
 // ========================= IMU =========================
@@ -980,6 +999,11 @@ static bool scalarStateUpdate(
 }
 
 static void updateEsekfWithAccelerometer(const ImuSample &sample) {
+  const float wx = sample.gyro[0] - esekf.bg[0];
+  const float wy = sample.gyro[1] - esekf.bg[1];
+  const float wz = sample.gyro[2] - esekf.bg[2];
+  if (sqrtf(wx * wx + wy * wy + wz * wz) > ESEKF_LEVEL_RATE_GATE_RADPS) return;
+
   const float ax = sample.accel[0];
   const float ay = sample.accel[1];
   const float az = sample.accel[2];
@@ -1051,11 +1075,12 @@ static void updateEsekfWithGps() {
     gps.velocityNed[1],
     -gps.velocityNed[2]
   };
+  const float velocityStd = fmaxf(gps.sAccMps, GPS_VELOCITY_NOISE_MPS);
   for (int axis = 0; axis < 3; axis++) {
     scalarStateUpdate(
         axis + 3,
         gpsVelocityNeu[axis] - esekf.v[axis],
-        sqf(GPS_VELOCITY_NOISE_MPS),
+        sqf(velocityStd),
         25.0f);
   }
 
@@ -1363,7 +1388,8 @@ static void writeCsvHeader(Print &out) {
       "b00,b01,b10,b11,left_deg,right_deg,morph_deg,tail_deg,"
       "left_pwm,right_pwm,morph_pwm,tail_pwm,"
       "gps_fix,gps_sats,gps_lat_deg,gps_lon_deg,gps_alt_m,"
-      "gps_vn,gps_ve,gps_vd"));
+      "gps_vn,gps_ve,gps_vd,"
+      "gps_fix_type,gps_hacc_m,gps_vacc_m,gps_sacc_mps,gps_origin_set"));
 }
 
 static void writeRecord(Print &out, const ControlRecord &r) {
@@ -1425,10 +1451,17 @@ static void writeRecord(Print &out, const ControlRecord &r) {
     out.print(r.gpsAltitudeM, 3); out.print(',');
     out.print(r.gpsVelocityNed[0], 3); out.print(',');
     out.print(r.gpsVelocityNed[1], 3); out.print(',');
-    out.println(r.gpsVelocityNed[2], 3);
+    out.print(r.gpsVelocityNed[2], 3); out.print(',');
+    out.print(r.gpsFixType); out.print(',');
+    out.print(r.gpsHAccM, 2); out.print(',');
+    out.print(r.gpsVAccM, 2); out.print(',');
+    out.print(r.gpsSAccMps, 2); out.print(',');
+    out.println(r.gpsOriginSet ? 1 : 0);
   } else {
     // No GPS data is represented by empty CSV fields, not fake zeros.
-    out.println(F(",,,,,,"));
+    out.print(F(",,,,,,,"));
+    out.print(r.gpsFixType); out.print(F(",,,,"));
+    out.println(r.gpsOriginSet ? 1 : 0);
   }
 }
 
@@ -1613,6 +1646,11 @@ static ControlRecord makeRecord(
   record.tailPwmUs = tailPwmUs;
   record.gpsFix = gps.fix;
   record.gpsSatellites = gps.satellites;
+  record.gpsFixType = gps.fixType;
+  record.gpsHAccM = gps.hAccM;
+  record.gpsVAccM = gps.vAccM;
+  record.gpsSAccMps = gps.sAccMps;
+  record.gpsOriginSet = gpsOriginSet;
   record.gpsLatitudeDeg = gps.latitudeDeg;
   record.gpsLongitudeDeg = gps.longitudeDeg;
   record.gpsAltitudeM = gps.altitudeM;
@@ -1655,9 +1693,9 @@ static void maybeEnqueueLog(
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
-  const uint32_t serialStartMs = millis();
-  while (!Serial &&
-         (uint32_t)(millis() - serialStartMs) < SERIAL_WAIT_MS) {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);  // Off until a valid GPS fix is received.
+  while (!Serial) {
     delay(10);
   }
 
@@ -1933,6 +1971,12 @@ Serial.print(F("SD Status:   "));
     if (globalSdFailed) Serial.println(F("FAILED"));
     else if (globalSdReady) Serial.println(F("OK"));
     else Serial.println(F("INIT..."));
+    
+    Serial.print(F("GPS Status:  Fix=")); Serial.print(gps.fix ? F("YES") : F("NO"));
+    Serial.print(F(", Type=")); Serial.print(gps.fixType);
+    Serial.print(F(", Sats=")); Serial.print(gps.satellites);
+    Serial.print(F(", hAcc=")); Serial.print(gps.hAccM, 1);
+    Serial.print(F("m, BytesReceived=")); Serial.println(gps.bytesSeen ? F("YES") : F("NO"));
     if (gps.fix) {
       Serial.print(F("Global Pos:  Lat=")); Serial.print(gps.latitudeDeg, 6);
       Serial.print(F(", Lon=")); Serial.print(gps.longitudeDeg, 6);
