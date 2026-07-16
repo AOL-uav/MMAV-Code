@@ -1695,9 +1695,7 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);  // Off until a valid GPS fix is received.
-  const uint32_t serialStartMs = millis();
-  while (!Serial &&
-         (uint32_t)(millis() - serialStartMs) < SERIAL_WAIT_MS) {
+  while (!Serial) {
     delay(10);
   }
 
