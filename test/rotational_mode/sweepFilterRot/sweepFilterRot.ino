@@ -1973,8 +1973,10 @@ Serial.print(F("SD Status:   "));
     else Serial.println(F("INIT..."));
     
     Serial.print(F("GPS Status:  Fix=")); Serial.print(gps.fix ? F("YES") : F("NO"));
+    Serial.print(F(", Type=")); Serial.print(gps.fixType);
     Serial.print(F(", Sats=")); Serial.print(gps.satellites);
-    Serial.print(F(", BytesReceived=")); Serial.println(gps.bytesSeen ? F("YES") : F("NO"));
+    Serial.print(F(", hAcc=")); Serial.print(gps.hAccM, 1);
+    Serial.print(F("m, BytesReceived=")); Serial.println(gps.bytesSeen ? F("YES") : F("NO"));
     if (gps.fix) {
       Serial.print(F("Global Pos:  Lat=")); Serial.print(gps.latitudeDeg, 6);
       Serial.print(F(", Lon=")); Serial.print(gps.longitudeDeg, 6);
