@@ -74,7 +74,7 @@
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "SW5D";
+static const char LOG_TAG[] = "o";
 
 
 // ========================= Fixed test position =========================
