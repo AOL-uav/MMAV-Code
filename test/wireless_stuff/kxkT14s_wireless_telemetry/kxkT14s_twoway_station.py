@@ -141,9 +141,12 @@ def main(stdscr):
                     log_win.addstr("(Note: 8-byte double alignment active)\n")
                     print_warn = False
             else:
+                log_win.addstr(f"Discarding packet of length {len(data)}\n")
+                log_win.refresh()
                 continue
 
             unpacked = struct.unpack(actual_format, data)
+
             elapsed = time.time() - start_time
             
             # Print at 2Hz (or 4Hz)
