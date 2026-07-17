@@ -4,19 +4,41 @@ import time
 
 import os
 import atexit
+import subprocess
+
+previous_network = None
 
 def setup_network():
+    global previous_network
     print("🚀 Starting dedicated telemetry hotspot (kxkT14s)...")
+    
+    # Record whatever Wi-Fi network is currently active
+    try:
+        output = subprocess.check_output("nmcli -t -f NAME,TYPE c show --active", shell=True, text=True)
+        for line in output.split('\n'):
+            if '802-11-wireless' in line:
+                name = line.split(':')[0]
+                if name != 'Hotspot':
+                    previous_network = name
+                    break
+    except Exception:
+        pass
+
     os.system("nmcli connection up Hotspot 2>/dev/null || nmcli dev wifi hotspot ssid kxkT14s password 'Mika12345.' >/dev/null")
     print("📶 Hotspot active! (Internet is temporarily paused)")
 
 def restore_network():
-    print("\n🌐 Restoring eduroam internet connection...")
-    os.system("nmcli connection up eduroam >/dev/null 2>&1")
-    print("✅ Internet restored.")
+    if previous_network:
+        print(f"\n🌐 Restoring previous internet connection ({previous_network})...")
+        os.system(f"nmcli connection up '{previous_network}' >/dev/null 2>&1")
+        print("✅ Internet restored.")
+    else:
+        print("\n🌐 No previous Wi-Fi connection detected. Turning off Hotspot...")
+        os.system("nmcli connection down Hotspot >/dev/null 2>&1")
 
 atexit.register(restore_network)
 setup_network()
+
 
 UDP_IP = "0.0.0.0" # Listen on all interfaces
 UDP_PORT = 5000
