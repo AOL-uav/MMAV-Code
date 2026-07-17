@@ -1584,16 +1584,16 @@ bool sdReady = false;
 
     ControlRecord *rec = reinterpret_cast<ControlRecord *>(evt.value.p);
 
+    // UDP Broadcast of binary record (works even without SD card!)
+    if (WiFi.status() == WL_CONNECTED) {
+      Udp.beginPacket(udpAddress, udpPort);
+      Udp.write((const uint8_t*)rec, sizeof(ControlRecord));
+      Udp.endPacket();
+    }
+
     if (sdReady && logFile && !finished) {
       writeRecord(logFile, *rec);
       
-      // UDP Broadcast of binary record
-      if (WiFi.status() == WL_CONNECTED) {
-        Udp.beginPacket(udpAddress, udpPort);
-        Udp.write((const uint8_t*)rec, sizeof(ControlRecord));
-        Udp.endPacket();
-      }
-
       rowCount++;
 
       if (rowCount % SD_FLUSH_EVERY_N == 0) {
@@ -1609,6 +1609,7 @@ bool sdReady = false;
         safeSerialPrintln(F("[Core 1] ERROR: SD write error - logging stopped."));
       }
     }
+
 
     // Return the slot to Core 0's free list.
     freeQueue.put(rec, osWaitForever);
