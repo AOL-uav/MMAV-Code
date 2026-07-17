@@ -72,7 +72,7 @@ def main(stdscr):
     print_warn = True
     
     log_win.addstr("=== TWO-WAY TELEMETRY STATION ACTIVE ===\n")
-    log_win.addstr(f"Listening on port {UDP_PORT}...\n\n")
+    log_win.addstr("Commands: 'arm', 'disarm', 'release', 'deploy', or 'tune p i d' (e.g. 'tune 1.5 0.2 0.0')\n\n")
     log_win.refresh()
     
     while True:
