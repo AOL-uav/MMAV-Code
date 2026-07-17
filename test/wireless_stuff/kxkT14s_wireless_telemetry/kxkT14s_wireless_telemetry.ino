@@ -12,6 +12,15 @@ WiFiUDP Udp;
 IPAddress udpAddress(255, 255, 255, 255); // Broadcast IP
 const int udpPort = 5000;
 
+// Struct for receiving commands from Python ground station
+#pragma pack(push, 1)
+struct UplinkCommand {
+  uint32_t magic;       // Must be 0xA1B2C3D4 to be accepted
+  uint8_t command_id;   // 1=Arm, 2=Disarm, 3=Tune, etc.
+  float values[3];      // General purpose payload array
+};
+#pragma pack(pop)
+
 #include <math.h>
 #include <rtos.h>
 
