@@ -6,10 +6,10 @@
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
 
-const char* ssid = "Kai's A55";
+const char* ssid = "kxkT14s";
 const char* pass = "Mika12345.";
 WiFiUDP Udp;
-const char* udpAddress = "10.184.28.203"; // Direct to laptop instead of 255.255.255.255 broadcast
+const char* udpAddress = "255.255.255.255"; // Direct to laptop via hotspot broadcast
 const int udpPort = 5000;
 
 #include <math.h>
