@@ -10,7 +10,7 @@ previous_network = None
 
 def setup_network():
     global previous_network
-    print("🚀 Starting dedicated telemetry hotspot (kxkT14s)...")
+    print("Starting dedicated telemetry hotspot (kxkT14s)...")
     
     # Record whatever Wi-Fi network is currently active
     try:
@@ -25,20 +25,19 @@ def setup_network():
         pass
 
     os.system("nmcli connection up Hotspot 2>/dev/null || nmcli dev wifi hotspot ssid kxkT14s password 'Mika12345.' >/dev/null")
-    print("📶 Hotspot active! (Internet is temporarily paused)")
+    print("Hotspot active! (Internet is temporarily paused)")
 
 def restore_network():
     if previous_network:
-        print(f"\n🌐 Restoring previous internet connection ({previous_network})...")
+        print(f"\nRestoring previous internet connection ({previous_network})...")
         os.system(f"nmcli connection up '{previous_network}' >/dev/null 2>&1")
-        print("✅ Internet restored.")
+        print("Internet restored.")
     else:
-        print("\n🌐 No previous Wi-Fi connection detected. Turning off Hotspot...")
+        print("\nNo previous Wi-Fi connection detected. Turning off Hotspot...")
         os.system("nmcli connection down Hotspot >/dev/null 2>&1")
 
 atexit.register(restore_network)
 setup_network()
-
 
 UDP_IP = "0.0.0.0" # Listen on all interfaces
 UDP_PORT = 5000
@@ -49,7 +48,7 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 sock.bind((UDP_IP, UDP_PORT))
 sock.setblocking(False)
 
-print(f"\n🎧 Listening for telemetry UDP packets on port {UDP_PORT}...")
+print(f"\nListening for telemetry UDP packets on port {UDP_PORT}...")
 
 
 # Format string for unpacking the C-struct (236 or 240 bytes)
