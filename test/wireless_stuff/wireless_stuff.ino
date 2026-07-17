@@ -9,7 +9,7 @@
 const char* ssid = "kxkT14s";
 const char* pass = "Mika12345.";
 WiFiUDP Udp;
-const char* udpAddress = "255.255.255.255"; // Direct to laptop via hotspot broadcast
+IPAddress udpAddress(255, 255, 255, 255); // Broadcast IP
 const int udpPort = 5000;
 
 #include <math.h>
