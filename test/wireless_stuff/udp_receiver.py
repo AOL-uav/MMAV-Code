@@ -2,6 +2,22 @@ import socket
 import struct
 import time
 
+import os
+import atexit
+
+def setup_network():
+    print("🚀 Starting dedicated telemetry hotspot (kxkT14s)...")
+    os.system("nmcli connection up Hotspot 2>/dev/null || nmcli dev wifi hotspot ssid kxkT14s password 'Mika12345.' >/dev/null")
+    print("📶 Hotspot active! (Internet is temporarily paused)")
+
+def restore_network():
+    print("\n🌐 Restoring eduroam internet connection...")
+    os.system("nmcli connection up eduroam >/dev/null 2>&1")
+    print("✅ Internet restored.")
+
+atexit.register(restore_network)
+setup_network()
+
 UDP_IP = "0.0.0.0" # Listen on all interfaces
 UDP_PORT = 5000
 
@@ -11,8 +27,8 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 sock.bind((UDP_IP, UDP_PORT))
 sock.setblocking(False)
 
-print(f"Listening for telemetry UDP packets on port {UDP_PORT}...")
-print("Make sure you are connected to the 'Kai's A55' hotspot!")
+print(f"\n🎧 Listening for telemetry UDP packets on port {UDP_PORT}...")
+
 
 # Format string for unpacking the C-struct (236 or 240 bytes)
 # <  = Little Endian
