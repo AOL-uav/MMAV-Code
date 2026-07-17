@@ -97,8 +97,11 @@ def main(stdscr):
                         
                         if line == "arm": cmd_id = 1
                         elif line == "disarm": cmd_id = 2
+                        elif line == "release": cmd_id = 4
+                        elif line == "deploy": cmd_id = 5
                         elif line.startswith("tune"):
                             parts = line.split()
+
                             if len(parts) == 4:
                                 try:
                                     vals = [float(parts[1]), float(parts[2]), float(parts[3])]
