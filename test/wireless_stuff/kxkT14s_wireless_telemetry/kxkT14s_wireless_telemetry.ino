@@ -1948,7 +1948,30 @@ void slowSweepAoaTo(int targetLeftUs, int targetRightUs) {
   rightPwmUs = targetRightUs;
 }
 
+void handleUplink() {
+  int packetSize = Udp.parsePacket();
+  if (packetSize) {
+    if (packetSize == sizeof(UplinkCommand)) {
+      UplinkCommand cmd;
+      Udp.read((char*)&cmd, sizeof(UplinkCommand));
+      if (cmd.magic == 0xA1B2C3D4) {
+        Serial.print(F("[Uplink] Command ID: "));
+        Serial.print(cmd.command_id);
+        Serial.print(F(" | Vals: "));
+        Serial.print(cmd.values[0]); Serial.print(F(", "));
+        Serial.print(cmd.values[1]); Serial.print(F(", "));
+        Serial.println(cmd.values[2]);
+        // TODO: Implement custom command logic here based on cmd.command_id
+      }
+    } else {
+      Udp.flush(); // discard unexpected packets
+    }
+  }
+}
+
 void loop() {
+  handleUplink(); // Check for incoming commands from python
+  
   // Run ESEKF/logging for the current tick if not sweeping
   pollGps();
   const uint32_t nowUs = micros();
