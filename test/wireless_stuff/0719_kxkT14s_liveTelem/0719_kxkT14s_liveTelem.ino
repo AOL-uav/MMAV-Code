@@ -104,8 +104,7 @@ static const char LOG_TAG[] = "0719";
 // Values and wiring follow sweep_aero_logger.  180 degrees spans 2000 us,
 // so five degrees is approximately 56 us.
 static const int SWEEP_UNFOLDED_US = 2475;
-static const int SWEEP_BACK_US = 500
-;  // 10 degrees of the 180-degree sweep range
+static const int SWEEP_BACK_US = 500;  // 10 degrees of the 180-degree sweep range
 static const int SWEEP_TARGET_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;  // 2364
 
 static const int AOA_LEFT_FLAT_US  = 1575;
