@@ -3,8 +3,31 @@
 #include <Servo.h>
 #include <SPI.h>
 #include <SD.h>
+#include <WiFiNINA.h>
+#include <WiFiUdp.h>
 #include <math.h>
 #include <rtos.h>
+
+// Dedicated kxkT14s hotspot and UDP broadcast settings.  The ground-station
+// scripts in this directory create/restore this hotspot automatically.
+static const char WIFI_SSID[] = "kxkT14s";
+static const char WIFI_PASS[] = "Mika12345.";
+static const IPAddress TELEMETRY_BROADCAST_IP(255, 255, 255, 255);
+static const uint16_t TELEMETRY_UDP_PORT = 5000;
+static const uint8_t WIFI_CONNECT_RETRIES = 15;
+static const uint16_t WIFI_CONNECT_RETRY_MS = 500;
+static WiFiUDP telemetryUdp;
+
+// Packed exactly like the ground station's '<IB3f' command payload.
+#pragma pack(push, 1)
+struct UplinkCommand {
+  uint32_t magic;       // Must be 0xA1B2C3D4.
+  uint8_t commandId;    // 1=arm, 2=disarm, 3=tune, 4=release, 5=deploy.
+  float values[3];
+};
+#pragma pack(pop)
+
+static const uint32_t UPLINK_MAGIC = 0xA1B2C3D4UL;
 
 // BENCH_MODE 1: use timed arming for restrained bench testing.
 // BENCH_MODE 0: require ARM_PIN to be released once, then pulled low to arm.
@@ -74,7 +97,7 @@
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "0715";
+static const char LOG_TAG[] = "0719";
 
 
 // ========================= Fixed test position =========================
@@ -308,6 +331,7 @@ struct ControlRecord {
   float gpsVAccM;
   float gpsSAccMps;
   bool gpsOriginSet;
+  uint32_t gpsITowMs;
   double gpsLatitudeDeg;
   double gpsLongitudeDeg;
   float gpsAltitudeM;
@@ -1389,7 +1413,8 @@ static void writeCsvHeader(Print &out) {
       "left_pwm,right_pwm,morph_pwm,tail_pwm,"
       "gps_fix,gps_sats,gps_lat_deg,gps_lon_deg,gps_alt_m,"
       "gps_vn,gps_ve,gps_vd,"
-      "gps_fix_type,gps_hacc_m,gps_vacc_m,gps_sacc_mps,gps_origin_set"));
+      "gps_fix_type,gps_hacc_m,gps_vacc_m,gps_sacc_mps,gps_origin_set,"
+      "gps_itow_ms"));
 }
 
 static void writeRecord(Print &out, const ControlRecord &r) {
@@ -1456,12 +1481,14 @@ static void writeRecord(Print &out, const ControlRecord &r) {
     out.print(r.gpsHAccM, 2); out.print(',');
     out.print(r.gpsVAccM, 2); out.print(',');
     out.print(r.gpsSAccMps, 2); out.print(',');
-    out.println(r.gpsOriginSet ? 1 : 0);
+    out.print(r.gpsOriginSet ? 1 : 0); out.print(',');
+    out.println(r.gpsITowMs);
   } else {
     // No GPS data is represented by empty CSV fields, not fake zeros.
     out.print(F(",,,,,,,"));
     out.print(r.gpsFixType); out.print(F(",,,,"));
-    out.println(r.gpsOriginSet ? 1 : 0);
+    out.print(r.gpsOriginSet ? 1 : 0);
+    out.println(F(","));
   }
 }
 
@@ -1570,6 +1597,14 @@ bool sdReady = false;
 
     ControlRecord *rec = reinterpret_cast<ControlRecord *>(evt.value.p);
 
+    // Send the same complete ControlRecord that is written to the SD log.
+    // This remains active even if SD initialization or logging fails.
+    if (WiFi.status() == WL_CONNECTED) {
+      telemetryUdp.beginPacket(TELEMETRY_BROADCAST_IP, TELEMETRY_UDP_PORT);
+      telemetryUdp.write(reinterpret_cast<const uint8_t *>(rec), sizeof(*rec));
+      telemetryUdp.endPacket();
+    }
+
     if (sdReady && logFile && !finished) {
       writeRecord(logFile, *rec);
       rowCount++;
@@ -1651,6 +1686,7 @@ static ControlRecord makeRecord(
   record.gpsVAccM = gps.vAccM;
   record.gpsSAccMps = gps.sAccMps;
   record.gpsOriginSet = gpsOriginSet;
+  record.gpsITowMs = gps.iTowMs;
   record.gpsLatitudeDeg = gps.latitudeDeg;
   record.gpsLongitudeDeg = gps.longitudeDeg;
   record.gpsAltitudeM = gps.altitudeM;
@@ -1695,10 +1731,27 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);  // Off until a valid GPS fix is received.
-  while (!Serial) {
+  const uint32_t serialStartMs = millis();
+  while (!Serial && (uint32_t)(millis() - serialStartMs) < SERIAL_WAIT_MS) {
     delay(10);
   }
 
+  Serial.print(F("[WiFi] Connecting to hotspot: "));
+  Serial.println(WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  for (uint8_t attempt = 0;
+       WiFi.status() != WL_CONNECTED && attempt < WIFI_CONNECT_RETRIES;
+       ++attempt) {
+    delay(WIFI_CONNECT_RETRY_MS);
+    Serial.print('.');
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    telemetryUdp.begin(TELEMETRY_UDP_PORT);
+    Serial.print(F("\n[WiFi] Connected; UDP telemetry broadcast port "));
+    Serial.println(TELEMETRY_UDP_PORT);
+  } else {
+    Serial.println(F("\n[WiFi] Connection failed; continuing with SD logging only."));
+  }
 
 
   serialMutex.lock();
@@ -1898,7 +1951,36 @@ void slowSweepAoaTo(int targetLeftUs, int targetRightUs) {
   rightPwmUs = targetRightUs;
 }
 
+static void handleUplink() {
+  const int packetSize = telemetryUdp.parsePacket();
+  if (packetSize <= 0) return;
+
+  if (packetSize != (int)sizeof(UplinkCommand)) {
+    telemetryUdp.flush();
+    return;
+  }
+
+  UplinkCommand command = {};
+  if (telemetryUdp.read(reinterpret_cast<char *>(&command), sizeof(command)) !=
+      (int)sizeof(command)) return;
+  if (command.magic != UPLINK_MAGIC) return;
+
+  // Keep the existing flight-test command interface observable without making
+  // wireless packets change actuator state.  This fixed-position test remains
+  // intentionally controlled by the sketch's physical/test configuration.
+  serialMutex.lock();
+  Serial.print(F("[Uplink] id="));
+  Serial.print(command.commandId);
+  Serial.print(F(" values="));
+  Serial.print(command.values[0], 3); Serial.print(',');
+  Serial.print(command.values[1], 3); Serial.print(',');
+  Serial.println(command.values[2], 3);
+  serialMutex.unlock();
+}
+
 void loop() {
+  handleUplink();
+
   // Run ESEKF/logging for the current tick if not sweeping
   pollGps();
   const uint32_t nowUs = micros();
