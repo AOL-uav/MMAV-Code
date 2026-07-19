@@ -103,14 +103,16 @@ static const char LOG_TAG[] = "0719F";
 
 
 // ========================= Wing-fold command positions =========================
-// These are the proven sweep-aero PWM endpoints.  Fold/unfold use the same
-// slow, ordered movement as the former A2/A1 short-to-ground controls:
-// first hold sweep fully unfolded, then rotate both AoA servos together.
+// These are the proven sweep-aero PWM endpoints. Fold/unfold use the same
+// ordered movement as the former A2/A1 short-to-ground controls:
+//   fold:   move both AoA servos to their clearance positions, then sweep in;
+//   unfold: sweep out, then return both AoA servos to flat.
 static const int SWEEP_UNFOLDED_US = 2475;
+static const int SWEEP_FOLDED_US = 500;
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
-static const int AOA_LEFT_FOLDED_US = 575;
-static const int AOA_RIGHT_FOLDED_US = 500;
+static const int AOA_LEFT_FOLDED_US = 1125;
+static const int AOA_RIGHT_FOLDED_US = 1050;
 
 static const uint8_t COMMAND_FOLD = 6;
 static const uint8_t COMMAND_UNFOLD = 7;
@@ -1949,20 +1951,36 @@ void slowSweepAoaTo(int targetLeftUs, int targetRightUs) {
 
 static void foldWings() {
   if (sweepMode == SWEEP_FOLDED) return;
-  lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
-  slowSweepTo(SWEEP_UNFOLDED_US);
-  slowSweepAoaTo(AOA_LEFT_FOLDED_US, AOA_RIGHT_FOLDED_US);
+
+  // This exactly replaces the former A2-to-GND action: clear the folded
+  // wing path with AoA first, then make the controlled D6 sweep inward.
+  lazyAttach(SWEEP_FOLDED_US, AOA_LEFT_FOLDED_US, AOA_RIGHT_FOLDED_US);
+  servoLeft.writeMicroseconds(AOA_LEFT_FOLDED_US);
+  servoRight.writeMicroseconds(AOA_RIGHT_FOLDED_US);
+  currentAoaLeftUs = AOA_LEFT_FOLDED_US;
+  currentAoaRightUs = AOA_RIGHT_FOLDED_US;
+  leftPwmUs = AOA_LEFT_FOLDED_US;
+  rightPwmUs = AOA_RIGHT_FOLDED_US;
+  slowSweepTo(SWEEP_FOLDED_US);
   sweepMode = SWEEP_FOLDED;
-  safeSerialPrintln(F("[Uplink] Wings folded (rotational AoA position)."));
+  safeSerialPrintln(F("[Uplink] Wings folded."));
 }
 
 static void unfoldWings() {
   if (sweepMode == SWEEP_UNFOLDED) return;
+
+  // This exactly replaces the former A1-to-GND action: sweep D6 fully out
+  // before flattening the AoA servos.
   lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
   slowSweepTo(SWEEP_UNFOLDED_US);
-  slowSweepAoaTo(AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
+  servoLeft.writeMicroseconds(AOA_LEFT_FLAT_US);
+  servoRight.writeMicroseconds(AOA_RIGHT_FLAT_US);
+  currentAoaLeftUs = AOA_LEFT_FLAT_US;
+  currentAoaRightUs = AOA_RIGHT_FLAT_US;
+  leftPwmUs = AOA_LEFT_FLAT_US;
+  rightPwmUs = AOA_RIGHT_FLAT_US;
   sweepMode = SWEEP_UNFOLDED;
-  safeSerialPrintln(F("[Uplink] Wings unfolded (flat AoA position)."));
+  safeSerialPrintln(F("[Uplink] Wings unfolded."));
 }
 
 static void handleUplink() {
