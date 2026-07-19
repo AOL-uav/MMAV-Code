@@ -119,7 +119,7 @@ enum SweepMode { SWEEP_UNKNOWN, SWEEP_FOLDED, SWEEP_UNFOLDED, SWEEP_MOUNT };
 static SweepMode sweepMode = SWEEP_UNKNOWN;
 static bool servosAttached = false;
 static float currentSweepUs = -1.0f;
-static float currentAoaLeftUs = -1.0f;
+static float currentAoaLeft  Us = -1.0f;
 static float currentAoaRightUs = -1.0f;
 static int targetSweepUs = -1;
 
