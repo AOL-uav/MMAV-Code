@@ -14,7 +14,7 @@ The dashboard shows attitude, PWM, GPS fix/type, satellites, position, and up-po
 
 At boot, the serial monitor should print `SD logging initialized before radio startup.` before Wi-Fi connects. This deliberately uses the same isolated D10/SPI `SD.begin` retry and CSV-file creation sequence as `test/rotational_mode/sweepFilterRot` before initializing GPS or Wi-Fi.
 
-The command field accepts `fold` and `unfold` for live wing control. These replace the former momentary A2 (fold) and A1 (unfold) shorts, retaining the proven sequence and PWM positions: `fold` moves AoA to 1125/1050 µs, then sweeps D6 from 2475 to 500 µs; `unfold` sweeps D6 back to 2475 µs, then restores flat AoA at 1575/1500 µs. The board starts unfolded and flat.
+The command field accepts `fold` and `unfold` for live wing control. These replace the former momentary A2 (fold) and A1 (unfold), retaining the proven sequence and PWM positions: `fold` moves AoA to 1125/1050 µs, then sweeps D6 from 2475 to 500 µs; `unfold` sweeps D6 back to 2475 µs, restores flat AoA at 1575/1500 µs, then holds the 100 µs (about 10-degree) flight sweep-back at 2375 µs. The board starts in that unfolded flight position.
 
 `arm`, `disarm`, `release`, `deploy`, and `tune P I D` remain UDP link tests only: they are printed by the sketch and do not move hardware.
 

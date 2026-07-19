@@ -112,6 +112,10 @@ static const char LOG_TAG[] = "0719F";
 //   unfold: sweep out, then return both AoA servos to flat.
 static const int SWEEP_UNFOLDED_US = 2475;
 static const int SWEEP_FOLDED_US = 500;
+// Sweep back during unfolded flight.  100 us is approximately 10 degrees of
+// the calibrated 2000 us / 180 degree D6 sweep-servo range.
+static const int SWEEP_BACK_US = 100;
+static const int SWEEP_FLIGHT_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
 static const int AOA_LEFT_FOLDED_US = 1125;
@@ -1562,7 +1566,6 @@ bool sdReady = false;
     globalSdFailed = true;
     safeSerialPrintln(F("[Core 1] ERROR: SD.begin failed - logging disabled."));
   } else {
-    globalSdReady = true;
     char name[16];
     for (int i = 0; i < 999; i++) {
       snprintf(name, sizeof(name), "%s_%03d.CSV", LOG_TAG, i);
@@ -1580,6 +1583,10 @@ bool sdReady = false;
     } else {
       writeCsvHeader(logFile);
       logFile.flush();
+      // Do not report ready until SD.begin, file creation, and the initial
+      // header flush have all completed.  setup() uses this to keep GPS and
+      // Wi-Fi startup away from the proven SD initialization sequence.
+      globalSdReady = true;
       serialMutex.lock();
       Serial.print(F("[Core 1] Logging to: "));
       Serial.println(logFile.name());
@@ -1838,9 +1845,11 @@ void setup() {
   nextControlUs = lastControlUs + CONTROL_DT_US;
   nextLogUs = lastControlUs;
 
-  // Begin in the unfolded, flat configuration.  Subsequent fold/unfold
-  // changes are requested by authenticated-format UDP packets from the T14S.
+  // Begin unfolded and flat, then take up the calibrated 10-degree flight
+  // sweep-back. Subsequent fold/unfold changes are requested by UDP packets.
   lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
+  delay(500);
+  slowSweepTo(SWEEP_FLIGHT_US);
   sweepMode = SWEEP_UNFOLDED;
   safeSerialPrintln(F("[Core 0] Wing control ready: uplink 'fold' or 'unfold'."));
 }
@@ -1999,6 +2008,9 @@ static void unfoldWings() {
   currentAoaRightUs = AOA_RIGHT_FLAT_US;
   leftPwmUs = AOA_LEFT_FLAT_US;
   rightPwmUs = AOA_RIGHT_FLAT_US;
+  // Keep the same calibrated sweep-back used by sweepFilterRot during the
+  // unfolded flight state.
+  slowSweepTo(SWEEP_FLIGHT_US);
   sweepMode = SWEEP_UNFOLDED;
   safeSerialPrintln(F("[Uplink] Wings unfolded."));
 }
