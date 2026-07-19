@@ -6,11 +6,20 @@
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
 
-const char* ssid = "Kai's A55";
+const char* ssid = "kxkT14s";
 const char* pass = "Mika12345.";
 WiFiUDP Udp;
-const char* udpAddress = "255.255.255.255";
+IPAddress udpAddress(255, 255, 255, 255); // Broadcast IP
 const int udpPort = 5000;
+
+// Struct for receiving commands from Python ground station
+#pragma pack(push, 1)
+struct UplinkCommand {
+  uint32_t magic;       // Must be 0xA1B2C3D4 to be accepted
+  uint8_t command_id;   // 1=Arm, 2=Disarm, 3=Tune, etc.
+  float values[3];      // General purpose payload array
+};
+#pragma pack(pop)
 
 #include <math.h>
 #include <rtos.h>
@@ -1584,16 +1593,16 @@ bool sdReady = false;
 
     ControlRecord *rec = reinterpret_cast<ControlRecord *>(evt.value.p);
 
+    // UDP Broadcast of binary record (works even without SD card!)
+    if (WiFi.status() == WL_CONNECTED) {
+      Udp.beginPacket(udpAddress, udpPort);
+      Udp.write((const uint8_t*)rec, sizeof(ControlRecord));
+      Udp.endPacket();
+    }
+
     if (sdReady && logFile && !finished) {
       writeRecord(logFile, *rec);
       
-      // UDP Broadcast of binary record
-      if (WiFi.status() == WL_CONNECTED) {
-        Udp.beginPacket(udpAddress, udpPort);
-        Udp.write((const uint8_t*)rec, sizeof(ControlRecord));
-        Udp.endPacket();
-      }
-
       rowCount++;
 
       if (rowCount % SD_FLUSH_EVERY_N == 0) {
@@ -1609,6 +1618,7 @@ bool sdReady = false;
         safeSerialPrintln(F("[Core 1] ERROR: SD write error - logging stopped."));
       }
     }
+
 
     // Return the slot to Core 0's free list.
     freeQueue.put(rec, osWaitForever);
@@ -1938,7 +1948,53 @@ void slowSweepAoaTo(int targetLeftUs, int targetRightUs) {
   rightPwmUs = targetRightUs;
 }
 
+void handleUplink() {
+  int packetSize = Udp.parsePacket();
+  if (packetSize) {
+    if (packetSize == sizeof(UplinkCommand)) {
+      UplinkCommand cmd;
+      Udp.read((char*)&cmd, sizeof(UplinkCommand));
+      if (cmd.magic == 0xA1B2C3D4) {
+        Serial.print(F("[Uplink] Received Command ID: "));
+        Serial.println(cmd.command_id);
+        
+        switch(cmd.command_id) {
+          case 1:
+            Serial.println(F(" -> Action: ARM (Placeholder)"));
+            // e.g., armed = true;
+            break;
+          case 2:
+            Serial.println(F(" -> Action: DISARM (Placeholder)"));
+            // e.g., armed = false;
+            break;
+          case 3:
+            Serial.print(F(" -> Action: TUNE | P: ")); Serial.print(cmd.values[0]);
+            Serial.print(F(" I: ")); Serial.print(cmd.values[1]);
+            Serial.print(F(" D: ")); Serial.println(cmd.values[2]);
+            // e.g., Kp = cmd.values[0];
+            break;
+          case 4:
+            Serial.println(F(" -> Action: RELEASE (Placeholder)"));
+            // e.g., servoDrop.write(180);
+            break;
+          case 5:
+            Serial.println(F(" -> Action: DEPLOY (Placeholder)"));
+            // e.g., parachuteDeploy();
+            break;
+          default:
+            Serial.println(F(" -> Action: UNKNOWN"));
+            break;
+        }
+      }
+    } else {
+      Udp.flush(); // discard unexpected packets
+    }
+  }
+}
+
 void loop() {
+  handleUplink(); // Check for incoming commands from python
+  
   // Run ESEKF/logging for the current tick if not sweeping
   pollGps();
   const uint32_t nowUs = micros();
