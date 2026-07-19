@@ -1,9 +1,9 @@
-# 0719 Live Telemetry
+# 0719 Fold-RC kxkT14s Telemetry
 
-Flash `0719_kxkT14s_liveTelem.ino` to the Nano RP2040 Connect, then run:
+Flash `0719_foldRC_kxkT14s.ino` to the Nano RP2040 Connect, then run:
 
 ```bash
-python3 kxkT14s_live_telem.py
+python3 kxkT14s_fold_rc.py
 ```
 
 The Python script starts the `kxkT14s` hotspot, shows live telemetry, and restores the previous Wi-Fi connection when you exit.
