@@ -8,7 +8,7 @@ python3 kxkT14s_live_telem.py
 
 The Python script starts the `kxkT14s` hotspot, shows live telemetry, and restores the previous Wi-Fi connection when you exit.
 
-The Python script is configured for the Fedora-based T14s ground station and will need NetworkManager/hotspot updates for other machines.
+The Python script is configured for my Fedora-based T14s ground station and will need NetworkManager/hotspot updates for other machines.
 
 The dashboard shows attitude, PWM, GPS fix/type, satellites, position, and up-positive vertical velocity.
 
