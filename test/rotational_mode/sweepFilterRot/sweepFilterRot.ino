@@ -1695,7 +1695,10 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);  // Off until a valid GPS fix is received.
-  while (!Serial) {
+  // Battery-only startup has no USB serial host.  Do not wait forever here or
+  // setup never reaches the servo attach and sweep-back command below.
+  const uint32_t serialStartMs = millis();
+  while (!Serial && (uint32_t)(millis() - serialStartMs) < SERIAL_WAIT_MS) {
     delay(10);
   }
 
