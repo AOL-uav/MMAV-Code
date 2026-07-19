@@ -22,7 +22,8 @@ static WiFiUDP telemetryUdp;
 #pragma pack(push, 1)
 struct UplinkCommand {
   uint32_t magic;       // Must be 0xA1B2C3D4.
-  uint8_t commandId;    // 1=arm, 2=disarm, 3=tune, 4=release, 5=deploy.
+  uint8_t commandId;    // 1=arm, 2=disarm, 3=tune, 4=release, 5=deploy,
+                        // 6=fold, 7=unfold.
   float values[3];
 };
 #pragma pack(pop)
@@ -97,31 +98,28 @@ static const uint32_t UPLINK_MAGIC = 0xA1B2C3D4UL;
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "0719";
+static const char LOG_TAG[] = "0719_live_fold";
 
 
-// ========================= Fixed test position =========================
-// Values and wiring follow sweep_aero_logger.  180 degrees spans 2000 us,
-// so five degrees is approximately 56 us.
+// ========================= Wing-fold command positions =========================
+// These are the proven sweep-aero PWM endpoints.  Fold/unfold use the same
+// slow, ordered movement as the former A2/A1 short-to-ground controls:
+// first hold sweep fully unfolded, then rotate both AoA servos together.
 static const int SWEEP_UNFOLDED_US = 2475;
-static const int SWEEP_BACK_US = 0
-;  // 10 degrees of the 180-degree sweep range
-static const int SWEEP_TARGET_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;  // 2364
-
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
-static const int AOA_5_DEG_US = -75;
-// The AoA direction follows the existing rotational-mode convention.
-static const int AOA_LEFT_TARGET_US = AOA_LEFT_FLAT_US - AOA_5_DEG_US;   // 1519
-static const int AOA_RIGHT_TARGET_US = AOA_RIGHT_FLAT_US - AOA_5_DEG_US; // 1444
+static const int AOA_LEFT_FOLDED_US = 575;
+static const int AOA_RIGHT_FOLDED_US = 500;
+
+static const uint8_t COMMAND_FOLD = 6;
+static const uint8_t COMMAND_UNFOLD = 7;
 
 enum SweepMode { SWEEP_UNKNOWN, SWEEP_FOLDED, SWEEP_UNFOLDED, SWEEP_MOUNT };
 static SweepMode sweepMode = SWEEP_UNKNOWN;
 static bool servosAttached = false;
 static float currentSweepUs = -1.0f;
-static float currentAoaLeft  Us = -1.0f;
+static float currentAoaLeftUs = -1.0f;
 static float currentAoaRightUs = -1.0f;
-static int targetSweepUs = -1;
 
 // ========================= Timing and IO =========================
 
