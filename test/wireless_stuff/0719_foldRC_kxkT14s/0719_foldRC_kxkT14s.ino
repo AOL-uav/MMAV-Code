@@ -16,6 +16,9 @@ static const IPAddress TELEMETRY_BROADCAST_IP(255, 255, 255, 255);
 static const uint16_t TELEMETRY_UDP_PORT = 5000;
 static const uint8_t WIFI_CONNECT_RETRIES = 15;
 static const uint16_t WIFI_CONNECT_RETRY_MS = 500;
+// loggerTask performs SD.begin() with up to five 400 ms retries.  Keep all
+// other peripheral bring-up out of that window, just as sweepFilterRot does.
+static const uint16_t SD_INIT_WAIT_MS = 3000;
 static WiFiUDP telemetryUdp;
 
 // Packed exactly like the ground station's '<IB3f' command payload.
@@ -1729,15 +1732,7 @@ static void maybeEnqueueLog(
 
 // ========================= Setup and loop =========================
 
-void setup() {
-  Serial.begin(SERIAL_BAUD);
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);  // Off until a valid GPS fix is received.
-  const uint32_t serialStartMs = millis();
-  while (!Serial && (uint32_t)(millis() - serialStartMs) < SERIAL_WAIT_MS) {
-    delay(10);
-  }
-
+static void connectTelemetryWifi() {
   Serial.print(F("[WiFi] Connecting to hotspot: "));
   Serial.println(WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
@@ -1754,7 +1749,16 @@ void setup() {
   } else {
     Serial.println(F("\n[WiFi] Connection failed; continuing with SD logging only."));
   }
+}
 
+void setup() {
+  Serial.begin(SERIAL_BAUD);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);  // Off until a valid GPS fix is received.
+  const uint32_t serialStartMs = millis();
+  while (!Serial && (uint32_t)(millis() - serialStartMs) < SERIAL_WAIT_MS) {
+    delay(10);
+  }
 
   serialMutex.lock();
   Serial.print(F("[Core 0] ESEKF + SMC boot, log tag="));
@@ -1784,7 +1788,18 @@ void setup() {
   }
 
   loggerThread.start(loggerTask);
-  delay(200);
+  // Match sweepFilterRot's startup isolation: wait until loggerTask finishes
+  // its SD.begin/file-open sequence before starting GPS or Wi-Fi peripherals.
+  const uint32_t sdInitStartMs = millis();
+  while (!globalSdReady && !globalSdFailed &&
+         (uint32_t)(millis() - sdInitStartMs) < SD_INIT_WAIT_MS) {
+    delay(10);
+  }
+  if (globalSdReady) {
+    safeSerialPrintln(F("[Core 0] SD logging initialized before radio startup."));
+  } else if (!globalSdFailed) {
+    safeSerialPrintln(F("[Core 0] WARNING: SD initialization timed out; logger continues in background."));
+  }
 
   safeSerialPrintln(F("[Core 0] Keep board still: gyro calibration."));
   if (!imuFaultLocked) {
@@ -1812,6 +1827,11 @@ void setup() {
   gps.lastFusedTowMs = 0xFFFFFFFFUL;
   delay(300);
   configureUbxReceiver();
+
+  // Wi-Fi uses the board's separate SPI1 bus, but it is intentionally brought
+  // up only after the SD logger has completed the proven sweepFilterRot
+  // initialization sequence above.
+  connectTelemetryWifi();
 
   logClockStartMs = millis();
   lastControlUs = micros();
