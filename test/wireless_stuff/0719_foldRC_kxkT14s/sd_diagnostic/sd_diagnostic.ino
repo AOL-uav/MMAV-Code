@@ -10,7 +10,8 @@ static const char *diagnosticResult = "NOT_RUN";
 static File openDiagnosticFile() {
   char name[16];
   for (unsigned int index = 0; index < 1000; ++index) {
-    snprintf(name, sizeof(name), "SDTEST_%03u.TXT", index);
+    // Keep the basename within FAT 8.3 limits, as required by this SD stack.
+    snprintf(name, sizeof(name), "DIAG%03u.TXT", index);
     if (!SD.exists(name)) return SD.open(name, FILE_WRITE);
   }
   return File();

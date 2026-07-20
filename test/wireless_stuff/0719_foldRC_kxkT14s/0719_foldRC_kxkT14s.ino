@@ -101,7 +101,8 @@ static const uint32_t UPLINK_MAGIC = 0xA1B2C3D4UL;
 
 // ========================= Edit each flight =========================
 
-// Keep this at seven characters or fewer: the SD filename buffer is 16 bytes.
+// FAT short filenames permit an eight-character basename. With the three-digit
+// sequence below, keep this tag at five characters or fewer.
 static const char LOG_TAG[] = "0719F";
 
 
@@ -1568,7 +1569,8 @@ bool sdReady = false;
   } else {
     char name[16];
     for (int i = 0; i < 999; i++) {
-      snprintf(name, sizeof(name), "%s_%03d.CSV", LOG_TAG, i);
+      // No underscore: "0719F000.CSV" has an 8-character FAT basename.
+      snprintf(name, sizeof(name), "%s%03d.CSV", LOG_TAG, i);
       if (!SD.exists(name)) {
         logFile = SD.open(name, FILE_WRITE);
         break;
