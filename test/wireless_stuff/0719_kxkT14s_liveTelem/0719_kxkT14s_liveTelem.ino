@@ -22,7 +22,8 @@ static WiFiUDP telemetryUdp;
 #pragma pack(push, 1)
 struct UplinkCommand {
   uint32_t magic;       // Must be 0xA1B2C3D4.
-  uint8_t commandId;    // 1=arm, 2=disarm, 3=tune, 4=release, 5=deploy.
+  uint8_t commandId;    // 1=arm, 2=disarm, 3=tune, 4=release, 5=deploy,
+                        // 6=fold, 7=unfold.
   float values[3];
 };
 #pragma pack(pop)
@@ -97,22 +98,24 @@ static const uint32_t UPLINK_MAGIC = 0xA1B2C3D4UL;
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "0719";
+// Keep this at seven characters or fewer: the SD filename buffer is 16 bytes.
+static const char LOG_TAG[] = "0719F";
 
 
-// ========================= Fixed test position =========================
-// Values and wiring follow sweep_aero_logger.  180 degrees spans 2000 us,
-// so five degrees is approximately 56 us.
+// ========================= Wing-fold command positions =========================
+// These are the proven sweep-aero PWM endpoints. Fold/unfold use the same
+// ordered movement as the former A2/A1 short-to-ground controls:
+//   fold:   move both AoA servos to their clearance positions, then sweep in;
+//   unfold: sweep out, then return both AoA servos to flat.
 static const int SWEEP_UNFOLDED_US = 2475;
-static const int SWEEP_BACK_US = 100;  // 10 degrees of the 180-degree sweep range
-static const int SWEEP_TARGET_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;  // 2364
-
+static const int SWEEP_FOLDED_US = 500;
 static const int AOA_LEFT_FLAT_US  = 1575;
 static const int AOA_RIGHT_FLAT_US = 1500;
-static const int AOA_5_DEG_US = -75;
-// The AoA direction follows the existing rotational-mode convention.
-static const int AOA_LEFT_TARGET_US = AOA_LEFT_FLAT_US - AOA_5_DEG_US;   // 1519
-static const int AOA_RIGHT_TARGET_US = AOA_RIGHT_FLAT_US - AOA_5_DEG_US; // 1444
+static const int AOA_LEFT_FOLDED_US = 1125;
+static const int AOA_RIGHT_FOLDED_US = 1050;
+
+static const uint8_t COMMAND_FOLD = 6;
+static const uint8_t COMMAND_UNFOLD = 7;
 
 enum SweepMode { SWEEP_UNKNOWN, SWEEP_FOLDED, SWEEP_UNFOLDED, SWEEP_MOUNT };
 static SweepMode sweepMode = SWEEP_UNKNOWN;
@@ -120,7 +123,6 @@ static bool servosAttached = false;
 static float currentSweepUs = -1.0f;
 static float currentAoaLeftUs = -1.0f;
 static float currentAoaRightUs = -1.0f;
-static int targetSweepUs = -1;
 
 // ========================= Timing and IO =========================
 
@@ -146,7 +148,7 @@ static const uint8_t SD_FLUSH_EVERY_N = 10;
 static const int SERVO_LEFT_PIN = 4;
 static const int SERVO_RIGHT_PIN = 3;
 static const int SERVO_MORPH_PIN = 6;  // Sweep servo, from sweep_aero_logger
-static const int SERVO_TAIL_PIN = 7;   // Unused in this fixed-position test
+static const int SERVO_TAIL_PIN = 7;   // Tail remains at its configured trim.
 static const int ARM_PIN = 2;
 static const bool SERVO_LEFT_REVERSE = true;
 static const bool SERVO_RIGHT_REVERSE = false;
@@ -1816,14 +1818,11 @@ void setup() {
   nextControlUs = lastControlUs + CONTROL_DT_US;
   nextLogUs = lastControlUs;
 
-  // Attach the sweep-aero servos and visibly command both AoA servos to their
-  // fixed 5-degree positions.  Then make the one-time 10-degree sweep-back
-  // from unfolded and hold all three commands for the rest of the test.
-  lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_TARGET_US, AOA_RIGHT_TARGET_US);
-  delay(500);
-  slowSweepTo(SWEEP_TARGET_US);
+  // Begin in the unfolded, flat configuration.  Subsequent fold/unfold
+  // changes are requested by authenticated-format UDP packets from the T14S.
+  lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
   sweepMode = SWEEP_UNFOLDED;
-  safeSerialPrintln(F("[Core 0] Fixed test: sweep back 10 deg; AoA servos held at 5 deg."));
+  safeSerialPrintln(F("[Core 0] Wing control ready: uplink 'fold' or 'unfold'."));
 }
 
 
@@ -1849,7 +1848,6 @@ void slowSweepTo(int targetUs) {
   if (currentSweepUs == -1.0f) currentSweepUs = targetUs;
   
   if ((int)currentSweepUs == targetUs) {
-    delay(1000);
     return;
   }
   
@@ -1951,6 +1949,40 @@ void slowSweepAoaTo(int targetLeftUs, int targetRightUs) {
   rightPwmUs = targetRightUs;
 }
 
+static void foldWings() {
+  if (sweepMode == SWEEP_FOLDED) return;
+
+  // This exactly replaces the former A2-to-GND action: clear the folded
+  // wing path with AoA first, then make the controlled D6 sweep inward.
+  lazyAttach(SWEEP_FOLDED_US, AOA_LEFT_FOLDED_US, AOA_RIGHT_FOLDED_US);
+  servoLeft.writeMicroseconds(AOA_LEFT_FOLDED_US);
+  servoRight.writeMicroseconds(AOA_RIGHT_FOLDED_US);
+  currentAoaLeftUs = AOA_LEFT_FOLDED_US;
+  currentAoaRightUs = AOA_RIGHT_FOLDED_US;
+  leftPwmUs = AOA_LEFT_FOLDED_US;
+  rightPwmUs = AOA_RIGHT_FOLDED_US;
+  slowSweepTo(SWEEP_FOLDED_US);
+  sweepMode = SWEEP_FOLDED;
+  safeSerialPrintln(F("[Uplink] Wings folded."));
+}
+
+static void unfoldWings() {
+  if (sweepMode == SWEEP_UNFOLDED) return;
+
+  // This exactly replaces the former A1-to-GND action: sweep D6 fully out
+  // before flattening the AoA servos.
+  lazyAttach(SWEEP_UNFOLDED_US, AOA_LEFT_FLAT_US, AOA_RIGHT_FLAT_US);
+  slowSweepTo(SWEEP_UNFOLDED_US);
+  servoLeft.writeMicroseconds(AOA_LEFT_FLAT_US);
+  servoRight.writeMicroseconds(AOA_RIGHT_FLAT_US);
+  currentAoaLeftUs = AOA_LEFT_FLAT_US;
+  currentAoaRightUs = AOA_RIGHT_FLAT_US;
+  leftPwmUs = AOA_LEFT_FLAT_US;
+  rightPwmUs = AOA_RIGHT_FLAT_US;
+  sweepMode = SWEEP_UNFOLDED;
+  safeSerialPrintln(F("[Uplink] Wings unfolded."));
+}
+
 static void handleUplink() {
   const int packetSize = telemetryUdp.parsePacket();
   if (packetSize <= 0) return;
@@ -1965,9 +1997,6 @@ static void handleUplink() {
       (int)sizeof(command)) return;
   if (command.magic != UPLINK_MAGIC) return;
 
-  // Keep the existing flight-test command interface observable without making
-  // wireless packets change actuator state.  This fixed-position test remains
-  // intentionally controlled by the sketch's physical/test configuration.
   serialMutex.lock();
   Serial.print(F("[Uplink] id="));
   Serial.print(command.commandId);
@@ -1976,6 +2005,14 @@ static void handleUplink() {
   Serial.print(command.values[1], 3); Serial.print(',');
   Serial.println(command.values[2], 3);
   serialMutex.unlock();
+
+  // Commands 6 and 7 replace the previous momentary A2 (fold) and A1
+  // (unfold) shorts.  Every other retained command remains telemetry-only.
+  if (command.commandId == COMMAND_FOLD) {
+    foldWings();
+  } else if (command.commandId == COMMAND_UNFOLD) {
+    unfoldWings();
+  }
 }
 
 void loop() {
@@ -2009,18 +2046,15 @@ void loop() {
     }
   }
 
-  // This is deliberately a no-button, fixed-position test.  Re-send the
-  // commands in case a servo browns out or its signal lead is reconnected.
+  // Re-send the last commanded positions in case a servo browns out or its
+  // signal lead is reconnected.  Do not overwrite a remote fold/unfold state.
   if (servosAttached) {
-    servoMorph.writeMicroseconds(SWEEP_TARGET_US);
-    servoLeft.writeMicroseconds(AOA_LEFT_TARGET_US);
-    servoRight.writeMicroseconds(AOA_RIGHT_TARGET_US);
-    currentSweepUs = SWEEP_TARGET_US;
-    currentAoaLeftUs = AOA_LEFT_TARGET_US;
-    currentAoaRightUs = AOA_RIGHT_TARGET_US;
-    morphPwmUs = SWEEP_TARGET_US;
-    leftPwmUs = AOA_LEFT_TARGET_US;
-    rightPwmUs = AOA_RIGHT_TARGET_US;
+    servoMorph.writeMicroseconds((int)currentSweepUs);
+    servoLeft.writeMicroseconds((int)currentAoaLeftUs);
+    servoRight.writeMicroseconds((int)currentAoaRightUs);
+    morphPwmUs = (uint16_t)currentSweepUs;
+    leftPwmUs = (uint16_t)currentAoaLeftUs;
+    rightPwmUs = (uint16_t)currentAoaRightUs;
   }
 
   static unsigned long lastPrint = 0;

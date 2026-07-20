@@ -23,8 +23,8 @@ RECORD_STRUCTS = (
     struct.Struct("<B3x6I36f4H?BBx3f?3xI4x2d4f"),
 )
 UPLINK_STRUCT = struct.Struct("<IB3f")
-COMMAND_IDS = {"arm": 1, "disarm": 2, "release": 4, "deploy": 5}
-COMMAND_HELP = "Commands: arm | disarm | release | deploy | tune P I D | exit"
+COMMAND_IDS = {"arm": 1, "disarm": 2, "release": 4, "deploy": 5, "fold": 6, "unfold": 7}
+COMMAND_HELP = "Commands: fold | unfold | arm | disarm | release | deploy | tune P I D | exit"
 
 
 def active_wifi_name():
@@ -69,7 +69,7 @@ def parse_command(line):
 
 
 def dashboard(stdscr, sock):
-    """Curses dashboard. All available uplinks are telemetry-link tests only."""
+    """Curses dashboard with live telemetry and wing fold/unfold control."""
     try:
         curses.curs_set(1)
     except curses.error:
@@ -113,7 +113,10 @@ def dashboard(stdscr, sock):
                 sock.sendto(
                     UPLINK_STRUCT.pack(UPLINK_MAGIC, command_id, *values), board_address
                 )
-                status = f"Sent test uplink: {line} (the sketch only prints it; no hardware action)."
+                if command_id in (COMMAND_IDS["fold"], COMMAND_IDS["unfold"]):
+                    status = f"Sent wing command: {line}."
+                else:
+                    status = f"Sent telemetry-only uplink: {line}."
         elif 32 <= key <= 126:
             typed += chr(key)
 
@@ -121,7 +124,7 @@ def dashboard(stdscr, sock):
         stdscr.erase()
         lines = [
             "0719 kxkT14s LIVE TELEMETRY",
-            "Uplinks are link tests only. They do NOT arm or move any hardware.",
+            "fold/unfold move the wings. All other uplinks are telemetry-only.",
             COMMAND_HELP,
             "",
         ]

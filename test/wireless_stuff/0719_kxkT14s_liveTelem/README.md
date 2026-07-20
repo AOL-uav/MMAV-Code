@@ -12,7 +12,9 @@ The Python script is configured for my Fedora T14s ground station and will need 
 
 The dashboard shows attitude, PWM, GPS fix/type, satellites, position, and up-positive vertical velocity.
 
-The command field accepts `arm`, `disarm`, `release`, `deploy`, and `tune P I D` for UDP link testing only. They are printed by the sketch and do not move hardware.
+The command field accepts `fold` and `unfold` for live wing control. These replace the former momentary A2 (fold) and A1 (unfold) shorts, retaining the proven sequence and PWM positions: `fold` moves AoA to 1125/1050 µs, then sweeps D6 from 2475 to 500 µs; `unfold` sweeps D6 back to 2475 µs, then restores flat AoA at 1575/1500 µs. The board starts unfolded and flat.
+
+`arm`, `disarm`, `release`, `deploy`, and `tune P I D` remain UDP link tests only: they are printed by the sketch and do not move hardware.
 
 If UDP port 5000 is blocked:
 
