@@ -74,7 +74,7 @@
 
 // ========================= Edit each flight =========================
 
-static const char LOG_TAG[] = "0719";
+static const char LOG_TAG[] = "0720";
 
 
 // ========================= Fixed test position =========================
