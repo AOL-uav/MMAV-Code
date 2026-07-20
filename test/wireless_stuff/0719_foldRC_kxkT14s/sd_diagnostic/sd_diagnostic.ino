@@ -5,6 +5,7 @@
 // Inert USB/SD bench diagnostic for the Nano RP2040 Connect.
 // It deliberately does not initialize Wi-Fi, GPS, IMU, or any servo pins.
 static const uint8_t SD_CS_PIN = 10;
+static const char *diagnosticResult = "NOT_RUN";
 
 static File openDiagnosticFile() {
   char name[16];
@@ -37,12 +38,14 @@ void setup() {
     delay(500);
   }
   if (!mounted) {
+    diagnosticResult = "MOUNT_FAILED";
     Serial.println("SD_RESULT=MOUNT_FAILED");
     return;
   }
 
   File file = openDiagnosticFile();
   if (!file) {
+    diagnosticResult = "OPEN_FAILED";
     Serial.println("SD_RESULT=OPEN_FAILED");
     return;
   }
@@ -51,6 +54,7 @@ void setup() {
   file.println("ms,sequence");
   file.flush();
   if (file.getWriteError()) {
+    diagnosticResult = "HEADER_WRITE_FAILED";
     Serial.println("SD_RESULT=HEADER_WRITE_FAILED");
     file.close();
     return;
@@ -62,6 +66,7 @@ void setup() {
     file.println(sequence);
     file.flush();
     if (file.getWriteError()) {
+      diagnosticResult = "WRITE_FAILED";
       Serial.print("SD_RESULT=WRITE_FAILED_AT=");
       Serial.println(sequence);
       file.close();
@@ -70,9 +75,12 @@ void setup() {
     delay(250);
   }
   file.close();
+  diagnosticResult = "PASS";
   Serial.println("SD_RESULT=PASS");
 }
 
 void loop() {
+  Serial.print("SD_DIAGNOSTIC_RESULT=");
+  Serial.println(diagnosticResult);
   delay(1000);
 }
