@@ -85,7 +85,7 @@ static const int SWEEP_BACK_US = 250;  // 10 degrees of the 180-degree sweep ran
 static const int SWEEP_TARGET_US = SWEEP_UNFOLDED_US - SWEEP_BACK_US;  // 2364
 
 static const int AOA_LEFT_FLAT_US  = 1575;
-static const int AOA_RIGHT_FLAT_US = 100;
+static const int AOA_RIGHT_FLAT_US = 1500;
 static const int AOA_5_DEG_US = -75;
 // The AoA direction follows the existing rotational-mode convention.
 static const int AOA_LEFT_TARGET_US = AOA_LEFT_FLAT_US - AOA_5_DEG_US;   // 1519
