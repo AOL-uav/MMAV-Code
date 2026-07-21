@@ -1,4 +1,4 @@
-t#include <Arduino.h>
+#include <Arduino.h>
 #include <Arduino_LSM6DSOX.h>
 #include <Servo.h>
 #include <SPI.h>
