@@ -6,8 +6,8 @@
 #include <math.h>
 #include <rtos.h>
 
-// BENCH_MODE 1: use timed arming for restrained bench testing.
-// BENCH_MODE 0: require ARM_PIN to be released once, then pulled low to arm.
+// Retained for compatibility with the original test configuration. This
+// fixed-position sketch does not currently use an arm input.
 #define BENCH_MODE 0
 
 // ENABLE_CONTROL 0: estimator/GPS/SD logging only; servos remain neutral.
@@ -124,7 +124,9 @@ static const int SERVO_LEFT_PIN = 4;
 static const int SERVO_RIGHT_PIN = 3;
 static const int SERVO_MORPH_PIN = 6;  // Sweep servo, from sweep_aero_logger
 static const int SERVO_TAIL_PIN = 7;   // Unused in this fixed-position test
-static const int ARM_PIN = 2;
+// Samara's external LED (D2 + R_LED1 to ground) is active-high. D2 is not
+// otherwise used by this fixed-position test.
+static const int STATUS_LED_PIN = 2;
 static const bool SERVO_LEFT_REVERSE = true;
 static const bool SERVO_RIGHT_REVERSE = false;
 static const bool SERVO_MORPH_REVERSE = false;
@@ -484,6 +486,24 @@ static void clearControlState() {
   bHat[1][0] = 0.0f;
   bHat[1][1] = B_PITCH_INITIAL;
   bEstimatorReady = false;
+}
+
+// External Samara status LED patterns:
+//   solid on  = valid, fresh 3D GPS fix
+//   slow blink = GPS is still acquiring / no valid fix
+//   fast blink = SD initialization or file-creation failure
+// SD failure deliberately takes priority because it is a persistent fault.
+static void updateStatusLed() {
+  const uint32_t nowMs = millis();
+  bool ledOn = false;
+  if (globalSdFailed) {
+    ledOn = ((nowMs / 125U) & 1U) == 0U;  // 4 Hz blink
+  } else if (gps.fix) {
+    ledOn = true;
+  } else {
+    ledOn = ((nowMs / 500U) & 1U) == 0U;  // 1 Hz blink
+  }
+  digitalWrite(STATUS_LED_PIN, ledOn ? HIGH : LOW);
 }
 
 static uint32_t recordStartMs() {
@@ -1695,6 +1715,8 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);  // Off until a valid GPS fix is received.
+  pinMode(STATUS_LED_PIN, OUTPUT);
+  digitalWrite(STATUS_LED_PIN, LOW);
   // Battery-only startup has no USB serial host.  Do not wait forever here or
   // setup never reaches the servo attach and sweep-back command below.
   const uint32_t serialStartMs = millis();
@@ -1904,6 +1926,7 @@ void slowSweepAoaTo(int targetLeftUs, int targetRightUs) {
 void loop() {
   // Run ESEKF/logging for the current tick if not sweeping
   pollGps();
+  updateStatusLed();
   const uint32_t nowUs = micros();
   if ((int32_t)(nowUs - nextControlUs) >= 0) {
     nextControlUs += CONTROL_DT_US;
