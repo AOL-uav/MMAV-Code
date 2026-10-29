@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XIAO Gimbal Controller</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f0f2f5; padding: 20px; height: 100vh; margin: 0; box-sizing: border-box; }
+        .container { display: flex; gap: 20px; width: 100%; max-width: 900px; height: 100%; max-height: 600px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 350px; }
+        .terminal { background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 12px; font-family: monospace; font-size: 0.85em; flex: 1; overflow-y: auto; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .terminal-line { margin-bottom: 4px; border-bottom: 1px solid #333; padding-bottom: 2px; }
+        h1 { color: #1a73e8; margin-top: 0; margin-bottom: 10px; text-align: center; }
+        .status-bar { text-align: center; color: #5f6368; font-size: 0.9em; margin-bottom: 25px; }
+        .slider-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #5f6368; }
+        input[type=range] { width: 100%; height: 8px; border-radius: 5px; background: #d7dbdd; outline: none; -webkit-appearance: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #1a73e8; cursor: pointer; }
+        .value { float: right; color: #1a73e8; }
+        button { width: 100%; padding: 10px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; transition: background 0.2s; font-weight: bold; }
+        button:hover { background: #1557b0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Gimbal Control</h1>
+            <div class="status-bar" id="status">Mode: Interactive</div>
+            
+            <div class="slider-group">
+                <label>Yaw <span id="yaw-val" class="value">90</span></label>
+                <input type="range" min="45" max="135" value="90" id="yaw-slider" oninput="update('Y', this.value)">
+            </div>
+
+            <div class="slider-group">
+                <label>Pitch <span id="pitch-val" class="value">90</span></label>
+                <input type="range" min="45" max="135" value="90" id="pitch-slider" oninput="update('P', this.value)">
+            </div>
+
+            <div class="slider-group">
+                <label>Roll <span id="roll-val" class="value">90</span></label>
+                <input type="range" min="45" max="135" value="90" id="roll-slider" oninput="update('R', this.value)">
+            </div>
+
+            <button onclick="centerAll()" style="margin-bottom: 8px;">Center All</button>
+            <button onclick="autoSweep()" style="margin-bottom: 8px; background: #34a853;" id="btn-auto">Start Auto Sweep</button>
+            <button onclick="relaxAll()" style="background: #ea4335;">Relax Servos (Off)</button>
+        </div>
+
+        <div class="terminal" id="terminal">
+            <div style="color: #888; margin-bottom: 10px;">--- Diagnostic Telemetry Stream ---</div>
+        </div>
+    </div>
+
+    <script>
+        // Telemetry Stream
+        const terminal = document.getElementById('terminal');
+        const eventSource = new EventSource("/stream");
+        
+        eventSource.onmessage = function(event) {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.innerText = `> ${event.data}`;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            // Limit lines to prevent memory issues
+            if (terminal.childNodes.length > 100) {
+                terminal.removeChild(terminal.childNodes[1]);
+            }
+        };
+
+        let timers = {};
+        let isAuto = false;
+
+        function setStatus(text, color) {
+            const el = document.getElementById('status');
+            el.innerText = text;
+            if (color) el.style.color = color;
+        }
+
+        function update(axis, angle) {
+            if (isAuto) {
+                isAuto = false;
+                document.getElementById('btn-auto').innerText = "Start Auto Sweep";
+            }
+            setStatus("Mode: Interactive (" + axis + angle + ")");
+            
+            const idMap = {'Y': 'yaw', 'P': 'pitch', 'R': 'roll'};
+            document.getElementById(idMap[axis] + '-val').innerText = angle;
+            
+            clearTimeout(timers[axis]);
+            timers[axis] = setTimeout(() => {
+                fetch('/control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ axis: axis, angle: parseInt(angle) })
+                });
+            }, 50);
+        }
+
+        function centerAll() {
+            isAuto = false;
+            document.getElementById('btn-auto').innerText = "Start Auto Sweep";
+            setStatus("Mode: Centering...");
+            
+            ['yaw', 'pitch', 'roll'].forEach(id => {
+                document.getElementById(id + '-slider').value = 90;
+                document.getElementById(id + '-val').innerText = 90;
+            });
+            
+            fetch('/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ axis: 'C' })
+            }).then(() => setStatus("Mode: Centered"));
+        }
+
+        function autoSweep() {
+            isAuto = !isAuto;
+            const btn = document.getElementById('btn-auto');
+            if (isAuto) {
+                btn.innerText = "Stop Auto Sweep";
+                btn.style.background = "#fbbc05";
+                setStatus("Mode: Auto-Sweep Active", "#34a853");
+                fetch('/control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ axis: 'A' })
+                });
+            } else {
+                btn.innerText = "Start Auto Sweep";
+                btn.style.background = "#34a853";
+                centerAll();
+            }
+        }
+
+        function relaxAll() {
+            isAuto = false;
+            document.getElementById('btn-auto').innerText = "Start Auto Sweep";
+            setStatus("Mode: Servos Relaxed", "#ea4335");
+            fetch('/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ axis: 'S' })
+            });
+        }
+    </script>
+</body>
+</html>
