@@ -1,0 +1,34 @@
+<MAV-2026>\Codes\rigid_glider\pullout_sim.py:247: ResourceWarning: unclosed file <_io.TextIOWrapper name='<MAV-2026>\\Codes\\results\\runs\\rigid_glider\\flat_test_v2\\scale_table.csv' mode='r' encoding='utf-8'>
+  scale = next(r for r in csv.DictReader((KIT / "scale_table.csv").open(encoding="utf-8")) if r["wing"] == info["key"] and r[[k for k in r if k.startswith("thickness_mm")][0]] == info["thick"])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+<MAV-2026>\Codes\rigid_glider\pullout_sim.py:249: ResourceWarning: unclosed file <_io.TextIOWrapper name='<MAV-2026>\\Codes\\results\\runs\\rigid_glider\\flat_test_v2\\ballast_table.csv' mode='r' encoding='utf-8'>
+  ballast_rows = [r for r in csv.DictReader((KIT / "ballast_table.csv").open(encoding="utf-8")) if r["wing"] == info["key"] and r["thickness_mm"] == info["thick"]]
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+test_avl_tab_signs (test_pullout_sim.InputTests.test_avl_tab_signs) ... ok
+test_kit_mass_and_cg_agree (test_pullout_sim.InputTests.test_kit_mass_and_cg_agree) ... ok
+test_poly_moments_rectangle (test_pullout_sim.InputTests.test_poly_moments_rectangle) ... ok
+test_tab_deck_has_two_control_sections (test_pullout_sim.InputTests.test_tab_deck_has_two_control_sections) ... ok
+test_table_choice_and_symmetry_of_data (test_pullout_sim.InputTests.test_table_choice_and_symmetry_of_data) ... ok
+test_band_offsets_are_aft_of_the_neutral_point (test_pullout_sim.KitBandTests.test_band_offsets_are_aft_of_the_neutral_point) ... ok
+test_inertia_scale_and_drag_off_options (test_pullout_sim.KitBandTests.test_inertia_scale_and_drag_off_options) ... ok
+test_kit_variants_and_flag_logic (test_pullout_sim.KitBandTests.test_kit_variants_and_flag_logic) ... ok
+test_default_output_folder_is_new (test_pullout_sim.OutputTests.test_default_output_folder_is_new) ... ok
+test_svg_plot_is_dark_and_wellformed (test_pullout_sim.OutputTests.test_svg_plot_is_dark_and_wellformed) ... ok
+test_blend_is_continuous_at_the_end_of_the_table (test_pullout_sim.PhysicsTests.test_blend_is_continuous_at_the_end_of_the_table) ... ok
+test_energy_conserved_with_aero_off (test_pullout_sim.PhysicsTests.test_energy_conserved_with_aero_off) ... ok
+test_negative_angles_mirror (test_pullout_sim.PhysicsTests.test_negative_angles_mirror) ... ok
+test_no_input_never_pitches_and_dives (test_pullout_sim.PhysicsTests.test_no_input_never_pitches_and_dives) ... ok
+test_nose_up_input_produces_pitch_up (test_pullout_sim.PhysicsTests.test_nose_up_input_produces_pitch_up) ... ok
+test_steady_glide_reproduces_the_table_lift_to_drag (test_pullout_sim.PhysicsTests.test_steady_glide_reproduces_the_table_lift_to_drag) ... ok
+test_time_step_halving (test_pullout_sim.PhysicsTests.test_time_step_halving) ... ok
+test_cannot_say_flags (test_pullout_sim.ReviewTests.test_cannot_say_flags) ... ok
+test_constant_cl_zero_drag_bottoms_at_three_trim_speed_heights (test_pullout_sim.ReviewTests.test_constant_cl_zero_drag_bottoms_at_three_trim_speed_heights) ... ok
+test_deep_stall_needs_a_clear_margin (test_pullout_sim.ReviewTests.test_deep_stall_needs_a_clear_margin) ... ok
+test_dive_has_no_swoop_depth (test_pullout_sim.ReviewTests.test_dive_has_no_swoop_depth) ... ok
+test_effectiveness_scales_tab_effect (test_pullout_sim.ReviewTests.test_effectiveness_scales_tab_effect) ... ok
+test_swoop_depth_is_the_first_local_minimum_of_height (test_pullout_sim.ReviewTests.test_swoop_depth_is_the_first_local_minimum_of_height) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 12.700s
+
+OK

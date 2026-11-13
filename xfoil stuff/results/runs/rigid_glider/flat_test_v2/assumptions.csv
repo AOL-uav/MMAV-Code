@@ -1,0 +1,33 @@
+item,value,unit,source_tag,what_it_means,how_to_replace_with_measurement
+PLA density,1.24,g/cm3,ASSUMED,Used for every printed mass. 100 % solid. Replace with weighed parts.,weigh each part
+PLA stiffness E,3.3,GPa,ASSUMED,Only used for the rough tip-bend estimate. Printed flat plates are stiffer along the print lines than across them.,measure with a deflection test
+Air density,1.225,kg/m3,ASSUMED,"Sea level, standard day. Used for speed.",none needed for a rough check
+Air viscosity,1.5e-05,m2/s,ASSUMED,Used for Reynolds number.,none needed for a rough check
+Printed plate thickness (default),0.6,mm,GEOMETRY,3 layers of 0.2 mm. The printed part may differ by a layer.,measure with calipers
+"Spar rib (printed wings, default)","1.2 mm wide x 2.5 mm high above the plate, along the quarter chord of each half, 3 mm short of the tip, gap 4.4 mm at the centre",,GEOMETRY,"Printed on top of the plate, flown rib-down with the stick. With a rib the wing is a flat plate with a spar underneath, not a plain plate. Reasoning, not a measured fact: the upper surface is where flow separation matters most, so the disturbance goes underneath.",print one plain wing (--plain) to compare
+Rib stiffness estimate,T-section second moment of area at the mean chord,,ASSUMED,ROUGH: treats the rib as running the whole half span; ignores sweep and taper.,flex the real wing and look
+Dihedral,0.0,deg,GEOMETRY,"Zero. A one-piece flat wing cannot have dihedral. The earlier model used 3 deg per panel, so these wings differ from what was modelled.",-
+Foamboard thickness,5.0,mm,ASSUMED,Typical craft foamboard. Kai to measure; the page has a blank for it. It is above the 2.6-4.3 % of the published plate tests.,measure with calipers
+Foamboard areal mass,300.0,g/m2,ASSUMED,Typical light craft foamboard with paper. To be weighed (cut a known area and weigh it).,weigh a measured area
+"Glue, tape, paint mass",0.0,g,UNKNOWN,Not included in any mass here.,weigh the finished aircraft
+Tip fin size,"24 mm x span/400 tall, chord = tip chord",,GEOMETRY,"Each fin is about 4 % of wing area. Fins are a design choice, not a result. Printed fins are centred on the plate mid-plane (not including the rib); foamboard fins are butt-glued centred on the board mid-plane.",-
+Fin / tab clearance (printed),"slot = plate + 0.1 mm wide, tab + 0.1 mm long",,GEOMETRY,A printer may need more or less. Test-fit before gluing.,adjust in flat_test.py
+Stick shape,"4 mm x 7 mm, nose 0.4 root chords ahead",,GEOMETRY,Square holes because the part is built on a grid.,-
+Foamboard edge shaping,round the leading edge to about a half-ellipse 2 board-thicknesses long; taper the last 20 mm of the trailing edge to about 1 mm; same on both halves,,JUDGEMENT,"A procedure we picked, not a result. Use a sanding block and check both sides match.",-
+CG test start,0.15 MAC ahead of the AVL neutral point,,JUDGEMENT,Picked to start on the safe (nose-heavy) side. Not a prediction.,move if flights say so
+CG table end,"at least 0.08 MAC behind the AVL neutral point, then the stop rule",,JUDGEMENT,"Printed so the sweep does not stop at the neutral point: the published free-flight study (Li et al. 2022, unswept plates) is a reason to keep testing past it, not a prediction.",follow the stop rule
+Stop rule,"keep going aft in 1 mm steps while any setting still glides or still dives; stop when, after at least one gliding setting, two settings in a row give no steady glide, or at the bare-aircraft balance point",,JUDGEMENT,Beyond the bare-aircraft balance point ballast must go in the holes under the wing instead of the nose.,agree before flying
+Li et al. 2022,"J. Fluid Mech. 937, A6, doi 10.1017/jfm.2022.89",,ASSUMED,"Published free-flight result on unswept rectangular plates (paper sheets in air, plastic plates in water, Re about 1,000 to 10,000). Quoted in its own terms on the page. Not our wings.",-
+Optional plain wing,F45-plain: the F45 wing with no rib,,JUDGEMENT,Optional. One plain wing shows whether the rib changes the behaviour. Floppier (rough tip-bend figure on the page).,print only if wanted
+CG step,1.0,mm,JUDGEMENT,Step aft between settings.,-
+Releases per setting,"5, then 10 at any setting that glides",,JUDGEMENT,A small count; luck can matter.,-
+Pass rule,>= 8 of 10 steady at one setting and both 1 mm neighbours also glide,,PROPOSED,To be agreed before flying. 'Also glide' = at least half of that neighbour's releases are steady glides.,agree first
+AVL neutral point and Cn_beta,"AVL 3.52, flat camber line, zero thickness",,AVL,"AVL knows only the outline. It does not know the thickness, a rib, the low Reynolds number or the edges.",compare with a measured balance point
+Weight on the wing for bend estimate,"all-up mass with ballast, 1 g",,ASSUMED,"Each half carries half the weight spread evenly; ignores sweep, taper and inertia relief. Shows which thicknesses are floppy, nothing more.",look at the real wing under load
+Ballast hardware,M3 screws and nuts in 3.2 mm square holes at 5 mm pitch; fine trim with a taped-on washer or coin slid along the stick,,UNKNOWN,"M3 hardware masses vary: weigh yours. The measured CG on the knife edge is what counts, not the ballast table.",weigh what you use
+US penny,2.5,g,ASSUMED,Nominal mass. Weigh yours.,weigh
+US dime,2.27,g,ASSUMED,Nominal mass. Weigh yours.,weigh
+US nickel,5.0,g,ASSUMED,Nominal mass. Weigh yours.,weigh
+Drone drop height,10.0,m,JUDGEMENT,Suggested release height from a 5-inch FPV quad. The same every time.,change if the field or the flights say so
+Phugoid period,"T = pi x sqrt(2) x V / g, about 0.45 x V seconds",s,ARITHMETIC,Textbook estimate of the slow nose-up / nose-down oscillation period of a glider at speed V. It shows why a few seconds of flight are needed.,read it from the video
+Published plate data,"Ananda, Sukumar & Selig 2015",,ASSUMED,"4.3 % plate (2.6-4.3 % range), AR 2-5, unswept, Re 60,000 and above. These wings are swept, fly lower and (printed) carry a rib. Not the same test.",-

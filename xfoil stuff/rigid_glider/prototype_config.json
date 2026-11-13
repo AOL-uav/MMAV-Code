@@ -1,0 +1,40 @@
+{
+  "purpose": "Exploratory adjustable test article, not final MMAV packaging",
+  "main_wing": {
+    "span_m": 1.2,
+    "aspect_ratio": 7.0,
+    "taper": 0.65,
+    "quarter_chord_sweep_deg": 25.0,
+    "washout_deg": 0.0,
+    "dihedral_deg": 0.0,
+    "section": "NACA_0008",
+    "cg_x_m": 0.16,
+    "cg_z_m": 0.0
+  },
+  "flight": {"rho_kg_m3": 1.225, "nu_m2_s": 0.000015, "g_m_s2": 9.80665, "wing_loading_n_m2": 8.0},
+  "tail": {
+    "span_fraction_of_main_wing": 0.35,
+    "incidence_deg": -3.0,
+    "area_fractions": [0.04, 0.06, 0.08, 0.10, 0.12],
+    "aerodynamic_center_x_m_from_root_le": [0.38, 0.44, 0.50, 0.56],
+    "target_nominal_static_margin_mac": 0.10,
+    "cg_offsets_mm": [-5, 0, 5]
+  },
+  "fin": {
+    "area_fractions": [0.0, 0.01, 0.02, 0.03, 0.04, 0.06],
+    "aerodynamic_center_x_m_from_root_le": [0.32, 0.40, 0.48, 0.56]
+  },
+  "reference_for_tolerance_study_not_final_design": {
+    "tail_area_fraction": 0.08,
+    "tail_ac_x_m": 0.44,
+    "fin_area_fraction": 0.03,
+    "fin_ac_x_m": 0.48
+  },
+  "exploratory_tolerances_not_measured": {
+    "cg_mm": [-5, -2, 0, 2, 5],
+    "tail_incidence_error_deg": [-1, 0, 1],
+    "wing_incidence_mismatch_deg": [-2, -1, 0, 1, 2],
+    "wing_sweep_mismatch_deg": [-2, 0, 2],
+    "fin_yaw_alignment_error_deg": [-2, -1, 0, 1, 2]
+  }
+}

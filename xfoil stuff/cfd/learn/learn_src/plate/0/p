@@ -1,0 +1,34 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| TEACHING CASE (toy). 0/p = starting pressure field and boundary conditions for pressure. |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;           // file-format version
+    format      ascii;         // text file
+    class       volScalarField; // one number per cell
+    object      p;             // the field name; the solver looks for a file called p
+}
+
+dimensions      [0 2 -2 0 0 0 0];   // length^2 / time^2 = m^2/s^2: this solver uses KINEMATIC pressure, p / density. Multiply by density to get pascals
+
+internalField   uniform 0;      // pressure in every cell at time 0. Only differences in pressure matter in incompressible flow, so 0 is just a reference level
+
+boundaryField       // one entry per patch named in blockMeshDict
+{
+    farfield
+    {
+        type            freestreamPressure;   // far field: pressure is fixed to the free-stream value where air leaves, and left free where air enters. Pairs with freestreamVelocity in 0/U
+        freestreamValue $internalField;       // the free-stream pressure: copy of the internalField line above (0)
+    }
+
+    plate
+    {
+        type            zeroGradient;   // at a wall: pressure does not change across the surface (zero normal gradient). The solver works out the wall pressure from the cell next to it
+    }
+
+    frontAndBack
+    {
+        type            empty;          // 2D case: nothing solved across z
+    }
+}
+// ************************************************************************* //

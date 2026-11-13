@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MMAV aero model figures</title>
+<style>
+  :root { color-scheme: dark; --bg:#14181d; --panel:#1c2229; --line:#333c46; --ink:#dde3ea; --muted:#9aa7b4; --link:#7fb4ff; --accent:#e89a55; --thead:#262e37; }
+  body { font-family: system-ui, "Segoe UI", sans-serif; margin: 24px auto; max-width: 1100px; padding: 0 16px; background: var(--bg); color: var(--ink); }
+  h1 { font-size: 22px; } h2 { font-size: 17px; margin-top: 36px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  p.note { color: var(--muted); font-size: 14px; max-width: 80ch; }
+  a { color: var(--link); } code { color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 16px; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); padding: 8px; }
+  /* the plot files (separate .svg files in the study folders, unchanged) have white backgrounds and black text; invert + rotate hue 180 deg turns them dark and keeps series hues */
+  figure img { width: 100%; height: auto; display: block; background: #fff; filter: invert(1) hue-rotate(180deg); }
+  figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+<h1>MMAV aero model figures (2026-10-11)</h1>
+<p class="note">Model outputs only: inviscid AVL and XFOIL section data, neither validated by measurement.
+Reports: <code>rigid_glider/PURE_WING_RESULTS.md</code>, <code>REFLEX_RESULTS.md</code>, <code>BUILD_ARTICLE.md</code>.</p>
+
+<h2>A0. Corrected comparison (uncensored CG scan, reviewed) — use these</h2>
+<p class="note">Report: <code>rigid_glider/ARCH_COMPARISON.md</code>. Pure is below lip and tail on every metric; lip versus tail is unresolved.</p>
+<div class="grid">
+<figure><img src="arch_compare_v2/fig1_uncensored_window_by_architecture.svg"><figcaption>CG window by architecture and wing loading; lip shown as a band over three model forms</figcaption></figure>
+<figure><img src="arch_compare_v2/fig2_window_centre_extent_P07.svg"><figcaption>Where each window sits on the CG rail (AR 4.5 candidate)</figcaption></figure>
+<figure><img src="arch_compare_v2/fig3_mass_ballast_budget.svg"><figcaption>Exploratory mass and ballast budget</figcaption></figure>
+</div>
+
+<h2>A. First-pass architecture comparison (CG scan censored at +20% margin; superseded by A0)</h2>
+<p class="note">Blue = pure wing, orange = lip, green = tail. "CG window" is the range of CG over which a stable trim at CL 0.2–0.5 exists in the model.</p>
+<div class="grid">
+<figure><img src="arch_compare/fig6_architecture_comparison.svg"><figcaption>Architecture comparison chart</figcaption></figure>
+<figure><img src="arch_compare/fig2_cg_window_by_architecture.svg"><figcaption>CG window width by architecture and wing loading</figcaption></figure>
+<figure><img src="arch_compare/fig1_trim_cl_vs_cg.svg"><figcaption>Trim CL vs CG: AVL-only vs coupled band</figcaption></figure>
+<figure><img src="arch_compare/fig4_cm_vs_cl_architectures.svg"><figcaption>Cm vs CL for the three architectures</figcaption></figure>
+<figure><img src="arch_compare/fig3_lip_moment_retained_vs_re.svg"><figcaption>Lip moment retained vs Reynolds number (XFOIL)</figcaption></figure>
+<figure><img src="arch_compare/fig5_Cn_beta_by_architecture.svg"><figcaption>Yaw stability by architecture, with and without fin</figcaption></figure>
+<figure><img src="arch_compare/fig5_Cl_beta_by_architecture.svg"><figcaption>Roll stability by architecture</figcaption></figure>
+</div>
+
+<h2>B. Mass, wing loading and pure-wing CG window versus scale</h2>
+<div class="grid">
+<figure><img src="pure_wing_v2/fig_p1a_ws_vs_span_shell.svg"><figcaption>Wing loading vs span, shell-type build (exploratory mass model)</figcaption></figure>
+<figure><img src="pure_wing_v2/fig_p1b_ws_vs_span_infill.svg"><figcaption>Wing loading vs span, infill-type build (exploratory mass model)</figcaption></figure>
+<figure><img src="pure_wing_v2/fig_p1c_re_mac_vs_span_models.svg"><figcaption>Reynolds number at mean chord vs span</figcaption></figure>
+<figure><img src="pure_wing_v2/fig_p2_max_window_vs_ws.svg"><figcaption>Widest pure-wing CG window vs wing loading</figcaption></figure>
+<figure><img src="pure_wing_v2/fig_p5_window_vs_ws_candidates.svg"><figcaption>Pure-wing CG window vs wing loading, candidate planforms</figcaption></figure>
+<figure><img src="pure_wing_v2/fig_p5_trim_cl_vs_cg_P07_0006.svg"><figcaption>Pure-wing trim CL vs CG, candidate AR 4.5 / taper 0.5 / sweep 25</figcaption></figure>
+<figure><img src="pure_wing_v2/fig_p4_cn_beta_fin_options.svg"><figcaption>Yaw stability for fin options</figcaption></figure>
+<figure><img src="pure_wing_v2/fig_p4_cl_beta_fin_options.svg"><figcaption>Roll stability for fin options</figcaption></figure>
+</div>
+
+<h2>1. Scale: Reynolds number, speed and mass versus span</h2>
+<div class="grid">
+<figure><img src="pure_wing/fig5a_re_vs_span.svg"><figcaption>Reynolds number vs span</figcaption></figure>
+<figure><img src="pure_wing/fig5b_speed_vs_span.svg"><figcaption>Glide speed vs span (depends on wing loading and CL only)</figcaption></figure>
+<figure><img src="pure_wing/fig5c_mass_vs_span.svg"><figcaption>Implied all-up mass vs span</figcaption></figure>
+</div>
+
+<h2>2. The driver: clean symmetric section pitching moment at low Re (XFOIL)</h2>
+<div class="grid">
+<figure><img src="pure_wing/fig6_section_cm_NACA_0006.svg"><figcaption>NACA 0006 section cm vs cl</figcaption></figure>
+<figure><img src="pure_wing/fig6_section_cm_NACA_0008.svg"><figcaption>NACA 0008 section cm vs cl</figcaption></figure>
+<figure><img src="pure_wing/fig6_section_cm_NACA_0010.svg"><figcaption>NACA 0010 section cm vs cl</figcaption></figure>
+<figure><img src="pure_wing/fig6_section_cm_NACA_0004.svg"><figcaption>NACA 0004 (thin proxy) section cm vs cl</figcaption></figure>
+</div>
+
+<h2>3. Pure wing: coupled AVL + XFOIL versus AVL-only</h2>
+<div class="grid">
+<figure><img src="pure_wing/fig3_cm_vs_cl.svg"><figcaption>Cm vs CL: AVL-only, coupled level 1, coupled level 2</figcaption></figure>
+<figure><img src="pure_wing/fig1_trim_cl_vs_cg_AR4.5_sw20_tp0.7_di0.svg"><figcaption>Trim CL vs CG, AR 4.5, sweep 20, taper 0.7</figcaption></figure>
+<figure><img src="pure_wing/fig2_trim_cl_vs_sm_AR4.5_sw20_tp0.7_di0.svg"><figcaption>Trim CL vs static margin, AR 4.5, sweep 20, taper 0.7</figcaption></figure>
+<figure><img src="pure_wing/fig1_trim_cl_vs_cg_AR3_sw30_tp0.4_di0.svg"><figcaption>Trim CL vs CG, AR 3, sweep 30, taper 0.4</figcaption></figure>
+<figure><img src="pure_wing/fig2_trim_cl_vs_sm_AR3_sw30_tp0.4_di0.svg"><figcaption>Trim CL vs static margin, AR 3, sweep 30, taper 0.4</figcaption></figure>
+<figure><img src="pure_wing/fig1_trim_cl_vs_cg_AR6_sw10_tp1_di0.svg"><figcaption>Trim CL vs CG, AR 6, sweep 10, taper 1.0</figcaption></figure>
+<figure><img src="pure_wing/fig2_trim_cl_vs_sm_AR6_sw10_tp1_di0.svg"><figcaption>Trim CL vs static margin, AR 6, sweep 10, taper 1.0</figcaption></figure>
+<figure><img src="pure_wing/fig1_trim_cl_vs_cg_AR4.5_sw35_tp0.7_di0.svg"><figcaption>Trim CL vs CG, AR 4.5, sweep 35, taper 0.7</figcaption></figure>
+<figure><img src="pure_wing/fig2_trim_cl_vs_sm_AR4.5_sw35_tp0.7_di0.svg"><figcaption>Trim CL vs static margin, AR 4.5, sweep 35, taper 0.7</figcaption></figure>
+</div>
+
+<h2>4. Pure wing: roll and yaw stability versus sweep and dihedral (inviscid, no fin)</h2>
+<div class="grid">
+<figure><img src="pure_wing/fig4_Cl_beta_vs_sweep.svg"><figcaption>Cl_beta vs sweep</figcaption></figure>
+<figure><img src="pure_wing/fig4_Cn_beta_vs_sweep.svg"><figcaption>Cn_beta vs sweep</figcaption></figure>
+<figure><img src="pure_wing/fig4_Cl_beta_vs_dihedral.svg"><figcaption>Cl_beta vs dihedral</figcaption></figure>
+<figure><img src="pure_wing/fig4_Cn_beta_vs_dihedral.svg"><figcaption>Cn_beta vs dihedral</figcaption></figure>
+</div>
+
+<h2>5. Tail fallback branch (1.2 m reference wing, AVL)</h2>
+<div class="grid">
+<figure><img src="prototype/tail_cl_vs_volume.svg"><figcaption>Trim CL vs tail volume</figcaption></figure>
+<figure><img src="prototype/tail_cl_vs_arm.svg"><figcaption>Trim CL vs tail arm</figcaption></figure>
+<figure><img src="prototype/fin_cnb_vs_volume.svg"><figcaption>Cn_beta vs fin volume</figcaption></figure>
+<figure><img src="prototype/tol_cg_mm.svg"><figcaption>Sensitivity to CG error</figcaption></figure>
+<figure><img src="prototype/tol_wing_incidence_mismatch_deg.svg"><figcaption>Sensitivity to left/right wing incidence mismatch</figcaption></figure>
+<figure><img src="prototype/tol_fin_yaw_alignment_error_deg.svg"><figcaption>Sensitivity to fin yaw misalignment</figcaption></figure>
+</div>
+</body>
+</html>

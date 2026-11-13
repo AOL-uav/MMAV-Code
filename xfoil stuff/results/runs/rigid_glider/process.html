@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMAV glider: the process</title>
+<style>
+:root{color-scheme:dark;--bg:#14181d;--sheet:#1c2229;--ink:#dde3ea;--ink2:#9aa7b4;--rule:#333c46;--wing:#243242;--accent:#6fb0f0;
+  --pure:#6fa8e6;--lip:#e89a55;--tail:#6cc08b;--bad:#e07a7a;--link:#7fb4ff;--thead:#262e37}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Segoe UI",system-ui,sans-serif}
+main{max-width:900px;margin:0 auto;padding:40px 20px 72px;display:flex;flex-direction:column;gap:44px}
+h1{font-size:32px;line-height:1.15;margin:0 0 10px;text-wrap:balance}
+h2{font-size:23px;line-height:1.25;margin:0;text-wrap:balance}
+h3{font-size:16.5px;margin:0}
+p{margin:0;max-width:66ch}
+section{display:flex;flex-direction:column;gap:14px}
+.sub{color:var(--ink2)}
+.note{border-left:3px solid var(--lip);padding:2px 0 2px 12px;color:var(--ink2);font-size:15px;max-width:70ch}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--rule)}
+.steps li::before{content:counter(s);font-weight:600;font-size:20px;color:var(--accent);font-variant-numeric:tabular-nums}
+.steps li>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.steps p{font-size:15.5px}
+.done{color:var(--tail);font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+.todo{color:var(--lip);font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{background:var(--sheet);border:1px solid var(--rule);padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card p{font-size:15px}
+figure{margin:0;background:var(--sheet);border:1px solid var(--rule);padding:16px;display:flex;flex-direction:column;gap:10px}
+figure svg,.card svg{display:block;width:100%;height:auto}
+figcaption{font-size:14.5px;color:var(--ink2)}
+ul{margin:0;padding-left:22px;max-width:68ch;display:flex;flex-direction:column;gap:8px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;font-size:15px;background:var(--sheet);width:100%;min-width:560px}
+th,td{border:1px solid var(--rule);padding:8px 10px;text-align:left;vertical-align:top}
+th{font-weight:600;background:var(--thead)}
+a{color:var(--link)}
+small{color:var(--ink2);font-size:14px;display:block;max-width:74ch}
+svg text{font:12px "Segoe UI",system-ui,sans-serif;fill:var(--ink)}
+svg text.m{fill:var(--ink2)}
+.w{fill:var(--wing);stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>How we got here, and what the prototype is for</h1>
+  <p class="sub">The MMAV glider study as a process, 11 October 2026. Companion to <a href="findings.html">the findings page</a>.</p>
+</header>
+
+<section>
+  <h2>The whole process in seven steps</h2>
+  <ol class="steps">
+    <li><div><span class="done">Done</span><h3>Ask one narrow question</h3><p>Can a very small glider with no motor and no controls fly steadily by itself, even when it is built and launched imperfectly?</p></div></li>
+    <li><div><span class="done">Done</span><h3>Pick three ways it might work</h3><p>A plain flying wing, a wing with a bent-up lip at the back, and a wing with a small tail. Preferred in that order, because fewer parts fold and stow better.</p></div></li>
+    <li><div><span class="done">Done</span><h3>Model each one on the computer</h3><p>Two standard tools were combined. One works out how the whole wing shares the lift. The other works out how a slice of the wing behaves in slow air. Together they estimate where the glider balances.</p></div></li>
+    <li><div><span class="done">Done</span><h3>Turn the answer into one number</h3><p>How many millimetres the balance point can move before the glider stops gliding. Bigger is more forgiving.</p></div></li>
+    <li><div><span class="done">Done</span><h3>Have the work checked independently</h3><p>Three reviews so far. The last one caught an error in the report and stopped a flat-plate calculation that looked fine but was not trustworthy.</p></div></li>
+    <li><div><span class="done">Done</span><h3>Decide what to build</h3><p>One 400 mm wing that can be flown all three ways. First from flat sheet, then printed with an airfoil shape.</p></div></li>
+    <li><div><span class="todo">Next</span><h3>Fly it and compare with the model</h3><p>The flights give the real number from step 4. That tells us which option works and how far the model can be trusted.</p></div></li>
+  </ol>
+</section>
+
+<section>
+  <h2>The one idea everything rests on: the balance point</h2>
+  <p>A glider is steady only if its weight is balanced a little ahead of the point where the lift acts. Too far forward and it dives. Too far back and it pitches up and stalls. In between there is a band where it settles into a glide. The whole study is about how wide that band is.</p>
+  <figure>
+    <svg viewBox="0 0 660 190" role="img" aria-label="Three side views: balance point too far forward dives, in the band glides, too far back stalls">
+      <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink)"/></marker></defs>
+      <g>
+        <line x1="40" y1="60" x2="180" y2="60" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="66" cy="60" r="7" fill="var(--bad)"/><text x="110" y="30" text-anchor="middle">Too far forward</text>
+        <path d="M110 80 Q150 120 135 165" fill="none" stroke="var(--ink)" stroke-width="1.2" marker-end="url(#a)"/><text x="110" y="182" text-anchor="middle" class="m">dives</text>
+      </g>
+      <g>
+        <line x1="260" y1="60" x2="400" y2="60" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+        <rect x="296" y="52" width="26" height="16" fill="var(--tail)" opacity=".35"/><circle cx="309" cy="60" r="7" fill="var(--tail)"/><text x="330" y="30" text-anchor="middle">Inside the band</text>
+        <path d="M300 90 L395 140" fill="none" stroke="var(--ink)" stroke-width="1.2" marker-end="url(#a)"/><text x="330" y="182" text-anchor="middle" class="m">steady glide</text>
+      </g>
+      <g>
+        <line x1="480" y1="60" x2="620" y2="60" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="560" cy="60" r="7" fill="var(--bad)"/><text x="550" y="30" text-anchor="middle">Too far back</text>
+        <path d="M520 110 Q570 70 590 100 Q600 130 575 165" fill="none" stroke="var(--ink)" stroke-width="1.2" marker-end="url(#a)"/><text x="550" y="182" text-anchor="middle" class="m">pitches up, stalls</text>
+      </g>
+    </svg>
+    <figcaption>Side view, nose to the left. The dot is where the weight is balanced. The green band is the range that works. The model says that band is about 2 mm for the plain wing and 6–12 mm with a lip or a tail.</figcaption>
+  </figure>
+  <p>A symmetric plain wing has a specific problem: with nothing to push the nose up, it only balances when it is making no lift at all. The lip and the tail both add that small nose-up push, which is why they open the band up.</p>
+</section>
+
+<section>
+  <h2>What the two tools do, and where they fail</h2>
+  <div class="grid">
+    <div class="card"><h3>Whole-wing tool (AVL)</h3><p>Treats the air as perfectly slippery. Good at how lift spreads along the span and where the balance-sensitive point is. Blind to everything that depends on air being sticky.</p></div>
+    <div class="card"><h3>Slice tool (XFOIL)</h3><p>Looks at one cross section and includes stickiness. At this tiny size the airflow can separate and re-attach abruptly, and the tool's answers jump around when that happens.</p></div>
+    <div class="card"><h3>What that means</h3><p>The numbers are good for comparing options and for knowing where to start. They are not good enough to predict a 2 mm band with confidence. That is why the last step is a flight test.</p></div>
+  </div>
+  <p class="note">The flat plate is the clearest example. The slice tool gave plate answers that changed with tiny details of the trailing edge and that disagree with wind-tunnel measurements, so they were thrown out.</p>
+</section>
+
+<section>
+  <h2>Is the wing too stubby?</h2>
+  <p>The chosen wing has an aspect ratio of 4.5 (span divided by average width). A slimmer wing glides further, so it is a fair thing to question. Here are the two candidates side by side.</p>
+  <div class="grid" id="ar"></div>
+  <ul>
+    <li><strong>For best glide, slimmer wins,</strong> but not by much here: roughly 5% on glide ratio (my estimate), because at this size surface drag dominates.</li>
+    <li><strong>The chosen wing is wider on purpose.</strong> Wider means the air behaves a little better (higher Reynolds number), and a printed airfoil tip is 3.6 mm thick where the slim wing's would be 2.7 mm.</li>
+    <li><strong>The model cannot separate them.</strong> The slim wing is slightly better for the plain flying wing; the wide one is better for the lip and tail.</li>
+    <li><strong>Glide distance is not the goal yet.</strong> The question is whether it flies steadily at all. Once that is answered, slimming the wing is an easy second step, and sheet panels make it cheap to try both.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Using the prototype to check the model</h2>
+  <p>Yes, this is exactly what the build is for. One point matters: the model only makes predictions for the <strong>printed airfoil wing</strong> (NACA 0006). There is no prediction for the flat sheet wing. So the printed wing is the test of the model, and the sheet wing is an experiment in its own right.</p>
+  <div class="scroll"><table>
+    <tr><th>What the model predicts (printed wing, about 29 g)</th><th>What to measure</th><th>What it would tell us</th></tr>
+    <tr><td>Plain wing glides only with the balance point 67–69 mm back from the nose of the wing</td><td>Slide the weight 1 mm at a time, 5–10 launches each</td><td>Glides over 2 mm or less, or not at all: model is right. Glides over a much wider range: the model is too pessimistic and the plain wing is alive.</td></tr>
+    <tr><td>With the big lip, it glides somewhere between 47 and 63 mm, 6–12 mm wide</td><td>Same sweep with the lip strips fitted</td><td>Where the band sits shows how much of the lip's effect survives in slow air, the model's biggest unknown.</td></tr>
+    <tr><td>With the tail, 63–74 mm, 7–11 mm wide</td><td>Same sweep with the tail fitted</td><td>A narrower band means the tiny tail is working less well than assumed.</td></tr>
+    <tr><td>Glide speed about 6 to 7.5 m/s</td><td>Speed from side-on video</td><td>A basic check that lift and weight are as modelled.</td></tr>
+    <tr><td>Plain-wing band disappears if the build is twice as heavy</td><td>Repeat the best setting with extra weight</td><td>Confirms weight is the thing to protect.</td></tr>
+    <tr><td>The bare wing has almost no steering stability</td><td>Watch for wandering left and right with tip fins fitted</td><td>Whether small tip fins are enough or the centre fin is needed.</td></tr>
+  </table></div>
+  <p>Even a rough result is useful. If the real bands are within a few millimetres of these, the model can be trusted to size the next version. If they are far off, we learn which of its assumptions was wrong.</p>
+</section>
+
+<section>
+  <h2>What to do, in order</h2>
+  <ul>
+    <li>Weigh the printed 20 cm benchmark gliders. Every weight in the model is a guess until then.</li>
+    <li>Print the airfoil wing if the aim is to check the model. Cut the sheet wing as well if time allows; it is quick.</li>
+    <li>Build a simple launcher so every launch is the same.</li>
+    <li>Fly the plain wing first, then the lip, then the tail, and log every launch.</li>
+  </ul>
+</section>
+
+<small>Drawings and cutting templates: <a href="article1/index.html">Article 1</a>. Full specification and test card: <code>rigid_glider/ARTICLE1.md</code>. Model report: <code>rigid_glider/ARCH_COMPARISON.md</code>. All model numbers are unvalidated estimates for the 400 mm P07 wing at 8 N/m².</small>
+</main>
+<script>
+const S=200,f=v=>v.toFixed(1);
+function wing(cr,ct,sw){const t=Math.tan(sw*Math.PI/180),c=y=>cr+(ct-cr)*Math.abs(y)/S,le=y=>0.25*cr+Math.abs(y)*t-0.25*c(y);
+  return [[-S,le(S)],[0,0],[S,le(S)],[S,le(S)+ct],[0,cr],[-S,le(S)+ct]].map(p=>p.map(f).join(',')).join(' ');}
+const W=[['Chosen: aspect ratio 4.5','119 mm wide at the centre, 59 mm at the tips',wing(118.5,59.3,25)],['Slimmer: aspect ratio 6','89 mm wide at the centre, 44 mm at the tips',wing(88.9,44.4,15)]];
+document.getElementById('ar').innerHTML=W.map(w=>`<div class="card"><h3>${w[0]}</h3><svg viewBox="-215 -15 430 200" role="img" aria-label="${w[0]} planform"><polygon class="w" points="${w[2]}"/></svg><p>${w[1]}. Both 400 mm span.</p></div>`).join('');
+</script>
+</body>
+</html>

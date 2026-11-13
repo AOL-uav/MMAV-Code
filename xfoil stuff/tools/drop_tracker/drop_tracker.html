@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drop tracker</title>
+<style>
+:root{
+  --bg:#12151a; --panel:#1b2028; --panel2:#232a34; --line:#333c49; --text:#e6e9ee; --dim:#9aa4b2;
+  --accent:#ffd400; --outline:#000000; --cal:#00e5ff; --lvl:#7CFF4F; --bad:#ff6b5e; --good:#5fd38d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,Segoe UI,Arial,sans-serif}
+header{padding:10px 14px;border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:18px}
+header span{color:var(--dim);font-size:13px}
+.wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px;padding:12px}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;padding:8px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:12px}
+.card h2{margin:0 0 6px;font-size:15px;color:var(--accent)}
+#stage{position:relative;background:#000;border-radius:6px;overflow:hidden;min-height:160px}
+#vid{display:block;width:100%;max-height:68vh;object-fit:contain;background:#000}
+#ov{position:absolute;left:0;top:0;cursor:crosshair;touch-action:manipulation}
+#ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--dim);text-align:center;padding:10px;pointer-events:none}
+button,select,input{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 9px}
+button{cursor:pointer;min-height:36px}
+button:hover{border-color:var(--accent)}
+button.on{background:var(--accent);color:#000;border-color:var(--accent)}
+input[type=number]{width:5.5em}
+input[type=text]{width:100%}
+input[type=range]{width:100%;padding:0}
+input[type=file]{width:100%}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.row label{color:var(--dim);font-size:13px;display:flex;gap:4px;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.grid2 label{display:block;color:var(--dim);font-size:12px}
+ol{margin:4px 0 0 18px;padding:0}li{margin:2px 0}
+.small{font-size:12.5px;color:var(--dim)}
+.warn{border-left:3px solid var(--accent);padding-left:8px;font-size:13px;color:var(--text)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td,th{border-bottom:1px solid var(--line);padding:3px 5px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+tr.sel{background:#3a3410}
+#out td{font-variant-numeric:tabular-nums}
+#ptsbox{max-height:210px;overflow:auto}
+#plot{width:100%;height:auto;background:#0d1015;border-radius:6px;display:block}
+#msg{min-height:1.3em;font-size:13px;color:var(--good)}
+#st{font:13px monospace;padding:8px 14px;white-space:pre-wrap}
+.pass{color:var(--good)}.fail{color:var(--bad)}
+kbd{background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:12px}
+</style>
+</head>
+<body>
+<header><h1>Drop tracker</h1><span>Offline. The video stays in this browser; nothing is uploaded.</span></header>
+<div id="st" style="display:none"></div>
+<div class="wrap">
+<div>
+  <div class="card">
+    <div id="stage"><video id="vid" playsinline muted preload="auto"></video><canvas id="ov"></canvas><div id="ph">Choose a video file below</div></div>
+    <input type="range" id="scrub" min="0" max="1" step="any" value="0" aria-label="scrub">
+    <div class="row">
+      <button id="bPlay">Play</button>
+      <button id="bBack" title="comma">&lt; Frame</button>
+      <button id="bFwd" title="period">Frame &gt;</button>
+      <button id="bBackN">&lt;&lt; N</button>
+      <button id="bFwdN" title="Enter or N">N &gt;&gt;</button>
+      <label>Speed <select id="speed"><option>0.1</option><option>0.25</option><option selected>0.5</option><option>1</option><option>2</option></select></label>
+    </div>
+    <div class="row">
+      <label>Frame rate <input type="number" id="fps" value="30" min="1" max="1000" step="any"></label>
+      <button id="fps30">30</button><button id="fps60">60</button>
+      <label>Advance N <input type="number" id="nAdv" value="2" min="1" max="60"></label>
+      <span class="small" id="tinfo">t = 0.000 s</span>
+    </div>
+    <div class="small">Frame stepping sets currentTime += 1/fps. Browsers are not frame-exact, so a step can be off by a frame; check the time shown.</div>
+  </div>
+
+  <div class="card">
+    <h2>Steps</h2>
+    <ol>
+      <li>Load the video (file box below). Set the frame rate it was filmed at.</li>
+      <li>Press <b>Set scale</b>, click both ends of the reference, then type its known length in m.</li>
+      <li>Optional: press <b>Set level line</b> and click two points on the horizon or ground to remove camera roll.</li>
+      <li>Press <b>Track</b>. Step to the release frame, click the glider. After each click the video advances N frames. Click again at every step.</li>
+      <li>Select a point in the list and tag it: release, lowest, level-off, glide start, glide end. Release is the first point and lowest is the deepest point unless you override them.</li>
+      <li>Read the results, fill in the drop details, then export the CSVs.</li>
+    </ol>
+    <div class="small">Keys: <kbd>,</kbd> back one frame, <kbd>.</kbd> forward one frame, <kbd>Enter</kbd> or <kbd>N</kbd> forward N frames, <kbd>Space</kbd> play/pause, <kbd>Z</kbd> undo the last point. Clicking again on a frame that already has a point moves that point.</div>
+  </div>
+
+  <div class="card">
+    <h2>Video</h2>
+    <input type="file" id="file" accept="video/*">
+    <div class="small" id="vinfo">No video loaded.</div>
+  </div>
+</div>
+
+<div>
+  <div class="card">
+    <h2>Calibration</h2>
+    <div class="row">
+      <button id="mScale">Set scale</button>
+      <button id="mLevel">Set level line</button>
+      <button id="mTrack">Track</button>
+    </div>
+    <div class="row">
+      <label>Reference length (m) <input type="number" id="dist" step="any" min="0" placeholder="e.g. 2.0"></label>
+      <button id="bClrCal">Clear calibration</button>
+    </div>
+    <div class="small" id="calinfo">Scale: not set.</div>
+    <div class="warn" style="margin-top:6px">Scale is valid only in the plane of the reference. Put the reference at the same distance from the camera as the flight path, with the camera side-on. No other perspective correction is applied.</div>
+  </div>
+
+  <div class="card">
+    <h2>Points and markers</h2>
+    <div class="row">
+      <button data-mk="release">Release</button>
+      <button data-mk="lowest">Lowest</button>
+      <button data-mk="leveloff">Level-off</button>
+      <button data-mk="glidestart">Glide start</button>
+      <button data-mk="glideend">Glide end</button>
+    </div>
+    <div class="row">
+      <button id="bClrMk">Clear tags on selected</button>
+      <button id="bAutoLow">Lowest: auto</button>
+      <button id="bUndo">Undo last</button>
+      <button id="bDel">Delete selected</button>
+      <button id="bDelAll">Delete all</button>
+    </div>
+    <div id="ptsbox"><table id="ptab"><thead><tr><th>#</th><th>t (s)</th><th>x (m)</th><th>z (m)</th><th>tag</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Results</h2>
+    <table id="out"><tbody></tbody></table>
+    <div class="small" style="margin-top:6px">Heading and path straightness cannot be measured from one side camera. Distances are along the camera's horizontal axis only.</div>
+  </div>
+
+  <div class="card">
+    <h2>Trajectory (x / z, metres, z up)</h2>
+    <canvas id="plot" width="600" height="360"></canvas>
+  </div>
+
+  <div class="card">
+    <h2>Drop details and export</h2>
+    <div class="grid2">
+      <label>Drop #<input type="text" id="fDrop"></label>
+      <label>Article<input type="text" id="fArt"></label>
+      <label>CG (mm)<input type="text" id="fCG"></label>
+      <label>Bend (deg)<input type="text" id="fBend"></label>
+      <label>Drop height (m)<input type="text" id="fH"></label>
+      <label>Outcome<select id="fOut" style="width:100%"><option></option><option>G</option><option>PS</option><option>D</option><option>T</option><option>SP</option><option>RF</option><option>H</option></select></label>
+    </div>
+    <label class="small">Note<input type="text" id="fNote"></label>
+    <div class="small">Outcome: G glides, PS porpoise or stall, D dives, T tumbles, SP spirals, RF release fault, H hand glide.</div>
+    <div class="row">
+      <button id="bCsv">Download points CSV</button>
+      <button id="bSum">Download summary CSV</button>
+      <button id="bCopy">Copy summary row</button>
+    </div>
+    <div class="row"><label>Import points CSV <input type="file" id="impf" accept=".csv,text/csv,text/plain"></label></div>
+    <div id="msg"></div>
+    <div class="small">The session autosaves in this browser, keyed by video file name and size.</div>
+  </div>
+</div>
+</div>
+
+<script>
+"use strict";
+/* ============ pure computation ============ */
+var MK_NAMES=["release","lowest","leveloff","glidestart","glideend"];
+var MK_LABEL={release:"release",lowest:"lowest",leveloff:"level-off",glidestart:"glide start",glideend:"glide end"};
+
+function calFrom(ref,lvl,dist){
+  var cal={scale:null,theta:0};
+  if(ref&&ref.length===2&&dist>0){
+    var d=Math.hypot(ref[1].x-ref[0].x,ref[1].y-ref[0].y);
+    if(d>0)cal.scale=d/dist;
+  }
+  if(lvl&&lvl.length===2){
+    var dx=lvl[1].x-lvl[0].x,dy=lvl[1].y-lvl[0].y;
+    if(dx<0){dx=-dx;dy=-dy;}
+    if(dx!==0||dy!==0)cal.theta=Math.atan2(dy,dx);
+  }
+  return cal;
+}
+/* adds xm, zm (metres, z up, roll-corrected, origin at first point by time) */
+function project(pts,cal){
+  if(!cal||!cal.scale||!pts.length){pts.forEach(function(p){p.xm=null;p.zm=null;});return pts;}
+  var c=Math.cos(cal.theta),s=Math.sin(cal.theta);
+  function rx(p){return c*p.x+s*p.y;} function ry(p){return -s*p.x+c*p.y;}
+  var x0=rx(pts[0]),y0=ry(pts[0]);
+  pts.forEach(function(p){p.xm=(rx(p)-x0)/cal.scale;p.zm=-(ry(p)-y0)/cal.scale;});
+  return pts;
+}
+function effIdx(pts){
+  var r={};
+  MK_NAMES.forEach(function(n){
+    r[n]=-1;
+    for(var i=0;i<pts.length;i++)if(pts[i].mk&&pts[i].mk.indexOf(n)>=0){r[n]=i;break;}
+  });
+  if(pts.length){
+    if(r.release<0)r.release=0;
+    if(r.lowest<0&&pts[0].zm!=null){
+      var b=0;for(var j=1;j<pts.length;j++)if(pts[j].zm<pts[b].zm)b=j;
+      r.lowest=b;
+    }
+  }
+  return r;
+}
+function computeAll(pts,cal){
+  project(pts,cal);
+  var R={ok:false,idx:effIdx(pts)};
+  if(!cal||!cal.scale||!pts.length||pts[0].zm==null)return R;
+  R.ok=true;var I=R.idx;
+  var P=function(i){return i>=0?pts[i]:null;};
+  var rel=P(I.release),low=P(I.lowest),lv=P(I.leveloff),gs=P(I.glidestart),ge=P(I.glideend);
+  if(rel&&low){R.swoop=rel.zm-low.zm;R.tLow=low.t-rel.t;}
+  if(rel&&lv)R.tLevel=lv.t-rel.t;
+  if(gs&&ge&&I.glideend>I.glidestart){
+    R.glideDist=Math.abs(ge.xm-gs.xm);
+    R.hLost=gs.zm-ge.zm;
+    R.glideTime=ge.t-gs.t;
+    var path=0;
+    for(var i=I.glidestart+1;i<=I.glideend;i++)path+=Math.hypot(pts[i].xm-pts[i-1].xm,pts[i].zm-pts[i-1].zm);
+    R.pathLen=path;
+    R.meanSpeed=R.glideTime>0?path/R.glideTime:null;
+    R.hSpeed=R.glideTime>0?R.glideDist/R.glideTime:null;
+    R.ratio=R.hLost>0?R.glideDist/R.hLost:null;
+    R.angle=Math.atan2(R.hLost,R.glideDist)*180/Math.PI;
+  }
+  return R;
+}
+function csvEsc(v){v=(v==null?"":String(v));return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function f(v,n){return v==null||!isFinite(v)?"":v.toFixed(n);}
+function pointsCsv(pts,cal){
+  var R=computeAll(pts,cal),I=R.idx;
+  var lines=["t,x_px,y_px,x_m,z_m,marker"];
+  pts.forEach(function(p,i){
+    var tags=[];MK_NAMES.forEach(function(n){if(I[n]===i)tags.push(n);});
+    lines.push([f(p.t,4),f(p.x,2),f(p.y,2),f(p.xm,4),f(p.zm,4),tags.join(";")].map(csvEsc).join(","));
+  });
+  return lines.join("\r\n")+"\r\n";
+}
+function parseCsvLine(l){
+  var out=[],cur="",q=false;
+  for(var i=0;i<l.length;i++){var ch=l[i];
+    if(q){if(ch==='"'){if(l[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+    else if(ch==='"')q=true;else if(ch===","){out.push(cur);cur="";}else cur+=ch;}
+  out.push(cur);return out;
+}
+function parsePointsCsv(text){
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim().length;});
+  if(!lines.length)return [];
+  var h=parseCsvLine(lines[0]).map(function(s){return s.trim().toLowerCase();});
+  var it=h.indexOf("t"),ix=h.indexOf("x_px"),iy=h.indexOf("y_px"),im=h.indexOf("marker");
+  if(it<0||ix<0||iy<0)throw new Error("CSV needs columns t, x_px, y_px");
+  var pts=[];
+  for(var i=1;i<lines.length;i++){
+    var c=parseCsvLine(lines[i]);
+    var t=parseFloat(c[it]),x=parseFloat(c[ix]),y=parseFloat(c[iy]);
+    if(!isFinite(t)||!isFinite(x)||!isFinite(y))continue;
+    var mk=(im>=0&&c[im]?c[im].split(";").map(function(s){return s.trim();}).filter(function(s){return MK_NAMES.indexOf(s)>=0;}):[]);
+    pts.push({t:t,x:x,y:y,mk:mk});
+  }
+  pts.sort(function(a,b){return a.t-b.t;});
+  return pts;
+}
+var SUM_HEAD=["drop #","article","CG","bend","height","outcome","swoop depth","glide dist","clip","note"];
+function summaryCsv(fl,R,clip){
+  var row=[fl.drop,fl.article,fl.cg,fl.bend,fl.height,fl.outcome,
+    R.swoop!=null?f(R.swoop,2):"",R.glideDist!=null?f(R.glideDist,2):"",clip||"",fl.note];
+  return SUM_HEAD.map(csvEsc).join(",")+"\r\n"+row.map(csvEsc).join(",")+"\r\n";
+}
+
+/* ============ synthetic data and self-test ============ */
+function synth(theta,scale,fps){
+  /* world: x right, z up. Swoop parabola 0 -> -3.0 m at 0.8 s, rise to -2.0 m at 1.6 s, then straight glide
+     at vx=5 m/s, sink 0.25 m/s until 4.0 s. Image = R(theta) * scale*(x,-z) + offset. */
+  var c=Math.cos(theta),s=Math.sin(theta),ox=300,oy=200,vx=5;
+  function toPx(x,z){var u=scale*x,v=-scale*z;return {x:c*u-s*v+ox,y:s*u+c*v+oy};}
+  var pts=[],n=Math.round(4.0*fps);
+  for(var i=0;i<=n;i++){
+    var t=i/fps,z;
+    if(t<=0.8)z=-3.0+3.0*Math.pow((t-0.8)/0.8,2);
+    else if(t<=1.6)z=-3.0+1.0*Math.pow((t-0.8)/0.8,2);
+    else z=-2.0-0.25*(t-1.6);
+    var q=toPx(vx*t,z);pts.push({t:t,x:q.x,y:q.y,mk:[]});
+  }
+  var ref=[toPx(20,-5),toPx(20,-2.5)];      /* vertical 2.5 m pole */
+  var lvl=[toPx(0,-6),toPx(8,-6)];          /* level line */
+  return {pts:pts,ref:ref,lvl:lvl,dist:2.5,fps:fps};
+}
+function selfTest(){
+  var res=[],fails=0;
+  function chk(name,got,want){
+    var ok=(got!=null&&isFinite(got)&&Math.abs(got-want)<=Math.abs(want)*0.01+1e-9);
+    if(!ok)fails++;res.push((ok?"ok   ":"FAIL ")+name+" got="+(got==null?"null":got.toFixed(4))+" want="+want.toFixed(4));
+  }
+  [[0,80,30],[4*Math.PI/180,80,30],[-7*Math.PI/180,55,60]].forEach(function(cfg){
+    var S0=synth(cfg[0],cfg[1],cfg[2]);
+    var cl=calFrom(S0.ref,S0.lvl,S0.dist);
+    var tag="[roll "+(cfg[0]*180/Math.PI).toFixed(0)+" fps "+cfg[2]+"] ";
+    chk(tag+"scale px/m",cl.scale,cfg[1]);
+    var pts=S0.pts;
+    var R=computeAll(pts,cl);
+    chk(tag+"swoop depth m (auto)",R.swoop,3.0);
+    chk(tag+"time to lowest s",R.tLow,0.8);
+    var iLv=Math.round(1.6*cfg[2]);
+    pts[iLv].mk=["leveloff","glidestart"];pts[pts.length-1].mk=["glideend"];
+    R=computeAll(pts,cl);
+    chk(tag+"time to level-off s",R.tLevel,1.6);
+    chk(tag+"glide dist m",R.glideDist,5*2.4);
+    chk(tag+"height lost m",R.hLost,0.25*2.4);
+    chk(tag+"glide ratio",R.ratio,20);
+    chk(tag+"glide angle deg",R.angle,Math.atan(0.05)*180/Math.PI);
+    chk(tag+"mean speed m/s",R.meanSpeed,Math.sqrt(25+0.0625));
+    var back=parsePointsCsv(pointsCsv(pts,cl));
+    var R2=computeAll(back,cl);
+    chk(tag+"csv round-trip ratio",R2.ratio,20);
+    chk(tag+"csv round-trip swoop",R2.swoop,3.0);
+  });
+  var sm=summaryCsv({drop:"1",article:"swift A, foam",cg:"37",bend:"6",height:"10",outcome:"G",note:'a "b"'},{swoop:3.004,glideDist:12.001},"v.mp4");
+  var want='1,"swift A, foam",37,6,10,G,3.00,12.00,v.mp4,"a ""b"""';
+  var ok=sm.split("\r\n")[1]===want;
+  if(!ok)fails++;res.push((ok?"ok   ":"FAIL ")+"summary csv row: "+sm.split("\r\n")[1]);
+  return {fails:fails,lines:res};
+}
+
+/* ============ app ============ */
+var $=function(id){return document.getElementById(id);};
+var vid=$("vid"),ov=$("ov"),ctx=ov.getContext("2d"),plot=$("plot");
+var S={pts:[],ref:[],lvl:[],dist:null,mode:"track",sel:null,fileName:"",fileSize:0,loaded:false,counter:0};
+
+function fps(){var v=parseFloat($("fps").value);return v>0?v:30;}
+function nAdv(){var v=parseInt($("nAdv").value,10);return v>0?v:1;}
+function cal(){return calFrom(S.ref,S.lvl,S.dist);}
+function msg(t,bad){var m=$("msg");m.textContent=t;m.style.color=bad?"var(--bad)":"var(--good)";}
+
+function seek(t){
+  if(!S.loaded)return;
+  var d=vid.duration||0;
+  vid.currentTime=Math.max(0,Math.min(d,t));
+}
+function stepFrames(n){if(!vid.paused)vid.pause();seek(vid.currentTime+n/fps());}
+
+/* display mapping: object-fit contain inside the element */
+function fit(){
+  var cw=vid.clientWidth,ch=vid.clientHeight,vw=vid.videoWidth,vh=vid.videoHeight;
+  if(!vw||!vh||!cw||!ch)return null;
+  var s=Math.min(cw/vw,ch/vh);
+  return {s:s,ox:(cw-vw*s)/2,oy:(ch-vh*s)/2};
+}
+function toNative(ev){
+  var F=fit();if(!F)return null;
+  var r=ov.getBoundingClientRect();
+  var x=(ev.clientX-r.left-F.ox)/F.s,y=(ev.clientY-r.top-F.oy)/F.s;
+  if(x<0||y<0||x>vid.videoWidth||y>vid.videoHeight)return null;
+  return {x:x,y:y};
+}
+
+/* ---- drawing ---- */
+function sizeOverlay(){
+  var w=vid.clientWidth,h=vid.clientHeight,dpr=window.devicePixelRatio||1;
+  if(ov.width!==Math.round(w*dpr)||ov.height!==Math.round(h*dpr)){
+    ov.width=Math.round(w*dpr);ov.height=Math.round(h*dpr);ov.style.width=w+"px";ov.style.height=h+"px";
+  }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function dot(x,y,r,col,ring){
+  ctx.beginPath();ctx.arc(x,y,r+1.5,0,7);ctx.fillStyle=css("--outline");ctx.fill();
+  ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=col;ctx.fill();
+  if(ring){ctx.beginPath();ctx.arc(x,y,r+5,0,7);ctx.lineWidth=3;ctx.strokeStyle=css("--outline");ctx.stroke();
+    ctx.lineWidth=1.5;ctx.strokeStyle=col;ctx.stroke();}
+}
+function line(a,b,col){
+  ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineWidth=4.5;ctx.strokeStyle=css("--outline");ctx.stroke();
+  ctx.lineWidth=2;ctx.strokeStyle=col;ctx.stroke();
+}
+function label(t,x,y,col){
+  ctx.font="bold 13px system-ui,Arial";ctx.lineWidth=3.5;ctx.lineJoin="round";
+  ctx.strokeStyle=css("--outline");ctx.strokeText(t,x,y);ctx.fillStyle=col;ctx.fillText(t,x,y);
+}
+function draw(){
+  sizeOverlay();
+  var w=vid.clientWidth,h=vid.clientHeight;ctx.clearRect(0,0,w,h);
+  var F=fit();
+  if(F){
+    var P=function(p){return {x:F.ox+p.x*F.s,y:F.oy+p.y*F.s};};
+    var acc=css("--accent");
+    if(S.ref.length){var a=P(S.ref[0]),b=null;if(S.ref.length>1){b=P(S.ref[1]);line(a,b,css("--cal"));dot(b.x,b.y,3.5,css("--cal"));}dot(a.x,a.y,3.5,css("--cal"));
+      if(b&&S.dist)label(S.dist+" m",(a.x+b.x)/2+8,(a.y+b.y)/2,css("--cal"));}
+    if(S.lvl.length){var c=P(S.lvl[0]);if(S.lvl.length>1){var d=P(S.lvl[1]);line(c,d,css("--lvl"));dot(d.x,d.y,3.5,css("--lvl"));}dot(c.x,c.y,3.5,css("--lvl"));}
+    var R=computeAll(S.pts,cal()),I=R.idx;
+    var ct=vid.currentTime,half=0.5/fps();
+    if(S.pts.length>1){ctx.beginPath();S.pts.forEach(function(p,i){var q=P(p);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y);});
+      ctx.lineWidth=3.5;ctx.strokeStyle=css("--outline");ctx.stroke();ctx.lineWidth=1.3;ctx.strokeStyle=acc;ctx.stroke();}
+    S.pts.forEach(function(p,i){
+      var q=P(p),cur=Math.abs(p.t-ct)<=half+1e-6;
+      dot(q.x,q.y,cur?4.5:3,acc,cur||p===S.sel);
+      var tg=MK_NAMES.filter(function(n){return I[n]===i;}).map(function(n){return MK_LABEL[n];});
+      if(tg.length)label(tg.join("/"),q.x+8,q.y-8,"#fff");
+    });
+  }
+  var fr=Math.round(vid.currentTime*fps());
+  $("tinfo").textContent="t = "+vid.currentTime.toFixed(3)+" s, frame ~"+fr;
+  if(document.activeElement!==$("scrub"))$("scrub").value=vid.currentTime;
+  $("bPlay").textContent=vid.paused?"Play":"Pause";
+}
+function loop(){draw();requestAnimationFrame(loop);}
+
+/* ---- results, lists, plot ---- */
+function refresh(){
+  S.pts.sort(function(a,b){return a.t-b.t;});
+  var c=cal(),R=computeAll(S.pts,c),I=R.idx;
+  var ci="Scale: ";
+  if(c.scale)ci+=c.scale.toFixed(2)+" px/m";else ci+="not set (click two reference points, then enter the length).";
+  ci+=S.lvl.length===2?" Roll correction: "+(c.theta*180/Math.PI).toFixed(2)+" deg.":" No level line (no roll correction).";
+  $("calinfo").textContent=ci;
+  var tb=$("ptab").tBodies[0];tb.innerHTML="";
+  S.pts.forEach(function(p,i){
+    var tr=document.createElement("tr");if(p===S.sel)tr.className="sel";
+    var tg=MK_NAMES.filter(function(n){return I[n]===i;}).map(function(n){return MK_LABEL[n]+((n==="release"||n==="lowest")&&!(p.mk&&p.mk.indexOf(n)>=0)?" (auto)":"");});
+    tr.innerHTML="<td>"+(i+1)+"</td><td>"+p.t.toFixed(3)+"</td><td>"+(p.xm!=null?p.xm.toFixed(2):"-")+"</td><td>"+(p.zm!=null?p.zm.toFixed(2):"-")+"</td><td>"+tg.join(", ")+"</td>";
+    tr.style.cursor="pointer";
+    tr.onclick=function(){S.sel=p;seek(p.t);refresh();};
+    tb.appendChild(tr);
+  });
+  var rows=[];
+  function add(n,v,u){rows.push("<tr><td>"+n+"</td><td>"+(v==null||!isFinite(v)?"-":v.toFixed(2))+"</td><td>"+u+"</td></tr>");}
+  add("Swoop depth (release to lowest)",R.swoop,"m");
+  add("Time to lowest point",R.tLow,"s");
+  add("Time to level-off",R.tLevel,"s");
+  add("Glide distance (horizontal)",R.glideDist,"m");
+  add("Height lost over glide",R.hLost,"m");
+  rows.push("<tr><td>Glide ratio (dist / height lost)</td><td>"+(R.ratio!=null?R.ratio.toFixed(1):(R.hLost!=null?"level/climb":"-"))+"</td><td></td></tr>");
+  add("Glide angle",R.angle,"deg");
+  add("Mean glide speed (along path)",R.meanSpeed,"m/s");
+  add("Mean horizontal speed",R.hSpeed,"m/s");
+  $("out").tBodies[0].innerHTML=rows.join("");
+  drawPlot(R);
+  save();
+}
+function drawPlot(R){
+  var g=plot.getContext("2d"),W=plot.width,H=plot.height;
+  g.clearRect(0,0,W,H);g.fillStyle=css("--bg");g.fillRect(0,0,W,H);
+  var pts=S.pts.filter(function(p){return p.xm!=null;});
+  g.font="12px system-ui,Arial";g.fillStyle=css("--dim");
+  if(pts.length<1){g.fillText("Set the scale and track points to see the path.",14,24);return;}
+  var xs=pts.map(function(p){return p.xm;}),zs=pts.map(function(p){return p.zm;});
+  var x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),z0=Math.min.apply(null,zs),z1=Math.max.apply(null,zs);
+  var m=34,spanx=Math.max(x1-x0,0.5),spanz=Math.max(z1-z0,0.5);
+  var s=Math.min((W-2*m)/spanx,(H-2*m)/spanz);
+  var offx=m+((W-2*m)-spanx*s)/2,offz=m+((H-2*m)-spanz*s)/2;
+  function X(x){return offx+(x-x0)*s;} function Y(z){return H-offz-(z-z0)*s;}
+  var step=[0.1,0.2,0.5,1,2,5,10,20,50].filter(function(v){return v*s>=40;})[0]||50;
+  g.strokeStyle=css("--line");g.lineWidth=1;g.fillStyle=css("--dim");
+  for(var gx=Math.ceil(x0/step)*step;gx<=x1+spanx;gx+=step){if(X(gx)>W-4)break;g.beginPath();g.moveTo(X(gx),4);g.lineTo(X(gx),H-4);g.stroke();g.fillText(gx.toFixed(step<1?1:0),X(gx)+2,H-4);}
+  for(var gz=Math.ceil(z0/step)*step;gz<=z1+spanz;gz+=step){if(Y(gz)<4)break;g.beginPath();g.moveTo(4,Y(gz));g.lineTo(W-4,Y(gz));g.stroke();g.fillText(gz.toFixed(step<1?1:0),4,Y(gz)-2);}
+  g.fillText("x (m), z up; grid "+step+" m",W-160,14);
+  g.lineJoin="round";
+  g.beginPath();pts.forEach(function(p,i){if(i)g.lineTo(X(p.xm),Y(p.zm));else g.moveTo(X(p.xm),Y(p.zm));});
+  g.lineWidth=1.5;g.strokeStyle=css("--accent");g.stroke();
+  pts.forEach(function(p){g.beginPath();g.arc(X(p.xm),Y(p.zm),2.5,0,7);g.fillStyle=css("--accent");g.fill();});
+  var I=R.idx;g.font="bold 12px system-ui,Arial";
+  MK_NAMES.forEach(function(n){
+    var i=I[n];if(i==null||i<0||S.pts[i].xm==null)return;
+    var p=S.pts[i],x=X(p.xm),y=Y(p.zm);
+    g.beginPath();g.arc(x,y,5.5,0,7);g.lineWidth=2;g.strokeStyle="#fff";g.stroke();
+    var dy={release:-10,lowest:20,leveloff:-10,glidestart:-24,glideend:-10}[n];
+    var lx=x+8;if(x+8+g.measureText(MK_LABEL[n]).width>W-4)lx=x-8-g.measureText(MK_LABEL[n]).width;
+    g.lineWidth=3;g.strokeStyle="#000";g.strokeText(MK_LABEL[n],lx,y+dy);g.fillStyle="#fff";g.fillText(MK_LABEL[n],lx,y+dy);
+  });
+}
+
+/* ---- tracking ---- */
+function addPoint(n){
+  var t=vid.currentTime,half=0.5/fps(),hit=null;
+  S.pts.forEach(function(p){if(Math.abs(p.t-t)<=half&&(!hit||Math.abs(p.t-t)<Math.abs(hit.t-t)))hit=p;});
+  if(hit){hit.x=n.x;hit.y=n.y;hit._n=++S.counter;S.sel=hit;}
+  else{var p={t:t,x:n.x,y:n.y,mk:[],_n:++S.counter};S.pts.push(p);S.sel=p;}
+}
+ov.addEventListener("click",function(ev){
+  if(!S.loaded)return;
+  var n=toNative(ev);if(!n)return;
+  if(S.mode==="scale"){
+    if(S.ref.length>=2)S.ref=[];
+    S.ref.push(n);
+    if(S.ref.length===2){msg("Now enter the reference length in m.");$("dist").focus();}
+    else msg("Click the other end of the reference.");
+    refresh();
+  }else if(S.mode==="level"){
+    if(S.lvl.length>=2)S.lvl=[];
+    S.lvl.push(n);
+    msg(S.lvl.length===1?"Click a second point on the level line.":"Level line set.");
+    refresh();
+  }else{
+    if(!vid.paused)vid.pause();
+    addPoint(n);refresh();
+    seek(vid.currentTime+nAdv()/fps());
+  }
+});
+function setMode(m){
+  S.mode=m;
+  $("mScale").classList.toggle("on",m==="scale");$("mLevel").classList.toggle("on",m==="level");$("mTrack").classList.toggle("on",m==="track");
+  if(m==="scale")msg("Click both ends of the reference object.");
+  else if(m==="level")msg("Click two points on the horizon or ground (far apart).");
+  else msg("Tracking: click the glider in each frame.");
+}
+$("mScale").onclick=function(){setMode("scale");};
+$("mLevel").onclick=function(){setMode("level");};
+$("mTrack").onclick=function(){setMode("track");};
+$("dist").addEventListener("input",function(){var v=parseFloat($("dist").value);S.dist=v>0?v:null;refresh();});
+$("bClrCal").onclick=function(){S.ref=[];S.lvl=[];S.dist=null;$("dist").value="";refresh();msg("Calibration cleared.");};
+
+document.querySelectorAll("[data-mk]").forEach(function(b){
+  b.onclick=function(){
+    if(!S.sel||S.pts.indexOf(S.sel)<0){msg("Select a point in the list first (or click one).",true);return;}
+    var n=b.getAttribute("data-mk");
+    S.pts.forEach(function(p){p.mk=(p.mk||[]).filter(function(x){return x!==n;});});
+    S.sel.mk=(S.sel.mk||[]);S.sel.mk.push(n);
+    refresh();msg("Tagged "+MK_LABEL[n]+".");
+  };
+});
+$("bClrMk").onclick=function(){if(S.sel){S.sel.mk=[];refresh();}};
+$("bAutoLow").onclick=function(){S.pts.forEach(function(p){p.mk=(p.mk||[]).filter(function(x){return x!=="lowest";});});refresh();msg("Lowest point set to automatic.");};
+function undo(){
+  if(!S.pts.length)return;
+  var last=S.pts[0];S.pts.forEach(function(p){if((p._n||0)>(last._n||0))last=p;});
+  S.pts.splice(S.pts.indexOf(last),1);if(S.sel===last)S.sel=null;
+  refresh();
+}
+$("bUndo").onclick=undo;
+$("bDel").onclick=function(){var i=S.pts.indexOf(S.sel);if(i>=0){S.pts.splice(i,1);S.sel=null;refresh();}};
+$("bDelAll").onclick=function(){if(S.pts.length&&confirm("Delete all "+S.pts.length+" points?")){S.pts=[];S.sel=null;refresh();}};
+
+$("bPlay").onclick=function(){if(!S.loaded)return;if(vid.paused)vid.play();else vid.pause();};
+$("bBack").onclick=function(){stepFrames(-1);};
+$("bFwd").onclick=function(){stepFrames(1);};
+$("bBackN").onclick=function(){stepFrames(-nAdv());};
+$("bFwdN").onclick=function(){stepFrames(nAdv());};
+$("speed").onchange=function(){vid.playbackRate=parseFloat($("speed").value);};
+$("fps30").onclick=function(){$("fps").value=30;save();};
+$("fps60").onclick=function(){$("fps").value=60;save();};
+$("fps").onchange=save;$("nAdv").onchange=save;
+$("scrub").addEventListener("input",function(){if(S.loaded){if(!vid.paused)vid.pause();vid.currentTime=parseFloat($("scrub").value);}});
+document.addEventListener("keydown",function(e){
+  var tg=e.target&&e.target.tagName;
+  if((tg==="INPUT"&&e.target.type!=="range")||tg==="SELECT"||tg==="TEXTAREA")return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  var k=e.key,h=true;
+  if(k===","||k==="<")stepFrames(-1);
+  else if(k==="."||k===">")stepFrames(1);
+  else if(k==="Enter"||k==="n"||k==="N")stepFrames(nAdv());
+  else if(k===" ")$("bPlay").click();
+  else if(k==="z"||k==="Z"||k==="Backspace")undo();
+  else h=false;
+  if(h)e.preventDefault();
+});
+
+$("file").addEventListener("change",function(){
+  var fl=$("file").files[0];if(!fl)return;
+  if(vid.dataset.url)URL.revokeObjectURL(vid.dataset.url);
+  var u=URL.createObjectURL(fl);vid.dataset.url=u;
+  S.fileName=fl.name;S.fileSize=fl.size;S.loaded=false;
+  vid.src=u;
+  $("vinfo").textContent="Loading "+fl.name+" ...";
+});
+vid.addEventListener("loadedmetadata",function(){
+  S.loaded=true;$("ph").style.display="none";
+  $("scrub").max=vid.duration;
+  vid.playbackRate=parseFloat($("speed").value);
+  $("vinfo").textContent=S.fileName+": "+vid.videoWidth+" x "+vid.videoHeight+" px, "+vid.duration.toFixed(2)+" s, "+(S.fileSize/1048576).toFixed(1)+" MB. Set the frame rate to match.";
+  S.pts=[];S.ref=[];S.lvl=[];S.dist=null;S.sel=null;$("dist").value="";
+  var restored=load();
+  refresh();
+  msg(restored?"Restored autosaved session for this file.":"Video loaded. Next: Set scale.");
+});
+vid.addEventListener("error",function(){$("vinfo").textContent="This browser cannot play that file. Try converting to H.264 MP4.";msg("Video error.",true);});
+
+function skey(){return "droptracker:"+S.fileName+":"+S.fileSize;}
+function fields(){return {drop:$("fDrop").value,article:$("fArt").value,cg:$("fCG").value,bend:$("fBend").value,height:$("fH").value,outcome:$("fOut").value,note:$("fNote").value};}
+var FIELD_IDS={drop:"fDrop",article:"fArt",cg:"fCG",bend:"fBend",height:"fH",outcome:"fOut",note:"fNote"};
+function save(){
+  if(!S.fileName)return;
+  try{
+    localStorage.setItem(skey(),JSON.stringify({ref:S.ref,lvl:S.lvl,dist:S.dist,fps:fps(),n:nAdv(),
+      pts:S.pts.map(function(p){return {t:p.t,x:p.x,y:p.y,mk:p.mk||[]};}),fields:fields()}));
+  }catch(e){}
+}
+function load(){
+  try{
+    var s=localStorage.getItem(skey());if(!s)return false;
+    var o=JSON.parse(s);
+    S.ref=o.ref||[];S.lvl=o.lvl||[];S.dist=o.dist||null;$("dist").value=S.dist||"";
+    if(o.fps)$("fps").value=o.fps;if(o.n)$("nAdv").value=o.n;
+    S.pts=(o.pts||[]).map(function(p){return {t:p.t,x:p.x,y:p.y,mk:p.mk||[],_n:++S.counter};});
+    if(o.fields)Object.keys(FIELD_IDS).forEach(function(k){$(FIELD_IDS[k]).value=o.fields[k]||"";});
+    return true;
+  }catch(e){return false;}
+}
+Object.keys(FIELD_IDS).forEach(function(k){$(FIELD_IDS[k]).addEventListener("input",save);$(FIELD_IDS[k]).addEventListener("change",save);});
+
+function download(name,text){
+  var b=new Blob([text],{type:"text/csv"}),u=URL.createObjectURL(b),a=document.createElement("a");
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u);},500);
+}
+function base(){return (S.fileName||"drop").replace(/\.[^.]+$/,"");}
+$("bCsv").onclick=function(){
+  if(!S.pts.length){msg("No points to export.",true);return;}
+  download(base()+"_points.csv",pointsCsv(S.pts,cal()));msg("Points CSV downloaded.");
+};
+$("bSum").onclick=function(){
+  var R=computeAll(S.pts,cal());
+  download(base()+"_summary.csv",summaryCsv(fields(),R,S.fileName));msg("Summary CSV downloaded.");
+};
+$("bCopy").onclick=function(){
+  var R=computeAll(S.pts,cal()),row=summaryCsv(fields(),R,S.fileName).split("\r\n")[1];
+  try{navigator.clipboard.writeText(row).then(function(){msg("Summary row copied.");},function(){msg("Copy blocked by the browser; use the download.",true);});}
+  catch(e){msg("Copy not available; use the download.",true);}
+};
+$("impf").addEventListener("change",function(){
+  var fl=$("impf").files[0];if(!fl)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var pts=parsePointsCsv(String(r.result));
+      if(S.pts.length&&!confirm("Replace the "+S.pts.length+" current points with "+pts.length+" imported points?")){$("impf").value="";return;}
+      pts.forEach(function(p){p._n=++S.counter;});
+      S.pts=pts;S.sel=null;refresh();msg("Imported "+pts.length+" points. Scale is not stored in the CSV; set it again if needed.");
+    }catch(e){msg("Import failed: "+e.message,true);}
+    $("impf").value="";
+  };
+  r.readAsText(fl);
+});
+
+window.addEventListener("resize",draw);
+window.addEventListener("load",function(){
+  var q=location.search;
+  if(/selftest/.test(q)){
+    var el=$("st");el.style.display="block";
+    try{
+      var T=selfTest();
+      el.innerHTML='<div id="selftest-result" class="'+(T.fails?"fail":"pass")+'">SELFTEST '+(T.fails?"FAIL ("+T.fails+" failed)":"PASS")+" "+(T.lines.length-T.fails)+"/"+T.lines.length+'</div><pre id="selftest-detail">'+T.lines.join("\n")+"</pre>";
+    }catch(e){el.innerHTML='<div id="selftest-result" class="fail">SELFTEST FAIL exception: '+e.message+"</div>";}
+  }
+  if(/demo/.test(q)){
+    var D=synth(4*Math.PI/180,80,30);
+    S.pts=D.pts;S.ref=D.ref;S.lvl=D.lvl;S.dist=D.dist;$("dist").value=D.dist;
+    var iL=Math.round(1.6*30);S.pts[iL].mk=["leveloff","glidestart"];S.pts[S.pts.length-1].mk=["glideend"];
+    $("fDrop").value="1";$("fArt").value="swift A foam 400";$("fOut").value="G";
+    S.sel=S.pts[iL];
+  }
+  setMode("track");refresh();loop();
+});
+</script>
+</body>
+</html>

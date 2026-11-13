@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMAV Article 1 drawings</title>
+<style>
+:root{color-scheme:dark;--bg:#14181d;--panel:#1c2229;--line:#333c46;--ink:#dde3ea;--muted:#9aa7b4;--link:#7fb4ff;--accent:#e89a55;--thead:#262e37;--bad:#ff8a80}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:32px 20px 64px;display:flex;flex-direction:column;gap:28px}
+h1{font-size:28px;margin:0}h2{font-size:20px;margin:0}p{margin:0;max-width:70ch}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);padding:12px}
+figure img{display:block;width:100%;height:auto}
+figcaption{font-size:14px;color:var(--muted);margin-top:8px}
+.note{border-left:3px solid var(--accent);padding:2px 0 2px 12px;color:var(--muted);font-size:15px}
+table{border-collapse:collapse;font-size:14.5px;background:var(--panel)}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}a{color:var(--link)}
+section{display:flex;flex-direction:column;gap:12px}
+th{background:var(--thead)}
+.sheet{background:#fff;border-color:#fff}.sheet figcaption{color:#3a4654}
+</style>
+</head>
+<body>
+<main>
+<h1>Article 1: P07 test article</h1>
+<p class="note">Design drawings from model numbers and assumed material densities. Nothing is measured yet. Full specification and test card: <code>rigid_glider/ARTICLE1.md</code>.</p>
+
+<section>
+<h2>Overview</h2>
+<figure><img src="overview.svg" alt="Top and front view of Article 1 with dimensions">
+<figcaption>Blue: CG scale. Orange: lip strips (pairs B and C only). Green dashed: tail module, fitted last. Dark bars at the tips: tip fins.</figcaption></figure>
+</section>
+
+<section>
+<h2>Cutting templates, full size</h2>
+<p>Open each one and print at 100% scale with fit-to-page turned off. Check the 100 mm bar with a ruler before cutting.</p>
+<ul>
+<li><a href="panel_template_1to1.svg">Wing panel template</a>: landscape, Letter or A4. One template makes both panels; turn it over for the left one.</li>
+<li><a href="small_parts_template_1to1.svg">Small parts template</a>: portrait. Tip fins, tail, alternate tail, spare centre fin.</li>
+</ul>
+<figure class="sheet"><img src="panel_template_1to1.svg" alt="Wing panel cutting template">
+<figcaption>Preview of the panel template. Orange dashed lines are the hinge cuts for the two lip options; cut only one of them on a given panel pair.</figcaption></figure>
+</section>
+
+<section>
+<h2>Mass and ballast at 8 N/m² (29.0 g all-up)</h2>
+<div class="scroll"><table>
+<tr><th>Wing sheet (assumed density)</th><th>Wing</th><th>Ballast</th><th>Ballast station for CG 54 mm</th><th>CG 64 mm</th><th>CG 78 mm</th></tr>
+<tr><td>3 mm foam, 40 kg/m³</td><td class="n">4.3 g</td><td class="n">19.4 g</td><td class="n">49 mm</td><td class="n">64 mm</td><td class="n">85 mm</td></tr>
+<tr><td>1.5 mm balsa, 160 kg/m³</td><td class="n">8.5 g</td><td class="n">14.8 g</td><td class="n">33 mm</td><td class="n">53 mm</td><td class="n">81 mm</td></tr>
+<tr><td>3 mm balsa, 120 kg/m³</td><td class="n">12.8 g</td><td class="n">10.2 g</td><td class="n">5 mm</td><td class="n">33 mm</td><td class="n">73 mm</td></tr>
+</table></div>
+<p>Stations are millimetres aft of the root leading edge. Assumes a 5 g printed centre piece. Other wing loadings: <a href="ballast_table.csv">ballast_table.csv</a>.</p>
+</section>
+</main>
+</body>
+</html>

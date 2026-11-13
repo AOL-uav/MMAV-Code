@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMAV Article 1 CAD package</title>
+<style>
+:root{color-scheme:dark;--bg:#14181d;--panel:#1c2229;--line:#333c46;--ink:#dde3ea;--muted:#9aa7b4;--link:#7fb4ff;--accent:#e89a55;--thead:#262e37;--bad:#ff8a80}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:32px 20px 64px;display:flex;flex-direction:column;gap:30px}
+h1{font-size:28px;margin:0}h2{font-size:21px;margin:0}h3{font-size:16px;margin:0}p{margin:0;max-width:72ch}
+section{display:flex;flex-direction:column;gap:12px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);padding:12px}
+figure img{display:block;width:100%;height:auto}
+figcaption{font-size:14px;color:var(--muted);margin-top:8px}
+.note{border-left:3px solid var(--accent);padding:2px 0 2px 12px;color:var(--muted);font-size:15px}
+table{border-collapse:collapse;font-size:14.5px;background:var(--panel)}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}a{color:var(--link)}code{font-size:14px}
+ol,ul{margin:0;padding-left:22px;max-width:74ch;display:flex;flex-direction:column;gap:6px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+th{background:var(--thead)}
+.sheet{background:#fff;border-color:#fff}.sheet figcaption{color:#3a4654}
+</style>
+</head>
+<body>
+<main>
+<h1>Article 1 CAD package</h1>
+<p class="note">Geometry generated from the model's P07 planform. Model-derived and unvalidated; no mass is measured. Only the 400 mm version was modelled. The 350 mm version is the same shape scaled down.</p>
+
+<section>
+<h2>Which files to use</h2>
+<div class="cols">
+<div><h3>Printed airfoil wing (NACA 0006)</h3>
+<ul>
+<li><code>wing_panel_right.stl</code>: one solid wing panel, flat, ready to drop into a slicer for a weight estimate (<a href="span_400/wing_panel_right.stl">400 mm</a>, <a href="span_350/wing_panel_right.stl">350 mm</a>). Mirror it for the left panel. Its trailing edge is thickened to 0.4 mm. It has no strip split, joiner or fins.</li>
+<li><code>section_root_xyz.txt</code>, <code>section_strip_xyz.txt</code>, <code>section_tip_xyz.txt</code>: closed section curves already placed in 3D, in millimetres. Columns are x (aft), y (out along the span), z (up).</li>
+<li><code>sections.dxf</code>: the same three sections as flat 2D outlines, if your CAD prefers DXF.</li>
+<li><code>naca0006_unit.dat</code>: the section at chord 1, for any airfoil plug-in.</li>
+<li><code>stations.csv</code>: every position and thickness as numbers.</li>
+</ul></div>
+<div><h3>Flat sheet wing</h3>
+<ul>
+<li><code>planform.dxf</code>: one wing panel with the hinge lines on separate layers. Use it directly for a laser cutter, or as a sketch to extrude to the sheet thickness.</li>
+<li><code>small_parts.dxf</code>: tip fins, tail, alternate tail, spare centre fin.</li>
+<li>For knife cutting, the paper templates are in <a href="../article1/index.html">the Article 1 drawings</a> (400 mm only).</li>
+</ul></div>
+</div>
+<p>DXF files carry no units: choose millimetres on import.</p>
+</section>
+
+<section>
+<h2>Building the printed wing in CAD</h2>
+<ol>
+<li>Import the root and tip section curves. They are already in position, 200 mm apart (175 mm for the small version), with the tip shifted aft for the sweep.</li>
+<li>Loft from root to tip. The wing is straight-tapered, so a plain two-section loft is exact. The strip-start section is only a check and a place to split.</li>
+<li>Thicken the trailing edge to what your printer can make, about 0.4 mm. The true section ends at 0.15 mm or less.</li>
+<li>Split off the removable strip: everything aft of the 80% chord line, from the strip-start station to the tip. Hinge positions are in <code>stations.csv</code>.</li>
+<li>Make the lip strips by rotating a copy of that strip upward about the hinge line: 10 degrees for the large lip. The small lip is the aft 15% rotated 8 degrees, so it needs its own split at 85%.</li>
+<li>Mirror for the other panel. Then tilt each panel up 3 degrees about its root chord line; the two panels meet at 174 degrees.</li>
+<li>Add the tip fins as flat plates centred on the wing at each tip, and design the centre piece to suit your sheet or printed root.</li>
+</ol>
+<p>The sections are streamwise: they lie parallel to the flight direction, not square to the swept leading edge. That matches the model.</p>
+</section>
+
+<section>
+<h2>400 mm</h2>
+<figure><img src="span_400/drawing.svg" alt="Dimensioned drawing, 400 mm span">
+<figcaption>Files: <a href="span_400/planform.dxf">planform.dxf</a> · <a href="span_400/sections.dxf">sections.dxf</a> · <a href="span_400/small_parts.dxf">small_parts.dxf</a> · <a href="span_400/stations.csv">stations.csv</a> · <a href="span_400/section_root_xyz.txt">root</a>, <a href="span_400/section_strip_xyz.txt">strip</a>, <a href="span_400/section_tip_xyz.txt">tip</a> curves · <a href="span_400/summary.json">summary.json</a></figcaption></figure>
+</section>
+
+<section>
+<h2>350 mm</h2>
+<figure><img src="span_350/drawing.svg" alt="Dimensioned drawing, 350 mm span">
+<figcaption>Files: <a href="span_350/planform.dxf">planform.dxf</a> · <a href="span_350/sections.dxf">sections.dxf</a> · <a href="span_350/small_parts.dxf">small_parts.dxf</a> · <a href="span_350/stations.csv">stations.csv</a> · <a href="span_350/section_root_xyz.txt">root</a>, <a href="span_350/section_strip_xyz.txt">strip</a>, <a href="span_350/section_tip_xyz.txt">tip</a> curves · <a href="span_350/summary.json">summary.json</a></figcaption></figure>
+</section>
+
+<section>
+<h2>What scaling down costs</h2>
+<div class="scroll"><table>
+<tr><th>Span</th><th>Root / tip chord</th><th>Airfoil thickness, root / tip</th><th>Strip thickness at hinge, tip</th><th>One panel fits in</th><th>Weight at 8 N/m²</th><th>Reynolds number at 8 N/m², mean chord / tip</th></tr>
+<tr><td>400 mm</td><td class="n">118.5 / 59.3</td><td class="n">7.1 / 3.6 mm</td><td class="n">1.6 mm</td><td class="n">200 × 167 mm</td><td class="n">29.0 g</td><td class="n">40,500 / 26,100</td></tr>
+<tr><td>350 mm</td><td class="n">103.7 / 51.9</td><td class="n">6.2 / 3.1 mm</td><td class="n">1.4 mm</td><td class="n">175 × 146 mm</td><td class="n">22.2 g</td><td class="n">35,500 / 22,800</td></tr>
+<tr><td>300 mm</td><td class="n">88.9 / 44.4</td><td class="n">5.3 / 2.7 mm</td><td class="n">1.2 mm</td><td class="n">150 × 126 mm</td><td class="n">16.3 g</td><td class="n">30,400 / 19,600</td></tr>
+</table></div>
+<p>The model found the lip loses most of its effect below a Reynolds number of about 30,000. At 400 mm the outer wing is already under that line; at 350 mm more of it is, and at 300 mm almost all of it. Smaller also means every tolerance in millimetres gets tighter and the printed tip gets thinner. Full table: <a href="scale_table.csv">scale_table.csv</a>.</p>
+</section>
+</main>
+</body>
+</html>

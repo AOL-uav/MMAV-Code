@@ -1,0 +1,34 @@
+EXERCISE 1: change the sweep (tip SECTION Xle), CL = 0.3, header unchanged
+tip Xle 0.0200 (qc sweep   4.9 deg)alpha=   4.41337  CL=   0.30000  Xnp=   0.02237  Cm=   0.03994  Clb=  -0.00586  Cnb=   0.00045  e=   0.99900    CDind=0.00633
+tip Xle 0.0675 (qc sweep  25.0 deg)alpha=   4.56690  CL=   0.30000  Xnp=   0.04375  Cm=  -0.07169  Clb=  -0.03090  Cnb=   0.00247  e=   0.99280    CDind=0.00626
+tip Xle 0.1100 (qc sweep  38.9 deg)alpha=   4.94259  CL=   0.30000  Xnp=   0.06355  Cm=  -0.17525  Clb=  -0.05412  Cnb=   0.00468  e=   0.97960    CDind=0.00628
+
+EXERCISE 2: tip fins off / on, CL = 0.3
+bare wing                   alpha=   4.56690  CL=   0.30000  Xnp=   0.04375  Cm=  -0.07169  Clb=  -0.03090  Cnb=   0.00247  e=   0.99280  
+with tip fins (TipFin)      alpha=   4.53732  CL=   0.30000  Xnp=   0.04389  Cm=  -0.07242  Clb=  -0.02994  Cnb=   0.01140  e=   1.00600  
+
+EXERCISE 3: tail panel behind the wing, section Ainc = -bend (trailing edge UP), alpha = 0
+bend  0 deg                 alpha=   0.00000  CL=   0.00000  Cm=   0.00000  Xnp=   0.04639  Cma=  -1.12886  CLa=   3.97244  
+bend  2 deg                 alpha=   0.00000  CL=  -0.01479  Cm=   0.01664  Xnp=   0.04639  Cma=  -1.12886  CLa=   3.97228  
+bend  5 deg                 alpha=   0.00000  CL=  -0.03706  Cm=   0.04169  Xnp=   0.04640  Cma=  -1.12886  CLa=   3.97146  
+bend 10 deg                 alpha=   0.00000  CL=  -0.07469  Cm=   0.08403  Xnp=   0.04641  Cma=  -1.12886  CLa=   3.96847  
+(CM at zero lift is the 'CM0' of the project; it is zero for a symmetric wing with no bend.)
+
+CHECK 1: panel counts (chordwise x spanwise per half wing), F45 bare wing, CL = 0.3
+  6 x   8  vortices=    96  alpha=4.5585  Xnp=0.043702  CLa=3.7507  e=0.9936  Cnb=+0.00247  Clb=-0.03094  (0.1 s)
+ 10 x  16  vortices=   320  alpha=4.5640  Xnp=0.043712  CLa=3.7459  e=0.9931  Cnb=+0.00247  Clb=-0.03089  (0.1 s)
+ 20 x  32  vortices=  1280  alpha=4.5669  Xnp=0.043747  CLa=3.7433  e=0.9928  Cnb=+0.00247  Clb=-0.03090  (1.2 s)
+ 30 x  64  vortices=  3840  alpha=4.5685  Xnp=0.043772  CLa=3.7418  e=0.9927  Cnb=+0.00247  Clb=-0.03091  (18.8 s)
+ 40 x  96  vortices=  7680  AVL FAILED; last lines of its screen: Building surface: Wing |  | Building duplicate image-surface: Wing (YDUP) | SDUPL: Vortex array overflow. Increase NVMAX currently         5000
+
+CHECK 2: known case, rectangular wing, span 0.25 m, chord 0.041667 m (AR 6); the neutral point of a plain wing should sit near the quarter chord
+Xnp = 0.009952 m = 0.2388 chords from the leading edge  (quarter chord = 0.010417 m);  CLa = 4.1893 per rad
+   for comparison, lifting-line theory CLa = 2*pi*AR/(AR+2) = 4.7124 per rad
+
+CHECK 3: mistakes and how each shows up (F45 deck, CL = 0.3 requested)
+correct deck                CL=   0.30000  alpha=   4.56690  Cm=  -0.07169  Xnp=   0.04375  Clb=  -0.03090  Cnb=   0.00247  
+YDUPLICATE removed          CL=   0.30000  alpha=  13.41859  Cm=  -0.08304  Xnp=   0.04568  Clb=  -0.03490  Cnb=   0.00833    (AVL now models ONE half wing; header areas still full)
+Cref doubled in header      CL=   0.30000  alpha=   4.56690  Cm=  -0.03584  Xnp=   0.04375  Clb=  -0.03090  Cnb=   0.00247  
+Sref halved in header       CL=   0.30000  alpha=   2.27878  Cm=  -0.07177  Xnp=   0.04379  Clb=  -0.03093  Cnb=   0.00123  
+Xref 10x too far aft        CL=   0.30000  alpha=   4.56690  Cm=   1.33311  Xnp=   0.04498  Clb=  -0.03090  Cnb=   0.00247  
+sections in mm, header in m CL=   0.30000  alpha=   0.00000  Cm=-227.96568  Xnp=  43.80944  Clb= -30.94594  Cnb=   0.00000    (sections 1000x bigger than the header's Sref/Cref/Bref)

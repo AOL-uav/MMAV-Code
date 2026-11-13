@@ -1,0 +1,80 @@
+name,value,unit,tag,note
+rod_d_mm,4.0,mm,ASSUMED,Boom rod OUTER diameter. Kai's rod is unknown. Measure with calipers.
+rod_wall_mm,0.5,mm,ASSUMED,Boom rod wall thickness (mass estimate only; tube assumed hollow carbon).
+pin_d_mm,1.0,mm,ASSUMED,"Release pin wire diameter (straight, hard, smooth wire). Measure it."
+servo_l_mm,23.0,mm,ASSUMED,"Servo body length (the long side, not counting mounting ears). Measure your servo."
+servo_w_mm,12.0,mm,ASSUMED,Servo body width (short side).
+servo_h_mm,22.0,mm,ASSUMED,"Servo body height along the output shaft, base to the face the arm sits on."
+servo_mass_g,9.0,g,ASSUMED,Servo mass used for the mass and CG sums (the 9 g class is the worst case).
+servo_shaft_from_end_mm,5.5,mm,ASSUMED,"Output shaft centre to the near end of the body, along the length."
+servo_arm_below_body_mm,3.5,mm,ASSUMED,Arm mid-plane to the servo body face it hangs below.
+servo_arm_thick_mm,1.6,mm,ASSUMED,Servo arm thickness.
+servo_arm_radius_mm,10.0,mm,ASSUMED,Distance from the shaft centre to the arm hole the pin hook goes through.
+servo_throw_deg,90.0,deg,ASSUMED,Arm angle you will set between pin-closed and pin-open end points (servo must be able to do it).
+frame_arm_w_mm,12.0,mm,ASSUMED,Width of the frame arm / plate the saddle blocks clamp to. Vapor5 frame is UNKNOWN here.
+rx_l_mm,22.0,mm,ASSUMED,PWM receiver length (for the optional receiver plate).
+rx_w_mm,12.0,mm,ASSUMED,PWM receiver width.
+rx_mass_g,2.0,g,ASSUMED,PWM receiver mass.
+zip_tie_w_mm,2.5,mm,ASSUMED,Zip tie width. Slots are cut for this; measure your ties.
+zip_tie_t_mm,1.0,mm,ASSUMED,Zip tie thickness.
+quad_mass_g,650.0,g,ASSUMED,"Quad all-up mass with battery, for the CG-shift sums. Weigh it."
+motor_diag_mm,225.0,mm,ASSUMED,Motor-to-motor DIAGONAL distance (true-X). Measure the Vapor5; frame geometry is UNKNOWN here.
+prop_d_in,5.0,in,ASSUMED,Propeller diameter.
+boom_rear_x_mm,-30.0,mm,ASSUMED,"Where the rod starts, measured forward of the quad centre (negative = behind the centre)."
+boom_length_mm,200.0,mm,JUDGEMENT,Rod END measured forward of the quad centre. Default puts the glider hang point past the front prop edge by the margin below.
+bore_clear_mm,0.3,mm,JUDGEMENT,Rod socket diameter = rod diameter + this (printed holes run small). Tune after a test print.
+socket_wall_mm,2.4,mm,JUDGEMENT,Socket tube wall (6 perimeters of 0.4 mm).
+slit_mm,1.0,mm,JUDGEMENT,Clamp slit width along the top of the socket.
+socket_len_mm,22.0,mm,JUDGEMENT,Socket length (rod insertion depth).
+tie_groove_depth_mm,1.0,mm,JUDGEMENT,Depth of the zip-tie groove round socket and rail.
+pin_clear_mm,0.2,mm,JUDGEMENT,Pin hole diameter = pin wire diameter + this.
+post_t_mm,4.0,mm,JUDGEMENT,Thickness of each eyelet post along the pin.
+gap_mm,5.0,mm,JUDGEMENT,Gap between the two eyelet posts (the string loop sits here).
+engage_mm,3.0,mm,JUDGEMENT,Pin tip depth inside the far post when closed.
+retract_inside_mm,1.5,mm,JUDGEMENT,"When open, pin tip is pulled back this far INTO the near post (still guided)."
+bridge_clear_mm,1.5,mm,JUDGEMENT,Space between the pin and the underside of the bridge over the gap.
+bridge_t_mm,2.0,mm,JUDGEMENT,Bridge thickness.
+hook_clear_mm,3.0,mm,JUDGEMENT,Clearance between the rear end of the pin rail and the arm hole at its most forward position.
+servo_rod_gap_mm,3.0,mm,JUDGEMENT,Free space between the rod and the servo side face (room for the zip tie).
+pad_t_mm,2.0,mm,JUDGEMENT,Servo pad plate thickness.
+post_len_mm,7.0,mm,JUDGEMENT,Length (along the boom) of the vertical post carrying the servo pad.
+post_w_mm,4.4,mm,JUDGEMENT,Width of the vertical post.
+saddle_len_mm,16.0,mm,JUDGEMENT,Length of each frame saddle block along the rod.
+saddle_rib_h_mm,0.4,mm,JUDGEMENT,Height of the anti-slide ribs in the saddle groove.
+saddle_spacing_mm,60.0,mm,JUDGEMENT,Spacing between the two saddle blocks along the rod.
+prop_margin_mm,60.0,mm,JUDGEMENT,Hang point must be at least this far forward of the front prop disc edge. Downwash column size is UNKNOWN and not modelled.
+loop_len_mm,25.0,mm,JUDGEMENT,"String loop length (flat, knot to end) from glider nose attachment."
+mu_lo,0.2,,ASSUMED,Low combined friction coefficient (string on wire plus wire in printed hole).
+mu_hi,0.6,,ASSUMED,High combined friction coefficient.
+load_factor,2.0,,JUDGEMENT,Extra factor on the hanging weight for binding / gentle manoeuvre load.
+usable_torque_frac,0.3,,JUDGEMENT,Fraction of stall torque treated as usable continuous pull.
+pla_density_g_cm3,1.24,g/cm3,ASSUMED,"PLA density, 100 % solid. Weigh your prints."
+pin_density_g_cm3,7.85,g/cm3,ASSUMED,Pin wire density (steel).
+rod_density_g_cm3,1.6,g/cm3,ASSUMED,Rod material density (carbon tube).
+misc_mass_g,1.5,g,ASSUMED,"Zip ties and tape on the whole assembly, placed at the quad centre."
+socket_bore_d_mm,4.3,mm,GEOMETRY,Rod socket bore diameter = rod_d + bore_clear.
+socket_outer_d_mm,9.1,mm,GEOMETRY,Socket outer diameter.
+pin_hole_d_mm,1.2,mm,GEOMETRY,Pin hole diameter = pin_d + pin_clear.
+pin_axis_z_mm,-6.75,mm,GEOMETRY,Pin axis below the rod axis.
+pin_axis_y_mm,1.0,mm,GEOMETRY,Pin axis sideways offset from the rod axis (so the servo clears the rod).
+rail_width_mm,5.6,mm,GEOMETRY,Pin rail / eyelet post width.
+servo_shaft_x_mm,-10.071,mm,GEOMETRY,"Servo shaft x relative to socket rear face (socket starts at x=0, tip forward)."
+servo_shaft_y_mm,11.0,mm,GEOMETRY,Servo shaft y.
+pad_underside_z_mm,20.75,mm,GEOMETRY,Underside of the servo pad plate.
+pin_cut_length_mm,40.8,mm,GEOMETRY,"Straight wire to cut: closed tip to the hook, plus the hook leg."
+pin_hook_leg_mm,3.8,mm,GEOMETRY,Length of the 90-degree bent leg that goes through the arm hole.
+pin_travel_required_mm,9.5,mm,ARITHMETIC,gap + engage + retract_inside.
+arm_throw_mm,14.142,mm,ARITHMETIC,2 r sin(theta/2).
+arm_angle_required_deg,56.719,deg,ARITHMETIC,2 asin(travel / 2r).
+prop_edge_x_mm,143.05,mm,ARITHMETIC,Front prop disc edge forward of the quad centre (motor geometry ASSUMED).
+hang_point_x_mm,206.5,mm,ARITHMETIC,Glider hang point forward of the quad centre.
+hang_margin_mm,63.45,mm,ARITHMETIC,Hang point minus front prop disc edge.
+boom_length_min_mm,196.55,mm,ARITHMETIC,Smallest boom_length that meets prop_margin.
+mass_A_tip_latch_g,3.209,g,ARITHMETIC,"Solid PLA estimate, voxel union (+-2 %)."
+bbox_A_tip_latch_mm,35.0x12.1x30.3,mm,ARITHMETIC,Print bounding box as written to the STL.
+mass_A2_servo_pad_g,1.69,g,ARITHMETIC,"Solid PLA estimate, voxel union (+-2 %)."
+bbox_A2_servo_pad_mm,40.1x28.5x2.0,mm,ARITHMETIC,Print bounding box as written to the STL.
+mass_B_frame_saddle_g,1.493,g,ARITHMETIC,"Solid PLA estimate, voxel union (+-2 %)."
+bbox_B_frame_saddle_mm,16.0x22.2x5.1,mm,ARITHMETIC,Print bounding box as written to the STL.
+mass_C_rx_plate_g,1.269,g,ARITHMETIC,"Solid PLA estimate, voxel union (+-2 %)."
+bbox_C_rx_plate_mm,28.0x26.0x1.6,mm,ARITHMETIC,Print bounding box as written to the STL.

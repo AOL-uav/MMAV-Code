@@ -1,0 +1,77 @@
+# swiftA_250 - sheet-builder kit
+
+Generated 2026-10-21T16:53:36 by `rigid_glider/sheet_builder.py` from `swiftA_250.json` (builtin outline: bird_outline_v4_swift.build_geometry4(GLIDE) at span 250). Nothing here is flight-validated; every number is tagged MODEL / ASSUMED / CALCULATED / GEOMETRY / KAI.
+
+## What is in the folder
+
+- `parts/*.stl` - print files (already rotated onto the bed; 250 mm bed). `dxf/*.dxf` - 2D outlines in mm for an Onshape sketch import. `foam/*.svg` - 1:1 white print templates. `summary.json`, `index.html` (dark previews).
+
+## Settings used
+
+| item | value | tag |
+|---|---|---|
+| full span | 250 mm | KAI |
+| membrane | 2 x 0.10 mm = 0.20 mm | KAI (parameter by size) |
+| dihedral (rail faces) | 0.00 deg per half | KAI |
+| tail bend (rail face) | 6.00 deg | KAI |
+| root strip | 4.4 mm wide x 1.00 mm thick | ASSUMED |
+| LE bead | 2.0 -> 0.8 mm wide, 0.60 -> 0.30 mm high above the membrane, stops at 90 % of the half span (rectangular section) | ASSUMED |
+| jigsaw root keys | 7 keys, head r 1.00, neck 0.80 x 1.00, post 0.40 mm high; socket = key + 0.15 mm on every edge, 0.15 mm deeper | ASSUMED |
+| root gap between halves | 0.40 mm | ASSUMED |
+| PLA density / lead density | 1.24 / 11.3 g/cm3, pocket fill margin 25 % | ASSUMED |
+| bed | 250 x 250 mm (design); rotation search every 0.5 deg | KAI |
+
+Every setting is described in `rigid_glider/sheet_builder_configs/README.md`.
+
+## Design
+
+**Wing halves.** Two mirrored halves, each printed with its FLAT face on the bed (this face is the top of the wing). The leading-edge bead, the root strip and the jigsaw posts stand up from the flat face on the print and hang BELOW the wing in flight, toward the rail. The printed right-wing half therefore has the mirrored planform. One unioned closed shell per part (raised regions are extra height of the same extrusion, vertical walls between regions).
+
+**Jigsaw key.** A post (0.40 mm high) with a round head and a straight neck stands on the underside of the root strip. The rail has a matching pocket in each saddle face: the pocket outline is the key outline moved outward by **0.15 mm on every edge** (ASSUMED clearance) and is 0.15 mm deeper than the post. The pocket walls fix the half in x (fore-aft) and y; the strip's bottom face sits on the saddle face, which fixes z and the dihedral. Keys alternate neck direction (+x / -x) so a half cannot be turned end for end.
+
+**Rail.** A thin web (1.6 mm, 3.2 mm in the ballast block) carrying four face plates (wing and tail, right and left, 1.10 mm thick, lightened between the keys). The wing plates are tilted +/- 0.00 deg about x (dihedral); the tail plates are rotated by 6.00 deg about the fold line x = 36.0 mm so the tail bend is a printed face, not a hand bend. The plates overlap the web top by 0.5 mm (overlapping closed shells in one STL, volume computed as the union).
+
+**Rail print orientation: `side`.** The rail lies on its side (profile plane on the bed, the flight y axis becomes build height). The two dihedral faces and the tail face are then near-vertical walls made by perimeters (the dihedral only leans a wall by 0.00 deg, a lateral shift of 0.0000 mm per 0.1 mm layer), so their position and angle depend on XY accuracy (about 0.05 mm) instead of on layer stair-stepping (an upright print would stair-step a 0.0 deg face with 0.1 mm steps and must bridge the underside of the plates). Weak point: the bed contact is the edge of one plate (1.1 mm wide) - use a brim and a clean plate; if it lifts, set `rail.print_orientation` to `upright` and accept stair-stepped faces.
+
+## Mass, CG and ballast (CALCULATED from the STL volumes)
+
+| item | mass g | x mm aft of root LE |
+|---|---|---|
+| wing piece 1 (R+L) | 3.158 | 28.31 |
+| rail | 1.287 | 21.20 |
+| root seam glue | 0.200 | 21.20 |
+| **bare total / CG** | **4.645** | **26.03** |
+| ballast (lead) at x = -19.9 mm | 0.317 | -19.9 |
+| **all-up / target CG** | **4.962** | **23.10** (45.6 mm from the nose tip) |
+
+Wing loading 10.01 N/m2 on a wing area of 4863 mm2 (planform ahead of the hinge, both halves); ballast pocket 35 mm3 for 28 mm3 of lead (fill margin 25 %); window 2.4 x 4.5 mm through the 3.2 mm ballast block, centre x = -19.9 mm.
+
+## Bed fit
+
+| part | footprint after rotation | rotation | fits 250 mm |
+|---|---|---|---|
+| wing_R | 97.4 x 125.0 | 0.0 deg | yes |
+| wing_L | 97.4 x 125.0 | 0.0 deg | yes |
+| rail | 89.6 x 10.6 | 0.0 deg | yes |
+
+## Flags
+
+- none
+
+## Assembly
+
+1. Print the wings flat-face-down (bead up) in PLA, the rail as stated above, fins and tabs flat. Do not scale in the slicer. Brim for the rail.
+2. Dry fit: each half must drop onto its rail plate with every post in its pocket, the strip flat on the plate. Do not file the pockets; if too tight, re-print with a larger `keys.clearance_mm`.
+3. Glue each half to the rail with thin CA (or hot glue) on the strip/plate contact faces and rib walls; press flat on a table for the wings (the table, not your hand, sets the sheet).
+4. Tail: press the tail fan down onto the tail plates (the thin hinge zone bends to the printed face at 6.0 deg) and glue it; do not hand-bend to a gauge.
+5. Ballast: fit lead into the rail window (0.3 g), seal both sides with tape or CA, weigh, and compare the CG with the target mark on the DXF / foam template.
+
+## ASSUMED / not validated
+
+- PLA 1.24 g/cm3, lead 11.3 g/cm3, glue masses and the pocket fill margin are ASSUMED; weigh the first printed half (CURRENT.md next action 2).
+- Key/socket clearance 0.15 mm is ASSUMED, never printed. Seams are zero-gap butt joints.
+- The bead is a rectangular step section, not a half round (the options study used half-round beads of the same width and height; areas differ).
+- Tail halves are bent about slanted fold lines when dihedral and tail bend are both set; the root gap is enlarged automatically to stay clear (reported above).
+- CG uses planform x of the sheet masses (bent-tail x shortening of 0.5 % ignored).
+- Fin position (centre fin on the rail's aft end; tip fins on the tip tabs) is a choice made here, not the position in fin_kit_v4.
+- No aerodynamic model is run on this geometry (AVL deck export not done).

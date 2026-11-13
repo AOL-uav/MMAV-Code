@@ -1,0 +1,1450 @@
+
+ ===================================================
+  XFOIL Version 6.99
+  Copyright (C) 2000   Mark Drela, Harold Youngren
+
+  This software comes with ABSOLUTELY NO WARRANTY,
+    subject to the GNU General Public License.
+
+  Caveat computor
+ ===================================================
+
+ File  xfoil.def  not found
+
+   QUIT    Exit program
+
+  .OPER    Direct operating point(s)
+  .MDES    Complex mapping design routine
+  .QDES    Surface speed design routine
+  .GDES    Geometry design routine
+
+   SAVE f  Write airfoil to labeled coordinate file
+   PSAV f  Write airfoil to plain coordinate file
+   ISAV f  Write airfoil to ISES coordinate file
+   MSAV f  Write airfoil to MSES coordinate file
+   REVE    Reverse written-airfoil node ordering
+
+   LOAD f  Read buffer airfoil from coordinate file
+   NACA i  Set NACA 4,5-digit airfoil and buffer airfoil
+   INTE    Set buffer airfoil by interpolating two airfoils
+   NORM    Buffer airfoil normalization toggle
+   XYCM rr Change CM reference location, currently  0.25000 0.00000
+
+   BEND    Display structural properties of current airfoil
+
+   PCOP    Set current-airfoil panel nodes directly from buffer airfoil points
+   PANE    Set current-airfoil panel nodes ( 160 ) based on curvature
+  .PPAR    Show/change paneling
+
+  .PLOP    Plotting options
+
+   WDEF f  Write  current-settings file
+   RDEF f  Reread current-settings file
+   NAME s  Specify new airfoil name
+   NINC    Increment name version number
+
+   Z       Zoom    | (available in all menus)
+   U       Unzoom  | 
+
+ XFOIL   c>   ...............................................
+
+  G raphics-enable flag:        T
+  S ize of plot object          10.00"
+  A spect ratio of plot object   0.5500
+  P age dimensions              11.00 x  8.50"
+  M argins from page edges       0.00",  0.00"
+  F ont size (relative)          0.0150
+  W indow/screen size fraction   0.8000
+  B lowup input method:        Cursor    
+  O rientation of plot:        Landscape 
+  C olor PostScript output?     F
+
+      Option, Value   (or <Return>)    c>   ...............................................
+
+  G raphics-enable flag:        F
+  S ize of plot object          10.00"
+  A spect ratio of plot object   0.5500
+  P age dimensions              11.00 x  8.50"
+  M argins from page edges       0.00",  0.00"
+  F ont size (relative)          0.0150
+  W indow/screen size fraction   0.8000
+  B lowup input method:        Cursor    
+  O rientation of plot:        Landscape 
+  C olor PostScript output?     F
+
+      Option, Value   (or <Return>)    c>  
+ XFOIL   c>  
+ Labeled airfoil file.  Name:  NACA_0006_Re60000_c15_a5                        
+
+ Number of input coordinate points: 321
+ Counterclockwise ordering
+ Max thickness =     0.060012  at x =   0.299
+ Max camber    =    -0.011057  at x =   0.847
+
+  LE  x,y  =   0.00000  -0.00005  |   Chord =   0.99952
+  TE  x,y  =   0.99943   0.01307  |
+
+ Current airfoil nodes set from buffer airfoil nodes ( 321 )
+
+ XFOIL   c>  
+ Sharp trailing edge
+
+ Paneling parameters used...
+   Number of panel nodes       160
+   Panel bunching parameter    1.000
+   TE/LE panel density ratio   0.150
+   Refined-area/LE panel density ratio    0.200
+   Top    side refined area x/c limits  1.000 1.000
+   Bottom side refined area x/c limits  1.000 1.000
+
+ XFOIL   c>  
+.OPERi   c>  
+ M  =    0.0000
+ Re =     60000
+
+.OPERv   c>  
+ Xtr/c     =  1.0000    top    side
+ Xtr/c     =  1.0000    bottom side
+ Ncrit     =    9.00   ( 0.070 % turb. level )
+ Vacc      =  0.0100
+
+ Klag  =  5.6000     Uxwt  =    1.00
+ A     =  6.7000     B     =  0.7500       KCt = 0.01485
+ CtiniK=  1.8000     CtiniX=  3.3000
+
+..VPAR   c>  
+..VPAR   c>  
+.OPERv   c>  
+.OPERv   c>  
+ Polar  1 newly created for accumulation
+ Airfoil archived with polar: NACA_0006_Re60000_c15_a5                        
+
+Enter  polar save filename  OR  <return> for no file   s>  
+ New polar save file available
+
+Enter  polar dump filename  OR  <return> for no file   s>  
+ Polar dump file will NOT be written
+
+ Polar accumulation enabled
+
+.OPERva   c>   Calculating unit vorticity distributions ...
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Initializing BL ...
+    side            1  ...
+ MRCHUE: Inverse mode at  59     Hk =   3.800
+ MRCHUE: Inverse mode at  60     Hk =   3.955
+ MRCHUE: Inverse mode at  61     Hk =   4.108
+ MRCHUE: Inverse mode at  62     Hk =   4.259
+ MRCHUE: Inverse mode at  63     Hk =   4.408
+ MRCHUE: Inverse mode at  64     Hk =   4.555
+ MRCHUE: Inverse mode at  65     Hk =   4.701
+ MRCHUE: Inverse mode at  66     Hk =   4.844
+ MRCHUE: Inverse mode at  67     Hk =   4.983
+ MRCHUE: Convergence failed at  68  side 1    Res =  0.3593E+01
+ MRCHUE: Inverse mode at  69     Hk =   5.099
+ MRCHUE: Inverse mode at  70     Hk =   5.228
+ MRCHUE: Inverse mode at  79     Hk =   3.800
+ MRCHUE: Inverse mode at  80     Hk =   3.855
+    side            2  ...
+ MRCHUE: Inverse mode at  72     Hk =   3.800
+ MRCHUE: Inverse mode at  73     Hk =   3.954
+ MRCHUE: Inverse mode at  74     Hk =   4.107
+ MRCHUE: Inverse mode at  75     Hk =   4.258
+ MRCHUE: Inverse mode at  76     Hk =   4.407
+ MRCHUE: Convergence failed at  77  side 2    Res =  0.3392E+01
+ MRCHUE: Inverse mode at  78     Hk =   4.554
+ MRCHUE: Inverse mode at  79     Hk =   4.698
+ MRCHUE: Convergence failed at  80  side 2    Res =  0.3011E+01
+ MRCHUE: Inverse mode at  81     Hk =   4.823
+ MRCHUE: Inverse mode at  82     Hk =   4.883
+ MRCHUE: Inverse mode at  84     Hk =   3.753
+ MRCHUE: Inverse mode at  85     Hk =   3.338
+ MRCHUE: Inverse mode at  86     Hk =   3.025
+
+ MRCHDU: Convergence failed at  80  side 2    Res =  0.2369E+01
+ MRCHDU: Convergence failed at  81  side 2    Res =  0.2693E+01
+ MRCHDU: Convergence failed at  82  side 2    Res =  0.2580E+01
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   1   rms: 0.2976E+00   max: 0.1500E+01   D at   87  2   RLX: 0.335
+       a =  0.000      CL = -0.2060
+      Cm =  0.0426     CD =  0.00851   =>   CDf =  0.00977    CDp = -0.00126
+
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   2   rms: 0.1832E+00   max: -.1011E+01   C at   80  1   RLX: 0.495
+       a =  0.000      CL = -0.1423
+      Cm =  0.0276     CD =  0.01038   =>   CDf =  0.01002    CDp =  0.00036
+
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   3   rms: 0.9832E-01   max: 0.4346E+00   D at   90  2
+       a =  0.000      CL = -0.0805
+      Cm =  0.0136     CD =  0.01322   =>   CDf =  0.01036    CDp =  0.00287
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   4   rms: 0.9662E-02   max: 0.6770E-01   D at   86  2
+       a =  0.000      CL = -0.0788
+      Cm =  0.0135     CD =  0.01386   =>   CDf =  0.01018    CDp =  0.00368
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   5   rms: 0.8227E-03   max: 0.8102E-02   D at    4  1
+       a =  0.000      CL = -0.0787
+      Cm =  0.0134     CD =  0.01387   =>   CDf =  0.01012    CDp =  0.00375
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   6   rms: 0.3338E-05   max: -.2402E-04   D at   90  2
+       a =  0.000      CL = -0.0787
+      Cm =  0.0134     CD =  0.01387   =>   CDf =  0.01012    CDp =  0.00375
+ plradd ia,ip,cpol            1          80  3.01124360E-02
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+
+.OPERva   c>   BLs will be initialized on next point
+
+.OPERva   c>   Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Initializing BL ...
+    side            1  ...
+ MRCHUE: Inverse mode at  61     Hk =   3.800
+ MRCHUE: Inverse mode at  62     Hk =   3.956
+ MRCHUE: Inverse mode at  63     Hk =   4.110
+ MRCHUE: Inverse mode at  64     Hk =   4.258
+ MRCHUE: Convergence failed at  65  side 1    Res =  0.7444E+01
+ MRCHUE: Inverse mode at  66     Hk =   4.381
+ MRCHUE: Inverse mode at  77     Hk =   2.845
+    side            2  ...
+ MRCHUE: Inverse mode at   9     Hk =   3.800
+ MRCHUE: Inverse mode at  10     Hk =   4.358
+ MRCHUE: Inverse mode at  11     Hk =   4.993
+ MRCHUE: Convergence failed at  12  side 2    Res =  0.2288E+01
+ MRCHUE: Inverse mode at  13     Hk =   5.879
+ MRCHUE: Inverse mode at  14     Hk =   6.681
+ MRCHUE: Inverse mode at  15     Hk =   7.396
+ MRCHUE: Inverse mode at  16     Hk =   6.592
+ MRCHUE: Inverse mode at  17     Hk =   4.021
+ MRCHUE: Inverse mode at  18     Hk =   2.500
+ MRCHUE: Inverse mode at  19     Hk =   2.500
+ MRCHUE: Inverse mode at  84     Hk =   2.500
+ MRCHUE: Inverse mode at  85     Hk =   2.500
+
+ MRCHDU: Convergence failed at  17  side 2    Res =  0.3245E+01
+ MRCHDU: Convergence failed at  18  side 2    Res =  0.7381E+01
+ MRCHDU: Convergence failed at  19  side 2    Res =  0.6368E+01
+ MRCHDU: Convergence failed at  20  side 2    Res =  0.1014E+04
+ MRCHDU: Convergence failed at  21  side 2    Res =  0.1512E+03
+ MRCHDU: Convergence failed at  22  side 2    Res =  0.1273E+03
+ MRCHDU: Convergence failed at  23  side 2    Res =  0.2277E+03
+ MRCHDU: Convergence failed at  24  side 2    Res =  0.3912E+02
+ MRCHDU: Convergence failed at  25  side 2    Res =  0.3946E+02
+ MRCHDU: Convergence failed at  26  side 2    Res =  0.4827E+02
+ MRCHDU: Convergence failed at  27  side 2    Res =  0.4108E+02
+ MRCHDU: Convergence failed at  28  side 2    Res =  0.4206E+02
+ MRCHDU: Convergence failed at  29  side 2    Res =  0.4338E+02
+ MRCHDU: Convergence failed at  30  side 2    Res =  0.4053E+02
+ MRCHDU: Convergence failed at  31  side 2    Res =  0.4276E+02
+ MRCHDU: Convergence failed at  32  side 2    Res =  0.4444E+02
+ MRCHDU: Convergence failed at  33  side 2    Res =  0.3860E+02
+ MRCHDU: Convergence failed at  34  side 2    Res =  0.3812E+02
+ MRCHDU: Convergence failed at  35  side 2    Res =  0.3746E+02
+ MRCHDU: Convergence failed at  36  side 2    Res =  0.3591E+02
+ MRCHDU: Convergence failed at  37  side 2    Res =  0.3437E+02
+ MRCHDU: Convergence failed at  38  side 2    Res =  0.3430E+02
+ MRCHDU: Convergence failed at  39  side 2    Res =  0.3059E+02
+ MRCHDU: Convergence failed at  40  side 2    Res =  0.3528E+02
+ MRCHDU: Convergence failed at  41  side 2    Res =  0.1449E+02
+ MRCHDU: Convergence failed at  42  side 2    Res =  0.3314E+02
+ MRCHDU: Convergence failed at  43  side 2    Res =  0.3490E+02
+ MRCHDU: Convergence failed at  44  side 2    Res =  0.3671E+02
+ MRCHDU: Convergence failed at  45  side 2    Res =  0.3818E+02
+ MRCHDU: Convergence failed at  46  side 2    Res =  0.3983E+02
+ MRCHDU: Convergence failed at  47  side 2    Res =  0.4140E+02
+ MRCHDU: Convergence failed at  48  side 2    Res =  0.1856E+02
+ MRCHDU: Convergence failed at  49  side 2    Res =  0.1777E+02
+ MRCHDU: Convergence failed at  50  side 2    Res =  0.1753E+02
+ MRCHDU: Convergence failed at  51  side 2    Res =  0.1634E+02
+ MRCHDU: Convergence failed at  52  side 2    Res =  0.1909E+02
+ MRCHDU: Convergence failed at  53  side 2    Res =  0.2114E+02
+ MRCHDU: Convergence failed at  54  side 2    Res =  0.2507E+02
+ MRCHDU: Convergence failed at  55  side 2    Res =  0.3149E+02
+ MRCHDU: Convergence failed at  56  side 2    Res =  0.2047E+02
+ MRCHDU: Convergence failed at  57  side 2    Res =  0.2058E+02
+ MRCHDU: Convergence failed at  58  side 2    Res =  0.5031E+02
+ MRCHDU: Convergence failed at  59  side 2    Res =  0.4662E+02
+ MRCHDU: Convergence failed at  60  side 2    Res =  0.4482E+02
+ MRCHDU: Convergence failed at  61  side 2    Res =  0.5029E+02
+ MRCHDU: Convergence failed at  62  side 2    Res =  0.4671E+02
+ MRCHDU: Convergence failed at  63  side 2    Res =  0.4574E+02
+ MRCHDU: Convergence failed at  64  side 2    Res =  0.4401E+02
+ MRCHDU: Convergence failed at  65  side 2    Res =  0.4269E+02
+ MRCHDU: Convergence failed at  66  side 2    Res =  0.4359E+02
+ MRCHDU: Convergence failed at  67  side 2    Res =  0.4101E+02
+ MRCHDU: Convergence failed at  68  side 2    Res =  0.5419E+02
+ MRCHDU: Convergence failed at  69  side 2    Res =  0.5247E+02
+ MRCHDU: Convergence failed at  70  side 2    Res =  0.5015E+02
+ MRCHDU: Convergence failed at  71  side 2    Res =  0.1888E+02
+ MRCHDU: Convergence failed at  72  side 2    Res =  0.2655E+02
+ MRCHDU: Convergence failed at  73  side 2    Res =  0.2488E+02
+ MRCHDU: Convergence failed at  74  side 2    Res =  0.1857E+02
+ MRCHDU: Convergence failed at  75  side 2    Res =  0.5641E+02
+ MRCHDU: Convergence failed at  76  side 2    Res =  0.4449E+02
+ MRCHDU: Convergence failed at  77  side 2    Res =  0.3501E+02
+ MRCHDU: Convergence failed at  78  side 2    Res =  0.2175E+03
+ MRCHDU: Convergence failed at  79  side 2    Res =  0.7728E+02
+ MRCHDU: Convergence failed at  80  side 2    Res =  0.3980E+02
+ MRCHDU: Convergence failed at  81  side 2    Res =  0.2919E+02
+ MRCHDU: Convergence failed at  82  side 2    Res =  0.2296E+02
+ MRCHDU: Convergence failed at  83  side 2    Res =  0.1253E+03
+ MRCHDU: Convergence failed at  84  side 2    Res =  0.4275E+02
+ MRCHDU: Convergence failed at  85  side 2    Res =  0.2763E+02
+ Side 1 forced transition at x/c =  1.0000   77
+ Side 2  free  transition at x/c =  0.0671   16
+
+   1   rms: 0.8553E+00   max: -.3788E+01   T at   16  2   RLX: 0.132
+       a = -3.000      CL = -1.7070
+      Cm =  0.3874     CD =  0.00662   =>   CDf =  0.00446    CDp =  0.00215
+
+ Side 1 forced transition at x/c =  1.0000   77
+ Side 2  free  transition at x/c =  0.0876   18
+
+   2   rms: 0.5498E+00   max: 0.1252E+01   D at   89  2   RLX: 0.418
+       a = -3.000      CL = -1.0521
+      Cm =  0.1837     CD =  0.01713   =>   CDf =  0.01377    CDp =  0.00337
+
+ Side 1 forced transition at x/c =  1.0000   77
+ Side 2  free  transition at x/c =  0.1018   19
+
+   3   rms: 0.3470E+00   max: -.5759E+00   D at   86  2   RLX: 0.544
+       a = -3.000      CL = -0.7519
+      Cm =  0.0915     CD =  0.01809   =>   CDf =  0.01216    CDp =  0.00592
+
+ MRCHDU: Convergence failed at  22  side 2    Res =  0.3672E+01
+ MRCHDU: Convergence failed at  23  side 2    Res =  0.1855E+01
+ MRCHDU: Convergence failed at  24  side 2    Res =  0.3741E+01
+ Side 1 forced transition at x/c =  1.0000   77
+ Side 2  free  transition at x/c =  0.0975   19
+
+   4   rms: 0.3673E+00   max: 0.2406E+01   T at   19  2   RLX: 0.425
+       a = -3.000      CL = -0.7227
+      Cm =  0.0708     CD =  0.01950   =>   CDf =  0.01202    CDp =  0.00748
+
+ MRCHDU: Convergence failed at  19  side 2    Res =  0.6303E+01
+ MRCHDU: Convergence failed at  20  side 2    Res =  0.3028E+01
+ Side 1 forced transition at x/c =  1.0000   77
+ Side 2  free  transition at x/c =  0.0676   17
+
+   5   rms: 0.1718E+00   max: -.6913E+00   D at   73  2   RLX: 0.723
+       a = -3.000      CL = -0.6128
+      Cm =  0.0479     CD =  0.02108   =>   CDf =  0.01138    CDp =  0.00970
+
+ Side 1 forced transition at x/c =  1.0000   77
+ Side 2  free  transition at x/c =  0.0686   17
+
+   6   rms: 0.1054E+00   max: -.6100E+00   T at   17  2   RLX: 0.820
+       a = -3.000      CL = -0.5383
+      Cm =  0.0355     CD =  0.02019   =>   CDf =  0.01184    CDp =  0.00835
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.0827   17
+
+   7   rms: 0.1085E+00   max: -.8126E+00   T at    2  1   RLX: 0.615
+       a = -3.000      CL = -0.5169
+      Cm =  0.0320     CD =  0.02001   =>   CDf =  0.01166    CDp =  0.00835
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.0900   17
+
+   8   rms: 0.6074E-01   max: -.4494E+00   D at   18  2
+       a = -3.000      CL = -0.5054
+      Cm =  0.0303     CD =  0.01982   =>   CDf =  0.01163    CDp =  0.00819
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.1032   18
+
+   9   rms: 0.3144E-01   max: 0.4419E+00   C at   18  2
+       a = -3.000      CL = -0.5078
+      Cm =  0.0304     CD =  0.01978   =>   CDf =  0.01144    CDp =  0.00834
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.0989   18
+
+  10   rms: 0.5118E-02   max: -.5025E-01   D at   21  2
+       a = -3.000      CL = -0.5077
+      Cm =  0.0303     CD =  0.01980   =>   CDf =  0.01148    CDp =  0.00832
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.0979   18
+
+  11   rms: 0.1677E-03   max: -.2922E-02   D at   21  2
+       a = -3.000      CL = -0.5077
+      Cm =  0.0303     CD =  0.01980   =>   CDf =  0.01151    CDp =  0.00830
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.0979   18
+
+  12   rms: 0.1861E-05   max: -.7977E-05   D at    4  1
+       a = -3.000      CL = -0.5077
+      Cm =  0.0303     CD =  0.01980   =>   CDf =  0.01151    CDp =  0.00830
+ plradd ia,ip,cpol            2          77  7.37702358E-04
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+
+.OPERva   c>  
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.0979   18
+
+   1   rms: 0.4951E-06   max: -.3027E-05   C at   18  2
+       a = -3.000      CL = -0.5077
+      Cm =  0.0303     CD =  0.01980   =>   CDf =  0.01151    CDp =  0.00830
+ plradd ia,ip,cpol            3         182  7.37702358E-04
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.0979   18
+
+   1   rms: 0.1736E+00   max: -.1342E+01   C at   18  2   RLX: 0.373
+       a = -2.500      CL = -0.4876
+      Cm =  0.0303     CD =  0.01856   =>   CDf =  0.01150    CDp =  0.00705
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.1347   21
+
+   2   rms: 0.2403E+00   max: -.2469E+01   C at   21  2   RLX: 0.203
+       a = -2.500      CL = -0.4794
+      Cm =  0.0301     CD =  0.01810   =>   CDf =  0.01148    CDp =  0.00662
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.1505   22
+
+   3   rms: 0.1869E+00   max: -.1754E+01   C at   22  2   RLX: 0.285
+       a = -2.500      CL = -0.4697
+      Cm =  0.0300     CD =  0.01782   =>   CDf =  0.01137    CDp =  0.00645
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.1761   24
+
+   4   rms: 0.2096E+00   max: -.2467E+01   C at   24  2   RLX: 0.203
+       a = -2.500      CL = -0.4643
+      Cm =  0.0298     CD =  0.01765   =>   CDf =  0.01131    CDp =  0.00634
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.1911   25
+
+   5   rms: 0.2045E+00   max: -.2615E+01   C at   25  2   RLX: 0.191
+       a = -2.500      CL = -0.4606
+      Cm =  0.0297     CD =  0.01752   =>   CDf =  0.01121    CDp =  0.00631
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.2053   26
+
+   6   rms: 0.2138E+00   max: -.2957E+01   C at   26  2   RLX: 0.169
+       a = -2.500      CL = -0.4580
+      Cm =  0.0296     CD =  0.01741   =>   CDf =  0.01113    CDp =  0.00628
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.2173   27
+
+   7   rms: 0.2169E+00   max: -.2949E+01   C at   27  2   RLX: 0.170
+       a = -2.500      CL = -0.4560
+      Cm =  0.0295     CD =  0.01729   =>   CDf =  0.01111    CDp =  0.00618
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.2295   27
+
+   8   rms: 0.7249E-01   max: -.6009E+00   T at   27  2   RLX: 0.832
+       a = -2.500      CL = -0.4528
+      Cm =  0.0300     CD =  0.01678   =>   CDf =  0.01107    CDp =  0.00571
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.4169   41
+
+   9   rms: 0.2659E+00   max: -.3574E+01   C at   41  2   RLX: 0.140
+       a = -2.500      CL = -0.4767
+      Cm =  0.0322     CD =  0.01605   =>   CDf =  0.00998    CDp =  0.00607
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.4204   41
+
+  10   rms: 0.6940E-01   max: -.7532E+00   C at   41  2   RLX: 0.664
+       a = -2.500      CL = -0.4663
+      Cm =  0.0314     CD =  0.01584   =>   CDf =  0.01014    CDp =  0.00569
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.5240   49
+
+  11   rms: 0.4577E-01   max: 0.5606E+00   C at   49  2
+       a = -2.500      CL = -0.4639
+      Cm =  0.0316     CD =  0.01577   =>   CDf =  0.00924    CDp =  0.00653
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.4834   46
+
+  12   rms: 0.1013E-01   max: 0.1174E+00   C at   46  2
+       a = -2.500      CL = -0.4640
+      Cm =  0.0318     CD =  0.01565   =>   CDf =  0.00931    CDp =  0.00634
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.4727   45
+
+  13   rms: 0.2042E-03   max: -.1912E-02   D at   55  2
+       a = -2.500      CL = -0.4641
+      Cm =  0.0318     CD =  0.01566   =>   CDf =  0.00937    CDp =  0.00628
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.4726   45
+
+  14   rms: 0.1051E-05   max: -.5160E-05   D at   71  2
+       a = -2.500      CL = -0.4641
+      Cm =  0.0318     CD =  0.01566   =>   CDf =  0.00938    CDp =  0.00628
+ plradd ia,ip,cpol            4           0  2.03601061E-03
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.4726   45
+
+   1   rms: 0.4279E+00   max: -.5510E+01   C at   45  2   RLX: 0.091
+       a = -2.000      CL = -0.4616
+      Cm =  0.0324     CD =  0.01533   =>   CDf =  0.00937    CDp =  0.00596
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.5305   49
+
+   2   rms: 0.1050E+00   max: -.3591E+00   T at   49  2
+       a = -2.000      CL = -0.4269
+      Cm =  0.0359     CD =  0.01458   =>   CDf =  0.00908    CDp =  0.00550
+
+ MRCHDU: Convergence failed at  76  side 2    Res =  0.1281E+01
+ MRCHDU: Convergence failed at  77  side 2    Res =  0.1559E+01
+ MRCHDU: Convergence failed at  78  side 2    Res =  0.1949E+01
+ MRCHDU: Convergence failed at  79  side 2    Res =  0.2704E+01
+ MRCHDU: Convergence failed at  80  side 2    Res =  0.3629E+01
+ MRCHDU: Convergence failed at  81  side 2    Res =  0.5489E+01
+ MRCHDU: Convergence failed at  82  side 2    Res =  0.1120E+02
+ MRCHDU: Convergence failed at  83  side 2    Res =  0.3968E+04
+ MRCHDU: Convergence failed at  84  side 2    Res =  0.1303E+02
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.8460   72
+
+   3   rms: 0.4710E+02   max: 0.4711E+03   C at   72  2   RLX: 0.003
+       a = -2.000      CL = -0.4900
+      Cm =  0.0614     CD =  0.01024   =>   CDf =  0.00846    CDp =  0.00179
+
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.8357   71
+
+   4   rms: 0.1526E+00   max: -.1061E+01   C at   71  2   RLX: 0.471
+       a = -2.000      CL = -0.4840
+      Cm =  0.0556     CD =  0.01098   =>   CDf =  0.00881    CDp =  0.00217
+
+ MRCHDU: Convergence failed at  83  side 2    Res =  0.3665E+01
+ MRCHDU: Convergence failed at  84  side 2    Res =  0.4069E+01
+ Side 1 forced transition at x/c =  1.0000   78
+ Side 2  free  transition at x/c =  0.9897   83
+
+   5   rms: 0.1111E+01   max: 0.4185E+01   D at   84  2   RLX: 0.092
+       a = -2.000      CL = -0.4019
+      Cm =  0.0414     CD =  0.00955   =>   CDf =  0.00867    CDp =  0.00088
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2 forced transition at x/c =  1.0000   83
+
+   6   rms: 0.2594E+00   max: -.3789E+01   D at    2  1   RLX: 0.132
+       a = -2.000      CL = -0.3885
+      Cm =  0.0373     CD =  0.01182   =>   CDf =  0.00875    CDp =  0.00306
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2 forced transition at x/c =  1.0000   83
+
+   7   rms: 0.1252E+00   max: 0.5168E+00   D at   82  2
+       a = -2.000      CL = -0.2807
+      Cm =  0.0111     CD =  0.01427   =>   CDf =  0.00879    CDp =  0.00548
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2 forced transition at x/c =  1.0000   83
+
+   8   rms: 0.2730E-01   max: 0.1812E+00   D at   73  2
+       a = -2.000      CL = -0.2722
+      Cm =  0.0104     CD =  0.01519   =>   CDf =  0.00913    CDp =  0.00606
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2  free  transition at x/c =  0.9906   82
+
+   9   rms: 0.2047E-01   max: -.1137E+00   D at   83  2
+       a = -2.000      CL = -0.2872
+      Cm =  0.0136     CD =  0.01537   =>   CDf =  0.00907    CDp =  0.00631
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2  free  transition at x/c =  0.9889   82
+
+  10   rms: 0.5933E-03   max: -.3765E-02   D at   92  2
+       a = -2.000      CL = -0.2876
+      Cm =  0.0137     CD =  0.01539   =>   CDf =  0.00897    CDp =  0.00642
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2  free  transition at x/c =  0.9890   82
+
+  11   rms: 0.5153E-05   max: 0.4163E-04   D at   85  2
+       a = -2.000      CL = -0.2876
+      Cm =  0.0137     CD =  0.01539   =>   CDf =  0.00897    CDp =  0.00642
+ plradd ia,ip,cpol            5           0  4.07922175E-03
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2  free  transition at x/c =  0.9890   82
+
+   1   rms: 0.1750E+00   max: -.7717E+00   T at   82  2   RLX: 0.648
+       a = -1.500      CL = -0.1900
+      Cm =  0.0008     CD =  0.01465   =>   CDf =  0.00896    CDp =  0.00569
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2 forced transition at x/c =  1.0000   83
+
+   2   rms: 0.7466E-01   max: -.4200E+00   D at   83  2
+       a = -1.500      CL = -0.2274
+      Cm =  0.0114     CD =  0.01447   =>   CDf =  0.00954    CDp =  0.00492
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2 forced transition at x/c =  1.0000   83
+
+   3   rms: 0.1055E-01   max: 0.1093E+00   D at   88  2
+       a = -1.500      CL = -0.2250
+      Cm =  0.0112     CD =  0.01477   =>   CDf =  0.00953    CDp =  0.00524
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2 forced transition at x/c =  1.0000   83
+
+   4   rms: 0.5455E-03   max: 0.5045E-02   D at   87  2
+       a = -1.500      CL = -0.2248
+      Cm =  0.0112     CD =  0.01479   =>   CDf =  0.00948    CDp =  0.00530
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2 forced transition at x/c =  1.0000   83
+
+   5   rms: 0.9960E-05   max: -.8441E-04   D at   92  2
+       a = -1.500      CL = -0.2248
+      Cm =  0.0112     CD =  0.01479   =>   CDf =  0.00948    CDp =  0.00530
+ plradd ia,ip,cpol            6           0  4.07922175E-03
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   79
+ Side 2 forced transition at x/c =  1.0000   83
+
+   1   rms: 0.7849E-01   max: -.1139E+00   D at   71  2
+       a = -1.000      CL = -0.1774
+      Cm =  0.0120     CD =  0.01439   =>   CDf =  0.00987    CDp =  0.00453
+
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   2   rms: 0.1327E-01   max: 0.1499E+00   D at    3  1
+       a = -1.000      CL = -0.1769
+      Cm =  0.0120     CD =  0.01439   =>   CDf =  0.00986    CDp =  0.00453
+
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   3   rms: 0.1598E-02   max: 0.1516E-01   D at    4  1
+       a = -1.000      CL = -0.1769
+      Cm =  0.0120     CD =  0.01440   =>   CDf =  0.00983    CDp =  0.00456
+
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   4   rms: 0.2374E-05   max: 0.1974E-04   D at    9  1
+       a = -1.000      CL = -0.1769
+      Cm =  0.0120     CD =  0.01440   =>   CDf =  0.00983    CDp =  0.00456
+ plradd ia,ip,cpol            7           0  7.18517555E-03
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   1   rms: 0.7801E-01   max: -.9559E-01   D at   70  2
+       a = -0.500      CL = -0.1284
+      Cm =  0.0128     CD =  0.01411   =>   CDf =  0.00983    CDp =  0.00427
+
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   2   rms: 0.1934E-02   max: 0.1027E-01   D at   72  2
+       a = -0.500      CL = -0.1281
+      Cm =  0.0128     CD =  0.01410   =>   CDf =  0.01004    CDp =  0.00406
+
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   3   rms: 0.1484E-04   max: 0.9790E-04   D at   72  2
+       a = -0.500      CL = -0.1281
+      Cm =  0.0128     CD =  0.01410   =>   CDf =  0.01002    CDp =  0.00407
+ plradd ia,ip,cpol            8           0  1.20554632E-02
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   80
+ Side 2 forced transition at x/c =  1.0000   82
+
+   1   rms: 0.7803E-01   max: -.8336E-01   D at   70  2
+       a = -0.000      CL = -0.0789
+      Cm =  0.0135     CD =  0.01386   =>   CDf =  0.01027    CDp =  0.00359
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   2   rms: 0.3221E-02   max: -.3287E-01   D at    2  1
+       a = -0.000      CL = -0.0787
+      Cm =  0.0134     CD =  0.01387   =>   CDf =  0.01013    CDp =  0.00374
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   3   rms: 0.8534E-03   max: 0.9028E-02   D at    4  1
+       a = -0.000      CL = -0.0787
+      Cm =  0.0134     CD =  0.01387   =>   CDf =  0.01012    CDp =  0.00375
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   4   rms: 0.1472E-05   max: -.1534E-04   D at    4  1
+       a = -0.000      CL = -0.0787
+      Cm =  0.0134     CD =  0.01387   =>   CDf =  0.01012    CDp =  0.00375
+ plradd ia,ip,cpol            9           0  3.01124360E-02
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   1   rms: 0.7837E-01   max: -.7408E-01   D at   69  2
+       a =  0.500      CL = -0.0290
+      Cm =  0.0141     CD =  0.01370   =>   CDf =  0.01012    CDp =  0.00358
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   2   rms: 0.1332E-02   max: -.7491E-02   D at    6  1
+       a =  0.500      CL = -0.0288
+      Cm =  0.0140     CD =  0.01371   =>   CDf =  0.01012    CDp =  0.00359
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   3   rms: 0.6614E-05   max: -.5939E-04   D at   83  2
+       a =  0.500      CL = -0.0288
+      Cm =  0.0140     CD =  0.01371   =>   CDf =  0.01011    CDp =  0.00360
+ plradd ia,ip,cpol           10           0  6.64145127E-02
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   1   rms: 0.7838E-01   max: -.6714E-01   D at   69  2
+       a =  1.000      CL =  0.0211
+      Cm =  0.0146     CD =  0.01361   =>   CDf =  0.01011    CDp =  0.00350
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   2   rms: 0.1454E-02   max: 0.7116E-02   D at   71  1
+       a =  1.000      CL =  0.0211
+      Cm =  0.0146     CD =  0.01362   =>   CDf =  0.01000    CDp =  0.00362
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   3   rms: 0.8792E-05   max: 0.4636E-04   D at   71  1
+       a =  1.000      CL =  0.0212
+      Cm =  0.0146     CD =  0.01362   =>   CDf =  0.00999    CDp =  0.00363
+ plradd ia,ip,cpol           11           0  2.89149322E-02
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   81
+ Side 2 forced transition at x/c =  1.0000   81
+
+   1   rms: 0.7893E-01   max: -.6203E-01   D at   69  2
+       a =  1.500      CL =  0.0711
+      Cm =  0.0151     CD =  0.01359   =>   CDf =  0.01001    CDp =  0.00357
+
+ Side 1 forced transition at x/c =  1.0000   82
+ Side 2 forced transition at x/c =  1.0000   80
+
+   2   rms: 0.4553E-02   max: -.3945E-01   D at    3  1
+       a =  1.500      CL =  0.0709
+      Cm =  0.0150     CD =  0.01360   =>   CDf =  0.00977    CDp =  0.00383
+
+ Side 1 forced transition at x/c =  1.0000   82
+ Side 2 forced transition at x/c =  1.0000   80
+
+   3   rms: 0.9094E-03   max: -.8372E-02   D at    6  1
+       a =  1.500      CL =  0.0709
+      Cm =  0.0150     CD =  0.01360   =>   CDf =  0.00975    CDp =  0.00384
+
+ Side 1 forced transition at x/c =  1.0000   82
+ Side 2 forced transition at x/c =  1.0000   80
+
+   4   rms: 0.2314E-05   max: -.2965E-04   D at    7  1
+       a =  1.500      CL =  0.0709
+      Cm =  0.0150     CD =  0.01360   =>   CDf =  0.00975    CDp =  0.00384
+ plradd ia,ip,cpol           12           0  1.14155635E-02
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   82
+ Side 2 forced transition at x/c =  1.0000   80
+
+   1   rms: 0.7954E-01   max: -.5902E-01   D at   68  2
+       a =  2.000      CL =  0.1203
+      Cm =  0.0155     CD =  0.01365   =>   CDf =  0.00975    CDp =  0.00389
+
+ Side 1 forced transition at x/c =  1.0000   82
+ Side 2 forced transition at x/c =  1.0000   80
+
+   2   rms: 0.4024E-02   max: 0.1978E-01   D at   74  1
+       a =  2.000      CL =  0.1195
+      Cm =  0.0155     CD =  0.01368   =>   CDf =  0.00945    CDp =  0.00423
+
+ Side 1 forced transition at x/c =  1.0000   82
+ Side 2 forced transition at x/c =  1.0000   80
+
+   3   rms: 0.8151E-04   max: 0.4925E-03   D at   75  1
+       a =  2.000      CL =  0.1195
+      Cm =  0.0155     CD =  0.01367   =>   CDf =  0.00942    CDp =  0.00425
+ plradd ia,ip,cpol           13           0  6.77158264E-03
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1 forced transition at x/c =  1.0000   82
+ Side 2 forced transition at x/c =  1.0000   80
+
+   1   rms: 0.8064E-01   max: -.5976E-01   D at   74  2
+       a =  2.500      CL =  0.1665
+      Cm =  0.0161     CD =  0.01386   =>   CDf =  0.00928    CDp =  0.00457
+
+ Side 1  free  transition at x/c =  0.9444   79
+ Side 2 forced transition at x/c =  1.0000   79
+
+   2   rms: 0.2157E-01   max: -.8982E-01   D at   84  2
+       a =  2.500      CL =  0.1840
+      Cm =  0.0126     CD =  0.01391   =>   CDf =  0.00898    CDp =  0.00492
+
+ Side 1  free  transition at x/c =  0.9400   78
+ Side 2 forced transition at x/c =  1.0000   79
+
+   3   rms: 0.3909E-02   max: -.3530E-01   D at    6  1
+       a =  2.500      CL =  0.1838
+      Cm =  0.0126     CD =  0.01395   =>   CDf =  0.00892    CDp =  0.00503
+
+ Side 1  free  transition at x/c =  0.9393   78
+ Side 2 forced transition at x/c =  1.0000   79
+
+   4   rms: 0.5781E-04   max: -.8853E-03   D at    7  1
+       a =  2.500      CL =  0.1838
+      Cm =  0.0126     CD =  0.01395   =>   CDf =  0.00892    CDp =  0.00503
+ plradd ia,ip,cpol           14           0  3.79881705E-03
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.9393   78
+ Side 2 forced transition at x/c =  1.0000   79
+
+   1   rms: 0.1815E+00   max: 0.1704E+01   C at   78  1   RLX: 0.880
+       a =  3.000      CL =  0.2817
+      Cm =  0.0029     CD =  0.01428   =>   CDf =  0.00893    CDp =  0.00535
+
+ Side 1  free  transition at x/c =  0.7965   68
+ Side 2 forced transition at x/c =  1.0000   79
+
+   2   rms: 0.4370E-01   max: -.3688E+00   D at   74  1
+       a =  3.000      CL =  0.2487
+      Cm =  0.0126     CD =  0.01465   =>   CDf =  0.00865    CDp =  0.00600
+
+ Side 1  free  transition at x/c =  0.8235   70
+ Side 2 forced transition at x/c =  1.0000   79
+
+   3   rms: 0.5775E-02   max: -.6396E-01   D at   77  1
+       a =  3.000      CL =  0.2512
+      Cm =  0.0120     CD =  0.01456   =>   CDf =  0.00872    CDp =  0.00584
+
+ Side 1  free  transition at x/c =  0.8208   69
+ Side 2 forced transition at x/c =  1.0000   79
+
+   4   rms: 0.3651E-03   max: -.3588E-02   D at   77  1
+       a =  3.000      CL =  0.2512
+      Cm =  0.0120     CD =  0.01456   =>   CDf =  0.00871    CDp =  0.00585
+
+ Side 1  free  transition at x/c =  0.8207   69
+ Side 2 forced transition at x/c =  1.0000   79
+
+   5   rms: 0.1622E-05   max: -.1620E-04   D at   72  1
+       a =  3.000      CL =  0.2512
+      Cm =  0.0120     CD =  0.01456   =>   CDf =  0.00871    CDp =  0.00585
+ plradd ia,ip,cpol           15           0  1.84352917E-03
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.8207   69
+ Side 2 forced transition at x/c =  1.0000   79
+
+   1   rms: 0.9052E-01   max: -.9605E-01   C at   80  2
+       a =  3.500      CL =  0.2871
+      Cm =  0.0166     CD =  0.01485   =>   CDf =  0.00846    CDp =  0.00639
+
+ Side 1  free  transition at x/c =  0.6274   56
+ Side 2 forced transition at x/c =  1.0000   78
+
+   2   rms: 0.6587E-01   max: -.5621E+00   D at   64  1   RLX: 0.890
+       a =  3.500      CL =  0.2772
+      Cm =  0.0214     CD =  0.01490   =>   CDf =  0.00885    CDp =  0.00606
+
+ MRCHDU: Convergence failed at  64  side 1    Res =  0.5036E+02
+ MRCHDU: Convergence failed at  65  side 1    Res =  0.9018E+01
+ MRCHDU: Convergence failed at  68  side 1    Res =  0.2719E+01
+ MRCHDU: Convergence failed at  69  side 1    Res =  0.2090E+01
+ MRCHDU: Convergence failed at  70  side 1    Res =  0.3218E+01
+ MRCHDU: Convergence failed at  71  side 1    Res =  0.3202E+01
+ MRCHDU: Convergence failed at  72  side 1    Res =  0.3674E+01
+ MRCHDU: Convergence failed at  73  side 1    Res =  0.2732E+01
+ MRCHDU: Convergence failed at  74  side 1    Res =  0.1810E+01
+ MRCHDU: Convergence failed at  75  side 1    Res =  0.1521E+01
+ MRCHDU: Convergence failed at  76  side 1    Res =  0.1318E+01
+ MRCHDU: Convergence failed at  77  side 1    Res =  0.1534E+01
+ MRCHDU: Convergence failed at  78  side 1    Res =  0.1631E+01
+ MRCHDU: Convergence failed at  79  side 1    Res =  0.1717E+01
+ MRCHDU: Convergence failed at  80  side 1    Res =  0.1797E+01
+ MRCHDU: Convergence failed at  81  side 1    Res =  0.1865E+01
+ MRCHDU: Convergence failed at  82  side 1    Res =  0.1914E+01
+ MRCHDU: Convergence failed at  83  side 1    Res =  0.1917E+01
+ MRCHDU: Convergence failed at  84  side 1    Res =  0.2029E+01
+ Side 1  free  transition at x/c =  0.6946   61
+ Side 2 forced transition at x/c =  1.0000   78
+
+   3   rms: 0.1178E+00   max: 0.8452E+00   C at   61  1
+       a =  3.500      CL =  0.2869
+      Cm =  0.0197     CD =  0.01472   =>   CDf =  0.00823    CDp =  0.00650
+
+ Side 1  free  transition at x/c =  0.6526   58
+ Side 2 forced transition at x/c =  1.0000   78
+
+   4   rms: 0.1365E-01   max: -.7396E-01   D at   82  1
+       a =  3.500      CL =  0.2814
+      Cm =  0.0197     CD =  0.01494   =>   CDf =  0.00869    CDp =  0.00625
+
+ Side 1  free  transition at x/c =  0.6618   59
+ Side 2 forced transition at x/c =  1.0000   78
+
+   5   rms: 0.8006E-03   max: 0.6075E-02   C at   59  1
+       a =  3.500      CL =  0.2818
+      Cm =  0.0195     CD =  0.01493   =>   CDf =  0.00873    CDp =  0.00620
+
+ Side 1  free  transition at x/c =  0.6606   59
+ Side 2 forced transition at x/c =  1.0000   78
+
+   6   rms: 0.5986E-05   max: -.3176E-04   C at   59  1
+       a =  3.500      CL =  0.2818
+      Cm =  0.0195     CD =  0.01493   =>   CDf =  0.00873    CDp =  0.00620
+ plradd ia,ip,cpol           16           0  1.84352917E-03
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.6606   59
+ Side 2 forced transition at x/c =  1.0000   78
+
+   1   rms: 0.1416E+00   max: 0.1289E+01   C at   59  1   RLX: 0.915
+       a =  4.000      CL =  0.3059
+      Cm =  0.0280     CD =  0.01540   =>   CDf =  0.00874    CDp =  0.00666
+
+ Side 1  free  transition at x/c =  0.4036   40
+ Side 2 forced transition at x/c =  1.0000   78
+
+   2   rms: 0.5735E-01   max: -.3234E+00   D at   44  1
+       a =  4.000      CL =  0.3158
+      Cm =  0.0257     CD =  0.01597   =>   CDf =  0.00963    CDp =  0.00634
+
+ Side 1  free  transition at x/c =  0.3144   34
+ Side 2 forced transition at x/c =  1.0000   78
+
+   3   rms: 0.1056E-01   max: -.7935E-01   D at   35  1
+       a =  4.000      CL =  0.3153
+      Cm =  0.0253     CD =  0.01657   =>   CDf =  0.01013    CDp =  0.00644
+
+ Side 1  free  transition at x/c =  0.3019   33
+ Side 2 forced transition at x/c =  1.0000   78
+
+   4   rms: 0.6548E-03   max: 0.8697E-02   C at   33  1
+       a =  4.000      CL =  0.3153
+      Cm =  0.0253     CD =  0.01659   =>   CDf =  0.01020    CDp =  0.00640
+
+ Side 1  free  transition at x/c =  0.3010   33
+ Side 2 forced transition at x/c =  1.0000   78
+
+   5   rms: 0.9894E-05   max: -.1354E-03   C at   33  1
+       a =  4.000      CL =  0.3153
+      Cm =  0.0253     CD =  0.01659   =>   CDf =  0.01020    CDp =  0.00639
+ plradd ia,ip,cpol           17           0  1.84352917E-03
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.3010   33
+ Side 2 forced transition at x/c =  1.0000   78
+
+   1   rms: 0.4565E+00   max: 0.6422E+01   C at   33  1   RLX: 0.234
+       a =  4.500      CL =  0.3248
+      Cm =  0.0255     CD =  0.01750   =>   CDf =  0.01020    CDp =  0.00729
+
+ Side 1  free  transition at x/c =  0.2132   26
+ Side 2 forced transition at x/c =  1.0000   78
+
+   2   rms: 0.1971E+00   max: 0.2673E+01   C at   26  1   RLX: 0.561
+       a =  4.500      CL =  0.3467
+      Cm =  0.0257     CD =  0.01853   =>   CDf =  0.01065    CDp =  0.00788
+
+ Side 1  free  transition at x/c =  0.1195   19
+ Side 2 forced transition at x/c =  1.0000   78
+
+   3   rms: 0.7778E-01   max: -.6165E+00   D at   22  1   RLX: 0.811
+       a =  4.500      CL =  0.3609
+      Cm =  0.0259     CD =  0.01884   =>   CDf =  0.01112    CDp =  0.00772
+
+ Side 1  free  transition at x/c =  0.0937   18
+ Side 2 forced transition at x/c =  1.0000   78
+
+   4   rms: 0.2792E-01   max: -.3336E+00   D at   22  1
+       a =  4.500      CL =  0.3618
+      Cm =  0.0257     CD =  0.01983   =>   CDf =  0.01123    CDp =  0.00860
+
+ Side 1  free  transition at x/c =  0.0909   17
+ Side 2 forced transition at x/c =  1.0000   78
+
+   5   rms: 0.5020E-02   max: 0.6702E-01   D at   18  1
+       a =  4.500      CL =  0.3619
+      Cm =  0.0258     CD =  0.01986   =>   CDf =  0.01136    CDp =  0.00850
+
+ Side 1  free  transition at x/c =  0.0902   17
+ Side 2 forced transition at x/c =  1.0000   78
+
+   6   rms: 0.2073E-03   max: 0.2934E-02   D at   18  1
+       a =  4.500      CL =  0.3619
+      Cm =  0.0258     CD =  0.01986   =>   CDf =  0.01134    CDp =  0.00852
+
+ Side 1  free  transition at x/c =  0.0902   17
+ Side 2 forced transition at x/c =  1.0000   78
+
+   7   rms: 0.2944E-05   max: 0.9455E-05   D at   32  1
+       a =  4.500      CL =  0.3619
+      Cm =  0.0258     CD =  0.01986   =>   CDf =  0.01134    CDp =  0.00852
+ plradd ia,ip,cpol           18           0  6.20106526E-04
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.0902   17
+ Side 2 forced transition at x/c =  1.0000   78
+
+   1   rms: 0.1245E+00   max: 0.7797E+00   T at   17  1
+       a =  5.000      CL =  0.4103
+      Cm =  0.0280     CD =  0.02233   =>   CDf =  0.01102    CDp =  0.01131
+
+ Side 1  free  transition at x/c =  0.0599   16
+ Side 2 forced transition at x/c =  1.0000   77
+
+   2   rms: 0.1043E+00   max: -.6289E+00   D at   17  1   RLX: 0.795
+       a =  5.000      CL =  0.4056
+      Cm =  0.0283     CD =  0.02318   =>   CDf =  0.01094    CDp =  0.01224
+
+ Side 1  free  transition at x/c =  0.0605   16
+ Side 2 forced transition at x/c =  1.0000   77
+
+   3   rms: 0.2306E-01   max: -.2584E+00   D at   17  1
+       a =  5.000      CL =  0.4076
+      Cm =  0.0277     CD =  0.02235   =>   CDf =  0.01109    CDp =  0.01126
+
+ Side 1  free  transition at x/c =  0.0603   16
+ Side 2 forced transition at x/c =  1.0000   77
+
+   4   rms: 0.1211E-02   max: 0.1166E-01   D at   18  1
+       a =  5.000      CL =  0.4079
+      Cm =  0.0278     CD =  0.02235   =>   CDf =  0.01111    CDp =  0.01125
+
+ Side 1  free  transition at x/c =  0.0602   16
+ Side 2 forced transition at x/c =  1.0000   77
+
+   5   rms: 0.6163E-05   max: 0.3353E-04   D at   17  1
+       a =  5.000      CL =  0.4079
+      Cm =  0.0278     CD =  0.02235   =>   CDf =  0.01110    CDp =  0.01125
+ plradd ia,ip,cpol           19           0  6.20106526E-04
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.0602   16
+ Side 2 forced transition at x/c =  1.0000   77
+
+   1   rms: 0.1049E+00   max: 0.5014E+00   T at   16  1
+       a =  5.500      CL =  0.4537
+      Cm =  0.0304     CD =  0.02519   =>   CDf =  0.01111    CDp =  0.01408
+
+ Side 1  free  transition at x/c =  0.0487   15
+ Side 2 forced transition at x/c =  1.0000   77
+
+   2   rms: 0.5239E-01   max: -.3220E+00   D at   15  1
+       a =  5.500      CL =  0.4533
+      Cm =  0.0301     CD =  0.02532   =>   CDf =  0.01065    CDp =  0.01467
+
+ Side 1  free  transition at x/c =  0.0475   15
+ Side 2 forced transition at x/c =  1.0000   77
+
+   3   rms: 0.2378E-02   max: 0.2278E-01   D at   18  1
+       a =  5.500      CL =  0.4538
+      Cm =  0.0300     CD =  0.02542   =>   CDf =  0.01079    CDp =  0.01463
+
+ Side 1  free  transition at x/c =  0.0475   15
+ Side 2 forced transition at x/c =  1.0000   77
+
+   4   rms: 0.1863E-04   max: 0.2412E-03   D at   17  1
+       a =  5.500      CL =  0.4538
+      Cm =  0.0300     CD =  0.02542   =>   CDf =  0.01079    CDp =  0.01463
+ plradd ia,ip,cpol           20           0  6.20106526E-04
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.0475   15
+ Side 2 forced transition at x/c =  1.0000   77
+
+   1   rms: 0.9862E-01   max: 0.7432E+00   T at   15  1
+       a =  6.000      CL =  0.5005
+      Cm =  0.0319     CD =  0.02828   =>   CDf =  0.01079    CDp =  0.01750
+
+ Side 1  free  transition at x/c =  0.0408   14
+ Side 2 forced transition at x/c =  1.0000   77
+
+   2   rms: 0.1293E-01   max: 0.1301E+00   D at   15  1
+       a =  6.000      CL =  0.4989
+      Cm =  0.0318     CD =  0.02978   =>   CDf =  0.01026    CDp =  0.01952
+
+ Side 1  free  transition at x/c =  0.0408   14
+ Side 2 forced transition at x/c =  1.0000   77
+
+   3   rms: 0.1918E-02   max: 0.1096E-01   D at   15  1
+       a =  6.000      CL =  0.4990
+      Cm =  0.0318     CD =  0.02978   =>   CDf =  0.01042    CDp =  0.01937
+
+ Side 1  free  transition at x/c =  0.0408   14
+ Side 2 forced transition at x/c =  1.0000   77
+
+   4   rms: 0.1445E-04   max: 0.1015E-03   D at   16  1
+       a =  6.000      CL =  0.4990
+      Cm =  0.0318     CD =  0.02978   =>   CDf =  0.01041    CDp =  0.01937
+ plradd ia,ip,cpol           21           0  6.20106526E-04
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.0408   14
+ Side 2 forced transition at x/c =  1.0000   77
+
+   1   rms: 0.1209E+00   max: 0.3819E+00   D at   20  1
+       a =  6.500      CL =  0.5464
+      Cm =  0.0339     CD =  0.03472   =>   CDf =  0.01041    CDp =  0.02431
+
+ Side 1  free  transition at x/c =  0.0382   14
+ Side 2 forced transition at x/c =  1.0000   77
+
+   2   rms: 0.2069E-01   max: -.6971E-01   D at   25  1
+       a =  6.500      CL =  0.5443
+      Cm =  0.0335     CD =  0.03538   =>   CDf =  0.00898    CDp =  0.02641
+
+ Side 1  free  transition at x/c =  0.0380   14
+ Side 2 forced transition at x/c =  1.0000   77
+
+   3   rms: 0.7820E-03   max: -.3244E-02   D at   25  1
+       a =  6.500      CL =  0.5439
+      Cm =  0.0335     CD =  0.03546   =>   CDf =  0.00919    CDp =  0.02627
+
+ Side 1  free  transition at x/c =  0.0380   14
+ Side 2 forced transition at x/c =  1.0000   77
+
+   4   rms: 0.1178E-04   max: -.3542E-04   D at   73  1
+       a =  6.500      CL =  0.5439
+      Cm =  0.0335     CD =  0.03546   =>   CDf =  0.00920    CDp =  0.02627
+ plradd ia,ip,cpol           22           0  6.20106526E-04
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.0380   14
+ Side 2 forced transition at x/c =  1.0000   77
+
+   1   rms: 0.1294E+00   max: 0.3597E+00   T at   14  1
+       a =  7.000      CL =  0.5848
+      Cm =  0.0349     CD =  0.04204   =>   CDf =  0.00873    CDp =  0.03331
+
+ Side 1  free  transition at x/c =  0.0332   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   2   rms: 0.6587E-01   max: -.1731E+00   D at   74  1
+       a =  7.000      CL =  0.5826
+      Cm =  0.0343     CD =  0.04136   =>   CDf =  0.00751    CDp =  0.03384
+
+ Side 1  free  transition at x/c =  0.0331   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   3   rms: 0.4935E-02   max: -.5025E-01   D at    4  1
+       a =  7.000      CL =  0.5806
+      Cm =  0.0342     CD =  0.04187   =>   CDf =  0.00806    CDp =  0.03381
+
+ Side 1  free  transition at x/c =  0.0331   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   4   rms: 0.2238E-03   max: 0.1545E-02   D at   15  1
+       a =  7.000      CL =  0.5806
+      Cm =  0.0342     CD =  0.04189   =>   CDf =  0.00807    CDp =  0.03382
+
+ Side 1  free  transition at x/c =  0.0331   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   5   rms: 0.8708E-05   max: 0.2676E-04   D at   66  1
+       a =  7.000      CL =  0.5806
+      Cm =  0.0342     CD =  0.04189   =>   CDf =  0.00807    CDp =  0.03382
+ plradd ia,ip,cpol           23           0  6.20106526E-04
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.0331   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   1   rms: 0.1186E+00   max: 0.2822E+00   D at   39  1
+       a =  7.500      CL =  0.6115
+      Cm =  0.0348     CD =  0.04986   =>   CDf =  0.00807    CDp =  0.04178
+
+ Side 1  free  transition at x/c =  0.0327   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   2   rms: 0.2980E-01   max: 0.1269E+00   D at   15  1
+       a =  7.500      CL =  0.6057
+      Cm =  0.0339     CD =  0.05098   =>   CDf =  0.00722    CDp =  0.04375
+
+ Side 1  free  transition at x/c =  0.0331   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   3   rms: 0.1253E-02   max: -.8469E-02   D at   19  1
+       a =  7.500      CL =  0.6052
+      Cm =  0.0340     CD =  0.05063   =>   CDf =  0.00714    CDp =  0.04349
+
+ Side 1  free  transition at x/c =  0.0330   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   4   rms: 0.1545E-03   max: 0.5810E-03   D at   74  1
+       a =  7.500      CL =  0.6053
+      Cm =  0.0340     CD =  0.05064   =>   CDf =  0.00714    CDp =  0.04350
+
+ Side 1  free  transition at x/c =  0.0330   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   5   rms: 0.3409E-05   max: -.2762E-04   C at   76  2
+       a =  7.500      CL =  0.6053
+      Cm =  0.0340     CD =  0.05064   =>   CDf =  0.00714    CDp =  0.04350
+ plradd ia,ip,cpol           24           0  6.20106526E-04
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+ Calculating wake trajectory ...
+ Calculating source influence matrix ...
+
+ Solving BL system ...
+
+ Side 1  free  transition at x/c =  0.0330   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   1   rms: 0.1281E+00   max: 0.3218E+00   D at   54  1
+       a =  8.000      CL =  0.6258
+      Cm =  0.0328     CD =  0.06157   =>   CDf =  0.00714    CDp =  0.05443
+
+ Side 1  free  transition at x/c =  0.0340   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   2   rms: 0.1469E-01   max: -.5977E-01   D at   85  1
+       a =  8.000      CL =  0.6158
+      Cm =  0.0317     CD =  0.06058   =>   CDf =  0.00645    CDp =  0.05413
+
+ Side 1  free  transition at x/c =  0.0340   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   3   rms: 0.1077E-02   max: -.5074E-02   D at   85  1
+       a =  8.000      CL =  0.6148
+      Cm =  0.0319     CD =  0.06057   =>   CDf =  0.00652    CDp =  0.05405
+
+ Side 1  free  transition at x/c =  0.0340   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   4   rms: 0.1627E-03   max: 0.7730E-03   D at   86  1
+       a =  8.000      CL =  0.6149
+      Cm =  0.0319     CD =  0.06059   =>   CDf =  0.00652    CDp =  0.05407
+
+ Side 1  free  transition at x/c =  0.0340   15
+ Side 2 forced transition at x/c =  1.0000   76
+
+   5   rms: 0.9472E-05   max: -.6307E-04   C at   76  2
+       a =  8.000      CL =  0.6149
+      Cm =  0.0319     CD =  0.06059   =>   CDf =  0.00652    CDp =  0.05407
+ plradd ia,ip,cpol           25           0  5.25040923E-05
+
+ Point added to stored polar  1
+ Point written to save file  polar.dat                                       
+ Dump file unspecified or not available
+
+.OPERva   c>  
+ Polar accumulation disabled
+
+.OPERv   c>  
+ XFOIL   c>  

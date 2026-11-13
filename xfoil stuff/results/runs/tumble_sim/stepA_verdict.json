@@ -1,0 +1,68 @@
+{
+ "geometry": [
+  {
+   "rule": "1: 0.00 clear TUMBLE",
+   "ok": true,
+   "detail": "TUMBLE 100% {'TUMBLE': 24}"
+  },
+  {
+   "rule": "1: 0.08 clear TUMBLE",
+   "ok": true,
+   "detail": "TUMBLE 88% {'TUMBLE': 21, 'BOUND/FLUTTER': 3}"
+  },
+  {
+   "rule": "2: 0.24 clear GLIDE",
+   "ok": true,
+   "detail": "GLIDE 100% {'GLIDE': 24}"
+  },
+  {
+   "rule": "3: 0.31 clear DIVE",
+   "ok": true,
+   "detail": "DIVE 100% {'DIVE': 24}"
+  },
+  {
+   "rule": "4: monotone rank (mixed cells skipped)",
+   "ok": true,
+   "detail": "no decreases"
+  },
+  {
+   "rule": "5: glide band contains 0.24",
+   "ok": true,
+   "detail": "clear GLIDE cells at 0.17, 0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24, 0.25, 0.26, 0.27, 0.28, 0.29"
+  }
+ ],
+ "generic": [
+  {
+   "rule": "1: 0.00 clear TUMBLE",
+   "ok": true,
+   "detail": "TUMBLE 100% {'TUMBLE': 24}"
+  },
+  {
+   "rule": "1: 0.08 clear TUMBLE",
+   "ok": false,
+   "detail": "TUMBLE 75% {'TUMBLE': 18, 'BOUND/FLUTTER': 6}"
+  },
+  {
+   "rule": "2: 0.24 clear GLIDE",
+   "ok": false,
+   "detail": "GLIDE 79% {'GLIDE': 19, 'BOUND/FLUTTER': 5}"
+  },
+  {
+   "rule": "3: 0.31 clear DIVE",
+   "ok": true,
+   "detail": "DIVE 100% {'DIVE': 24}"
+  },
+  {
+   "rule": "4: monotone rank (mixed cells skipped)",
+   "ok": false,
+   "detail": "0.23->0.28: rank 2->1"
+  },
+  {
+   "rule": "5: glide band contains 0.24",
+   "ok": false,
+   "detail": "clear GLIDE cells at 0.17, 0.18, 0.19, 0.20, 0.21, 0.22, 0.23"
+  }
+ ],
+ "dt_identical": 144,
+ "dt_total": 144
+}

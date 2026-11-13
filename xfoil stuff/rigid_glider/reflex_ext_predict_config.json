@@ -1,0 +1,25 @@
+{
+  "note": "Pre-experiment model predictions for larger trailing-edge-up lips. Reuses reflex_config.json reference/flight and reflex_ext_config.json widened probe.",
+  "sections": ["NACA_0008", "NACA_0006", "NACA_0004"],
+  "section_labels": {"NACA_0004": "NACA 0004 thin PROXY (not a flat plate)"},
+  "existing_lip": [0.10, 3],
+  "new_lips": [[0.15, 5], [0.15, 8], [0.20, 10]],
+  "reynolds": [60000, 80000, 100000],
+  "target_cl": [0.20, 0.25, 0.30],
+  "slope_cl": [0.15, 0.35],
+  "companion_sections": ["NACA_0008", "NACA_0006"],
+  "companion_alphas_deg": [0, 2, 4, 6],
+  "xfoil_workers": 3,
+  "avl": {
+    "sweep_deg": 25,
+    "margin": 0.10,
+    "split": 0.55,
+    "requested_lips": [[0.15, 5], [0.15, 8], [0.20, 10]],
+    "placements": ["full", "outer"],
+    "interp_extra_angles": {"0.15": [2, 3, 4], "0.2": [2, 3, 4, 5, 6]},
+    "interp_target_trim_cl": 0.26,
+    "widened_probe_alpha_deg": [-4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+    "workers": 4,
+    "repro_expected": {"trim_cl": 0.25956, "static_margin_mac": 0.1004}
+  }
+}

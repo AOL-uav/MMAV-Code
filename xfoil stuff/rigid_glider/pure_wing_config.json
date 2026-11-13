@@ -1,0 +1,172 @@
+{
+ "sections": [
+  "NACA_0004",
+  "NACA_0006",
+  "NACA_0008",
+  "NACA_0010"
+ ],
+ "section_notes": {
+  "NACA_0004": "thin-plate PROXY (4 percent symmetric section), NOT a flat plate"
+ },
+ "reynolds": [
+  10000,
+  15000,
+  20000,
+  30000,
+  40000,
+  60000,
+  80000,
+  100000,
+  130000,
+  160000
+ ],
+ "ncrit": [
+  5,
+  9
+ ],
+ "alpha_min": -2.0,
+ "alpha_max": 10.0,
+ "alpha_step": 0.5,
+ "xfoil_timeout_s": 120,
+ "xfoil_workers": 8,
+ "xfoil_iter": 200,
+ "xfoil_iter_pass2": 400,
+ "flight": {
+  "rho_kg_m3": 1.225,
+  "nu_m2_s": 1.5e-05,
+  "g_m_s2": 9.80665
+ },
+ "avl": {
+  "nchord": 8,
+  "nspan": 24,
+  "nspan_l2": 48,
+  "l2_nodes": 11
+ },
+ "study": {
+  "span_m": [
+   0.2,
+   0.3,
+   0.4,
+   0.5
+  ],
+  "wing_loading_n_m2": [
+   2,
+   4,
+   6,
+   8,
+   12
+  ],
+  "sm_min": -0.05,
+  "sm_max": 0.2,
+  "sm_step": 0.025,
+  "ncrit": [
+   5,
+   9
+  ],
+  "exploratory_cl_band": [
+   0.15,
+   0.6
+  ],
+  "coverage_min": 0.9,
+  "figure_case": {
+   "shape": [
+    4.5,
+    20,
+    0.7,
+    0
+   ],
+   "span_m": 0.4,
+   "wing_loading_n_m2": 4,
+   "section": "NACA_0008",
+   "sm": 0.05
+  },
+  "representative_shapes": [
+   [
+    4.5,
+    20,
+    0.7,
+    0
+   ],
+   [
+    3,
+    30,
+    0.4,
+    0
+   ],
+   [
+    6,
+    10,
+    1.0,
+    0
+   ],
+   [
+    4.5,
+    35,
+    0.7,
+    0
+   ]
+  ],
+  "dihedral_bases": [
+   [
+    4.5,
+    20,
+    0.7
+   ],
+   [
+    3,
+    30,
+    0.4
+   ],
+   [
+    6,
+    10,
+    1.0
+   ],
+   [
+    4.5,
+    35,
+    0.7
+   ],
+   [
+    4.5,
+    30,
+    0.7
+   ]
+  ],
+  "jagged_clean_max": 0.1
+ },
+ "scale": {
+  "span_m": [
+   0.15,
+   0.2,
+   0.25,
+   0.3,
+   0.35,
+   0.4,
+   0.45,
+   0.5,
+   0.55,
+   0.6
+  ],
+  "cl": [
+   0.2,
+   0.4,
+   0.6
+  ],
+  "ar": [
+   3,
+   4.5,
+   6
+  ],
+  "taper": 0.7,
+  "bands": [
+   20000,
+   40000,
+   80000
+  ],
+  "db_re": [
+   10000,
+   160000
+  ]
+ }
+}

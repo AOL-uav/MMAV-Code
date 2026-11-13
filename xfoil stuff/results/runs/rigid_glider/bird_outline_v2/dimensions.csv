@@ -1,0 +1,43 @@
+family,kind,parameter,value,source_tag,note
+BS,v1 parameter,ar_target,9.5,CITED,"common swift b^2/S = 9.5 (paper value 9.8) [R2, bird notes section 1.1]"
+BS,v1 parameter,body_halfwidth_frac,0.03,JUDGEMENT,body strip half-width / span; not in the notes
+BS,v1 parameter,nose_frac,0.05,JUDGEMENT,nose ahead of the wing root leading edge / span
+BS,v1 parameter,wrist_frac,0.4,JUDGEMENT,arm/hand split as a fraction of the semi-span; no cited number
+BS,v1 parameter,arm_sweep_deg,5.0,JUDGEMENT,leading-edge sweep of the arm panel
+BS,v1 parameter,hand_sweep_deg,50.0,JUDGEMENT,"leading-edge sweep of the hand panel; context only: a 60 deg swift hand-wing model in a water tunnel [R21, secondary]"
+BS,v1 parameter,cw_over_croot,0.85,JUDGEMENT,chord at the wrist / chord at the centreline
+BS,v1 parameter,hand_stations,"(0, 1); (0.4, 0.78); (0.75, 0.5); (0.93, 0.25); (1, 0.06)",JUDGEMENT,"(fraction of hand semi-span, chord / wrist chord): scythe tip"
+BS,v1 parameter,tail_len_frac,0.12,JUDGEMENT,tail length behind the wing trailing edge / span
+BS,v1 parameter,tail_spread_frac,0.23,CITED,swift tail span 0.09 m at 7 m/s over wing span 0.39 m [R2]: ARITHMETIC 0.09/0.39 = 0.23 (the bird furls it to 0.04 m at 11 m/s)
+BS,v1 parameter,tail_root_frac,0.05,JUDGEMENT,tail root (hinge) width / span
+BS,v1 parameter,tail_bulge_frac,0.15,JUDGEMENT,"rounding of the tail end, fraction of the tail length"
+BS,v2 feature on-value,m_shape: arm_sweep_deg,-10.0,JUDGEMENT,off value = v1 value 5.0
+BS,v2 feature on-value,m_shape: wrist_blend_frac,0.1,JUDGEMENT,off value = v1 value 0.0
+BS,v2 feature on-value,curved_te: arm_te_bulge,0.1,JUDGEMENT,off value = v1 value 0.0
+BS,v2 feature on-value,curved_te: te_smooth,1.0,JUDGEMENT,off value = v1 value 0.0
+BS,v2 feature on-value,root_blend: root_blend,1.0,JUDGEMENT,off value = v1 value 0.0
+BS,v2 feature on-value,tip_round: tip_round,1.0,JUDGEMENT,off value = v1 value 0.0
+BS,v2 feature on-value,neck: tail_root_frac,0.08,JUDGEMENT,off value = v1 value 0.05
+BS,v2 feature on-value,spread: tail_spread_frac,0.3,JUDGEMENT,off value = v1 value 0.23
+BS,v2 feature on-value,nose: nose_frac,0.09,JUDGEMENT,off value = v1 value 0.05
+BC,v1 parameter,ar_target,5.0,CITED,"magpie wing aspect ratio 4.97, jackdaw 6 [R9, R2 via bird notes table 1.1]"
+BC,v1 parameter,body_halfwidth_frac,0.04,JUDGEMENT,body strip half-width / span; not in the notes
+BC,v1 parameter,nose_frac,0.07,JUDGEMENT,nose ahead of the wing root leading edge / span
+BC,v1 parameter,wrist_frac,0.5,JUDGEMENT,arm/hand split as a fraction of the semi-span; no cited number
+BC,v1 parameter,arm_sweep_deg,3.0,JUDGEMENT,leading-edge sweep of the arm panel
+BC,v1 parameter,hand_sweep_deg,20.0,JUDGEMENT,"leading-edge sweep of the hand panel; the notes say sweep costs L/D on plates and helps yaw only through the OUTER wing [R17, R39]"
+BC,v1 parameter,cw_over_croot,0.95,JUDGEMENT,chord at the wrist / chord at the centreline
+BC,v1 parameter,hand_stations,"(0, 1); (0.5, 0.9); (0.8, 0.72); (0.95, 0.5); (1, 0.25)",JUDGEMENT,"(fraction of hand semi-span, chord / wrist chord): rounded tip"
+BC,v1 parameter,tail_len_frac,0.2,JUDGEMENT,tail length behind the wing trailing edge / span
+BC,v1 parameter,tail_spread_frac,0.38,JUDGEMENT,fan tail spread / span; no cited number for a corvid or pigeon
+BC,v1 parameter,tail_root_frac,0.08,JUDGEMENT,tail root (hinge) width / span
+BC,v1 parameter,tail_bulge_frac,0.1,JUDGEMENT,"rounding of the tail end, fraction of the tail length"
+BC,v2 feature on-value,m_shape: arm_sweep_deg,-10.0,JUDGEMENT,off value = v1 value 3.0
+BC,v2 feature on-value,m_shape: wrist_blend_frac,0.1,JUDGEMENT,off value = v1 value 0.0
+BC,v2 feature on-value,curved_te: arm_te_bulge,0.1,JUDGEMENT,off value = v1 value 0.0
+BC,v2 feature on-value,curved_te: te_smooth,1.0,JUDGEMENT,off value = v1 value 0.0
+BC,v2 feature on-value,root_blend: root_blend,1.0,JUDGEMENT,off value = v1 value 0.0
+BC,v2 feature on-value,tip_round: tip_round,1.0,JUDGEMENT,off value = v1 value 0.0
+BC,v2 feature on-value,neck: tail_root_frac,0.12,JUDGEMENT,off value = v1 value 0.08
+BC,v2 feature on-value,spread: tail_spread_frac,0.48,JUDGEMENT,off value = v1 value 0.38
+BC,v2 feature on-value,nose: nose_frac,0.11,JUDGEMENT,off value = v1 value 0.07

@@ -1,0 +1,36 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| TEACHING CASE (toy). 0/U = starting velocity field and boundary conditions for velocity. |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;           // file-format version
+    format      ascii;         // text file
+    class       volVectorField; // a vector (3 numbers) stored in every cell
+    object      U;             // the field name; the solver looks for a file called U
+}
+
+dimensions      [0 1 -1 0 0 0 0];   // units, as powers of [mass length time temperature ...]: length^1 * time^-1 = metres per second. A wrong unit stops the run with an error
+
+// Free stream: speed 1, tilted up by 4 degrees from the x axis: (cos 4, sin 4, 0).
+// The plate lies flat along x, so the air meets it at 4 degrees angle of attack. Change the angle: edit these two numbers AND liftDir/dragDir in controlDict.
+internalField   uniform (0.99756405 0.06975647 0);   // value in every cell at time 0. "uniform" = same everywhere. Starting with the free stream everywhere is the usual "impulsive start"
+
+boundaryField       // one entry per patch named in blockMeshDict
+{
+    farfield
+    {
+        type            freestreamVelocity;   // far from the plate: if air is entering, impose the free stream; if leaving, let it go. Lets one patch act as both inlet and outlet
+        freestreamValue $internalField;       // the free-stream value to use: copy of the internalField line above
+    }
+
+    plate
+    {
+        type            noSlip;   // wall: air sticks to the surface, velocity = 0 there. This is what creates the boundary layer. Change to "slip" and the plate becomes frictionless
+    }
+
+    frontAndBack
+    {
+        type            empty;    // the two z faces of a 2D case: no equations solved across them. Must match the patch type in blockMeshDict
+    }
+}
+// ************************************************************************* //

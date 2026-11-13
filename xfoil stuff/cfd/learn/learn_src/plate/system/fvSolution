@@ -1,0 +1,44 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| TEACHING CASE (toy). fvSolution = which linear-equation solvers to use, and the pressure-velocity loop settings. |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;           // file-format version
+    format      ascii;         // text file
+    class       dictionary;    // dictionary of settings
+    object      fvSolution;    // fixed name the solver looks for
+}
+
+solvers             // one entry per field: how to solve its big linear system
+{
+    p                           // pressure equation, used for the early correction passes
+    {
+        solver          GAMG;   // geometric-algebraic multigrid: fast on big meshes (a smoother such as PCG also works on small ones)
+        smoother        GaussSeidel;   // the cheap inner iteration GAMG uses on each mesh level
+        tolerance       1e-6;   // stop when the residual (how badly the equation is still unsatisfied, scaled) drops below this. Smaller = more accurate, slower
+        relTol          0.05;   // OR stop when the residual has fallen to 5 % of where it started this pass. 0 = ignore this test
+    }
+
+    pFinal                      // pressure equation on the LAST pass of a time step
+    {
+        $p;                     // copy every setting from the entry p above
+        relTol          0;      // but demand the full tolerance on the last pass
+    }
+
+    "U.*"                       // velocity equations (also catches UFinal): the quotes mean "any name starting with U"
+    {
+        solver          smoothSolver;   // simple iterative solver, enough because momentum equations are well behaved
+        smoother        symGaussSeidel; // the iteration it repeats
+        tolerance       1e-8;   // stop at this residual level
+        relTol          0;      // no relative stopping test
+    }
+}
+
+PIMPLE              // settings of the pressure-velocity coupling loop (PISO + SIMPLE hybrid), run once per time step
+{
+    momentumPredictor yes;      // first solve momentum with the old pressure to get a guess of velocity. "no" saves time but can be less accurate
+    nOuterCorrectors  1;        // how many times to repeat the whole predictor+corrector block per step. 1 = behaves as plain PISO. Larger lets you take bigger time steps
+    nCorrectors       3;        // pressure-solve-and-correct-velocity passes per outer loop. More = more accurate coupling, slower
+    nNonOrthogonalCorrectors 1; // extra pressure passes to fix mesh non-orthogonality. 0 is fine on a perfectly square mesh
+}
+// ************************************************************************* //

@@ -1,0 +1,43 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| TEACHING CASE (toy). fvSchemes = HOW each term of the equations is turned into numbers on the mesh. |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;           // file-format version
+    format      ascii;         // text file
+    class       dictionary;    // dictionary of settings
+    object      fvSchemes;     // fixed name the solver looks for
+}
+
+ddtSchemes          // d/dt terms: how the change in time is approximated
+{
+    default         backward;  // second-order, uses the last two time levels (more accurate). "Euler" = first-order, simpler and more damped
+}
+
+gradSchemes         // gradients such as grad(p) and grad(U)
+{
+    default         Gauss linear;  // sum face values (linear interpolation between neighbour cells) times face area, divided by cell volume. Other choices change accuracy on skewed cells
+}
+
+divSchemes          // divergence / convection terms: how a quantity is carried through cell faces by the flow
+{
+    default         none;      // forces every term to be listed by name below: a missing entry gives an error instead of a silent default
+    div(phi,U)      Gauss limitedLinearV 1;   // momentum convection: second-order "limited linear". Falls back toward upwind where the solution wiggles. Try "Gauss upwind" (first-order, smoother, more smeared) to see the difference
+    div((nuEff*dev2(T(grad(U))))) Gauss linear;   // small extra viscous term the solver asks for; linear is the standard choice
+}
+
+laplacianSchemes    // diffusion terms: viscosity times second derivative of U
+{
+    default         Gauss linear corrected;   // linear interpolation + a correction for cells whose face is not square to the line joining the cell centres (non-orthogonal)
+}
+
+interpolationSchemes  // how a value is read at a face from the two neighbour cell values, when nothing more specific applies
+{
+    default         linear;    // plain average weighted by distance
+}
+
+snGradSchemes       // face-normal gradient (change across a face)
+{
+    default         corrected; // same non-orthogonal correction as above. "uncorrected" is faster and wrong on skewed meshes
+}
+// ************************************************************************* //

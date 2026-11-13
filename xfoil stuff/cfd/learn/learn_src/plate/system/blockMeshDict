@@ -1,0 +1,136 @@
+/*--------------------------------*- C++ -*----------------------------------*| OpenFOAM v2606 teaching case: 2D flat plate, Re = 1000, angle of attack 4 deg |
+| TOY FOR LEARNING. Not accurate, not validated. Every entry is commented.     |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;      // file-format version; leave alone
+    format      ascii;    // text file (could be binary; ascii lets you read it)
+    class       dictionary; // this file is a plain dictionary of settings
+    object      blockMeshDict; // the name blockMesh looks for; do not rename
+}
+
+// Units: chord c = 1, free-stream speed = 1. Time is then measured in "chord passages".
+// The plate is a thin rectangle 0 <= x <= 1, -0.02 <= y <= 0.02 (4 % thick), sitting flat along x.
+// The 4 degree angle is made by tilting the INFLOW (see 0/U), not the plate: blockMesh cannot rotate a hole easily.
+
+convertToMeters 1;   // multiply every coordinate below by this. 1 = coordinates are already "metres" (here: chords)
+
+// 16 corner points per z-level: x in {-5, 0, 1, 10}, y in {-5, -0.02, 0.02, 5}. z = -0.05 and +0.05.
+// (OpenFOAM is always 3D; a 2D case is one cell thick in z, with the z faces set to type "empty".)
+vertices
+(
+    (-5 -5 -0.05)   // vertex 0  (x=-5, y=-5, z-level 0)
+    (0 -5 -0.05)   // vertex 1  (x=0, y=-5, z-level 0)
+    (1 -5 -0.05)   // vertex 2  (x=1, y=-5, z-level 0)
+    (10 -5 -0.05)   // vertex 3  (x=10, y=-5, z-level 0)
+    (-5 -0.02 -0.05)   // vertex 4  (x=-5, y=-0.02, z-level 0)
+    (0 -0.02 -0.05)   // vertex 5  (x=0, y=-0.02, z-level 0)
+    (1 -0.02 -0.05)   // vertex 6  (x=1, y=-0.02, z-level 0)
+    (10 -0.02 -0.05)   // vertex 7  (x=10, y=-0.02, z-level 0)
+    (-5 0.02 -0.05)   // vertex 8  (x=-5, y=0.02, z-level 0)
+    (0 0.02 -0.05)   // vertex 9  (x=0, y=0.02, z-level 0)
+    (1 0.02 -0.05)   // vertex 10  (x=1, y=0.02, z-level 0)
+    (10 0.02 -0.05)   // vertex 11  (x=10, y=0.02, z-level 0)
+    (-5 5 -0.05)   // vertex 12  (x=-5, y=5, z-level 0)
+    (0 5 -0.05)   // vertex 13  (x=0, y=5, z-level 0)
+    (1 5 -0.05)   // vertex 14  (x=1, y=5, z-level 0)
+    (10 5 -0.05)   // vertex 15  (x=10, y=5, z-level 0)
+    (-5 -5 0.05)   // vertex 16  (x=-5, y=-5, z-level 1)
+    (0 -5 0.05)   // vertex 17  (x=0, y=-5, z-level 1)
+    (1 -5 0.05)   // vertex 18  (x=1, y=-5, z-level 1)
+    (10 -5 0.05)   // vertex 19  (x=10, y=-5, z-level 1)
+    (-5 -0.02 0.05)   // vertex 20  (x=-5, y=-0.02, z-level 1)
+    (0 -0.02 0.05)   // vertex 21  (x=0, y=-0.02, z-level 1)
+    (1 -0.02 0.05)   // vertex 22  (x=1, y=-0.02, z-level 1)
+    (10 -0.02 0.05)   // vertex 23  (x=10, y=-0.02, z-level 1)
+    (-5 0.02 0.05)   // vertex 24  (x=-5, y=0.02, z-level 1)
+    (0 0.02 0.05)   // vertex 25  (x=0, y=0.02, z-level 1)
+    (1 0.02 0.05)   // vertex 26  (x=1, y=0.02, z-level 1)
+    (10 0.02 0.05)   // vertex 27  (x=10, y=0.02, z-level 1)
+    (-5 5 0.05)   // vertex 28  (x=-5, y=5, z-level 1)
+    (0 5 0.05)   // vertex 29  (x=0, y=5, z-level 1)
+    (1 5 0.05)   // vertex 30  (x=1, y=5, z-level 1)
+    (10 5 0.05)   // vertex 31  (x=10, y=5, z-level 1)
+);
+
+// Eight blocks: a 3 x 3 grid of boxes with the middle one (the plate) left out.
+// hex (v0 v1 v2 v3 v4 v5 v6 v7) lists the 8 corners: bottom face counter-clockwise, then the top face the same way.
+// (nx ny nz) = number of cells along x, y, z in that block. If two blocks touch, the cell counts on the shared edge MUST match.
+// simpleGrading (gx gy gz) = cell-size ratio last/first along each direction. 1 = even cells.
+//   Left column x -5..0 : cells get small toward the plate (ratio 0.03566). Right column x 1..10: small at the trailing edge (ratio 31.54).
+//   Rows above/below the plate: small cells next to the plate, large far away. Change a ratio and cells move; total count does not change.
+blocks
+(
+    hex (0 1 5 4 16 17 21 20) (30 40 1) simpleGrading (0.0356645 0.0208541 1)   // below-left block
+    hex (1 2 6 5 17 18 22 21) (60 40 1) simpleGrading (1 0.0208541 1)   // below-centre block
+    hex (2 3 7 6 18 19 23 22) (50 40 1) simpleGrading (31.5355 0.0208541 1)   // below-right block
+    hex (4 5 9 8 20 21 25 24) (30 4 1) simpleGrading (0.0356645 1 1)   // middle-left block
+    hex (6 7 11 10 22 23 27 26) (50 4 1) simpleGrading (31.5355 1 1)   // middle-right block
+    hex (8 9 13 12 24 25 29 28) (30 40 1) simpleGrading (0.0356645 47.9521 1)   // above-left block
+    hex (9 10 14 13 25 26 30 29) (60 40 1) simpleGrading (1 47.9521 1)   // above-centre block
+    hex (10 11 15 14 26 27 31 30) (50 40 1) simpleGrading (31.5355 47.9521 1)   // above-right block
+);
+
+edges ();   // curved edges (arcs etc.). Empty = all edges straight
+
+// Patches = named groups of boundary faces. The names must match the 0/U and 0/p files exactly.
+// A face is written as its 4 corner vertices, looking from outside, in order.
+boundary
+(
+    plate   // the solid plate surface (all four sides of the thin rectangle)
+    {
+        type wall;   // wall: lets "no-slip" act and lets forces be integrated here. Change to "patch" and the plate stops being a wall
+        faces
+        (
+            (5 9 25 21)   // leading-edge face
+            (6 22 26 10)   // trailing-edge face
+            (9 10 26 25)   // upper surface
+            (5 21 22 6)   // lower surface
+        );
+    }
+    farfield   // outer rectangle: inflow comes in through some of it, leaves through the rest (see freestream conditions in 0/)
+    {
+        type patch;   // generic patch: no special physics, boundary conditions in 0/ decide behaviour
+        faces
+        (
+            (0 16 20 4)   // left edge of domain
+            (4 20 24 8)   // left edge of domain
+            (8 24 28 12)   // left edge of domain
+            (3 7 23 19)   // right edge of domain
+            (7 11 27 23)   // right edge of domain
+            (11 15 31 27)   // right edge of domain
+            (0 1 17 16)   // bottom edge of domain
+            (1 2 18 17)   // bottom edge of domain
+            (2 3 19 18)   // bottom edge of domain
+            (12 28 29 13)   // top edge of domain
+            (13 29 30 14)   // top edge of domain
+            (14 30 31 15)   // top edge of domain
+        );
+    }
+    frontAndBack   // the two flat z faces of every cell: this is what makes the case 2D
+    {
+        type empty;   // empty: OpenFOAM solves nothing in this direction. Change it and the solver will refuse or give nonsense
+        faces
+        (
+            (0 4 5 1)
+            (16 17 21 20)
+            (1 5 6 2)
+            (17 18 22 21)
+            (2 6 7 3)
+            (18 19 23 22)
+            (4 8 9 5)
+            (20 21 25 24)
+            (6 10 11 7)
+            (22 23 27 26)
+            (8 12 13 9)
+            (24 25 29 28)
+            (9 13 14 10)
+            (25 26 30 29)
+            (10 14 15 11)
+            (26 27 31 30)
+        );
+    }
+);
+
+mergePatchPairs ();   // advanced: glue separate patches together. Not used
+// ************************************************************************* //

@@ -1,0 +1,129 @@
+FLAT-PLATE SECTION vs NACA 0006: SUMMARY (2026-10-11)  -- XFOIL DID NOT CONVERGE ON THE PLATE; NO PLATE WINDOW NUMBER EXISTS
+
+RESULT IN ONE LINE
+XFOIL 6.99, run with the existing small-scale runner unchanged, returned 0 of 406 viscous points for the clean 4.3% plate
+(14 polars: Re 15k-100k x Ncrit 5, 9) and 0 of 406 for the 4.3% plate with the 20%/10 deg lip. The 3.0% plate returned 26
+scattered points (7 of 14 polars non-empty) and the 15%/8 lip 22 (5 of 14); none of these supports a coupled-model lookup.
+Every plate cell in comparison_P07.csv is therefore "insufficient coverage". The plate-vs-NACA 0006 comparison the brief asked
+for cannot be made from this method. No judgement on better/worse is made or possible.
+
+WHAT WAS BUILT (all new files, rigid_glider/)
+plate_section.py   geometry: constant thickness, 5:1 elliptical LE, 10:1 elliptical TE (semi-major = 5 / 10 x half-thickness),
+                   t/c 4.3% (PLATE_43) and 3.0% (PLATE_30); lip = rigid rotation of the aft chord about x = 1-cf, TE-up positive
+                   (same as reflex_xfoil.coordinates).  363 points/section, upper TE first, closed at (1,0).
+plate_polars.py    imports reflex_small_polars (RES, NCRITS, GRID, build_script, merge_sweeps, coverage_row, lip_moment_cells),
+                   reflex_ext_gaps.run_xfoil, pure_wing_polars.parse_polar unchanged.  Only the foil coordinates differ.
+                   60 jobs: {4.3% clean, 3.0% clean, 4.3% 15/8, 4.3% 20/10} x (inviscid + 2 Ncrit x 7 Re), 160 panels,
+                   alpha -4..10 step 0.5 (0->10, then 0->-4, INIT at 0), ITER 400, 300 s timeout.  240 panels NOT run (brief: 160).
+                   Also PlateTables (same clean/bent/inv_curve interface as ArchTables) and the section_summary table.
+plate_study.py     existing machinery (V2.evaluators -> build_curve_ev -> scan_curve2 -> window_rows2), P07, final deck
+                   (models_final.json read), uncensored SM scan, CL band 0.2-0.5, both Ncrit, W/S 3, 6, 8, 12, 16.
+                   NACA 0006 values: stored scans_v2.json turned into window rows by the same existing window_rows2 (not recomputed).
+                   Cross-check: these reproduce ARCH_COMPARISON section 4 (pure 8 N/m2: 1.8 mm, 67.3-69.1; lip 20/10 (a) 8.8 mm,
+                   51.6-60.3; (b) 12.0 mm, 46.5-58.5; tail 11.1 mm, 63.0-74.1).
+test_plate.py      16 tests, pass (unittest_output.txt).
+P09 and P12 were NOT run: no P07 result to extend.
+
+XFOIL CONVERGENCE (plate/polars/coverage.csv, section_summary.csv)
+Clean 4.3%  : 0/406 viscous points (0 of 14 polars).   Inviscid: 29/29.
+Clean 3.0%  : 26/406 (7 of 14 polars non-empty, max 6 points in one polar); 10 of the 14 runs were killed for runaway NaN output.
+Lip 15/8    : 22/406 (5 of 14), all at Re <= 30k, all at alpha 0..3 deg where this lip is at negative cl (cl -0.35..0).
+Lip 20/10   : 0/406.   One run (15/8, Re 100k, Ncrit 9) hit the 300 s timeout.  11 runs killed for runaway output, 17 logged NaN.
+Failure location (REVISED after review; earlier text attributed it to the leading-edge ellipse, withdrawn).  In
+polars/raw/PLATE_43_clean_Re60000_N5_p160/xfoil.log the leading-edge laminar bubble is marched in inverse mode and RECOVERS
+(MRCHUE "Inverse mode" at BL stations 16-34, Hk 3.8 rising to 7.4 then falling to 2.77 at station 34; log lines 139-157 and
+160-178).  The first failures are "MRCHUE: Convergence failed at 81 side 1" (line 158) and "at 81 side 2" plus 83, 84 (lines 179-181),
+followed by MRCHDU failures at stations 81-103 of side 2.  Side 1 has 80 stations (line ~260: "Side 1 forced transition at
+x/c = 1.0000 80"), so station 81 is the first wake station: the failure is at the trailing edge and in the wake, from the first
+alpha = 0 point; the sweep then halts ("previous 4 points did not converge") and every point is lost.  I earlier read BL station
+numbers as panel node numbers; that was wrong.
+CAUSE UNDETERMINED.  Trailing-edge closure and TE panelling are untested here (plate_section.py closes the 10:1 TE ellipse to a
+single point at (1,0) with a vertical tangent; XFOIL reports "Sharp trailing edge"; see the separate diagnosis in
+results/runs/rigid_glider/plate_te_diag/).  It is not established that this is a tool limitation rather than a geometry/panelling
+issue of my plate contour.  No parameter was retuned in the deliverable.
+The few points that were returned are not trustworthy (PLATE_30 Re 60k N5: cl 0.107 at 0.5 deg then 0.072 at 1.0 deg; Re 100k N9:
+cl -0.277 at -1.0, -0.117 at -0.5) and were not used: every coupled lookup there is uncovered.
+
+PLATE-VS-NACA 0006 TABLE (P07, both Ncrit, "any" tier; window width mm, CG mm aft of root LE)
+architecture                 W/S   plate 4.3%             plate 3.0%             NACA 0006
+pure                          3    insufficient coverage  insufficient coverage  not in existing study
+                              8    insufficient coverage  insufficient coverage  1.8 (67.3-69.1)
+                             16    insufficient coverage  insufficient coverage  0.5 (69.6-70.0)
+lip 20/10 outboard (a)        8    insufficient coverage  not run                8.8 (51.6-60.3)
+                             16    insufficient coverage  not run                8.3 (52.0-60.3)
+lip 20/10 outboard (b)        8    insufficient coverage  not run                12.0 (46.5-58.5)
+                             16    insufficient coverage  not run                11.5 (47.0-58.5)
+lip 20/10 outboard (c)        8    insufficient coverage  not run                5.5 (57.6-63.1)
+                             16    insufficient coverage  not run                6.9 (55.7-62.6)
+lip 15/8 outboard (a)/(b)/(c) 8    insufficient coverage  not run                4.1 / 6.9 / 1.8
+                             16    insufficient coverage  not run                3.7 / 6.5 / 1.8
+tail 10%, AVL lift            3    insufficient coverage  insufficient coverage  not in existing study
+                              8    insufficient coverage  insufficient coverage  11.1 (63.0-74.1)
+                             16    insufficient coverage  insufficient coverage  9.2 (65.3-74.5)
+tail 5%-area model (lift 0.58-0.60 of the 10% tail; 0.603 on P07)  8    insufficient coverage  insufficient coverage  7.4 (64.4-71.8)
+                             16    insufficient coverage  insufficient coverage  5.5 (66.7-72.2)
+Strict tier (transition-interval-free; the "offti" mode): plate = insufficient coverage everywhere.  NACA 0006 on P07: pure is
+zero; the tail is zero to within one scan step (0.46 mm on P07 at 16 N/m2); NACA 0008 tails are not zero; the 20/10 lip has
+1-7 mm strict windows in 15 of 18 Section-4 cells (comparison_P07.csv has the P07 values).  ARCH_COMPARISON's "almost every
+window is zero under strict" therefore does not describe the lip rows.
+"insufficient coverage" rule (my choice, not in the existing code): for either Ncrit, fewer than 50% of the 31 band CL points
+(0.2-0.5) have min(strip-coverage, derivative-coverage) >= 0.9.  Here the fraction is 0.00 in every plate cell (band_cov columns).
+"0.59 lift" (label in comparison_P07.csv): on P07 the 5%-area tail model has d(CL)/d(incidence) = 0.603 of the 10% tail (0.59 is the six-case figure in
+ARCH_COMPARISON); the existing NACA rows use the same 5% model, so the two are consistent.
+AVL-only (inviscid, section independent) windows on this deck, for reference: pure 0; lip 20/10 19.4 mm (37.3-56.7);
+lip 15/8 14.3 mm (46.1-60.3); tail 10% 9.2 mm (66.2-75.4); tail 0.59 6.0 mm (67.6-73.6).
+
+SANITY CHECK vs PUBLISHED DATA (Ananda, Sukumar & Selig 2015: 4.3% plate, Re ~80k, quarter-chord moment near zero before stall,
+wing CLmax 0.55-0.7)
+Could NOT be performed.  XFOIL returned no viscous point for the 4.3% plate at Re 80k (Ncrit 5 or 9), so neither the pre-stall
+cm(c/4) nor the cl break can be stated; this is a disagreement with the measurement in the sense that XFOIL gives nothing
+where the experiment gives a smooth, flyable plate polar.  Only the inviscid solution exists: cm(c/4) = -0.0010, -0.0018,
+-0.0027, -0.0035 at cl 0.1, 0.2, 0.3, 0.4 (i.e. near zero, about -0.009 x cl, small and nose-down), vs NACA 0006 inviscid
+-0.0005, -0.0009, -0.0015, -0.0020.  Inviscid XFOIL says nothing about stall; its cl keeps rising at 0.116/deg to alpha 10.
+
+DOES THE PLATE SHOW THE NOSE-UP MOMENT HUMP?
+Not determinable (no viscous data).  For reference the NACA 0006 viscous section (pure_wing database, Ncrit 5 / 9) has a
+peak nose-up cm of +0.013 to +0.015 (cl 0.16-0.27 at Ncrit 9; Re 30k Ncrit 5 at cl 0.23), cm(cl 0.2) up to +0.015 at Re 60-80k
+Ncrit 9, i.e. the hump the pure-wing trims rely on; the NACA 0006 inviscid cm is only -0.001 to -0.002.  The plate's inviscid
+cm is the same sign and size, so any hump on the plate would have to come from the viscous solution, which is what failed.
+
+ASSUMPTIONS
+- Geometry is generated from the brief's description (semi-axes 5h and 10h, h = t/2); the exact Ananda et al. coordinates were not
+  consulted.  The TE ellipse ends in a rounded tip (vertical tangent, radius h/10) closed at (1,0); XFOIL reports "Sharp trailing edge".
+- Lip convention as in the existing study: pure rotation about x = 1-cf, no gap, 15%/8 and 20/10 on the 4.3% plate only.
+  The 15% and 20% hinges (x = 0.85, 0.80) lie inside the TE ellipse (starts at x = 0.785 for 4.3%).
+- The coupled model, AVL deck, section data lookup, forms (a)/(b)/(c), window definition and tiers are the existing ones unchanged.
+  AVL decks use NACA 0006/0008 labels on zero-camber sections, so AVL itself is the same for plate and NACA.
+- Clean 160-panel plate polars come from this run (ITER 400, alpha -4..10), whereas the NACA clean 160 tables come from the
+  pure_wing database (its own ITER-200 schedule plus 0.25 deg fill).  Moot here; relevant if the plate polars are redone.
+
+WEAK PLACES
+1. Nothing in the plate comparison is a result: no viscous polar for the clean 4.3% or 20/10 cases, a handful of unusable points
+   for 3.0% and 15/8.  This is the dominant finding.
+2. The cause of the non-convergence is undetermined (see "Failure location").  The failure is at the trailing edge/wake, and the TE closure
+   and TE panelling of my contour were not varied in this run.
+3. 240-panel polars were not run.  Only P07; P09 and P12 skipped.
+4. The 3.0% plate was scanned for the pure wing and tail only (lips are specified on the 4.3% plate only).
+5. NACA 0006 comparison for 3 N/m2 does not exist (existing study covers 6, 8, 12, 16, 24).
+6. The sanity check against Ananda et al. is unanswered; no statement about XFOIL's ability to model the plate follows from this run.
+7. Whether a corrected contour/panelling gives usable polars is addressed only as diagnosis in plate_te_diag/ (not fed to the model).
+
+CONVERGENCE FLOOR AND SECTION_SUMMARY.CSV (added after review)
+Floor: a viscous polar must have at least 15 of the 29 requested alpha points.  In section_summary.csv, rows below the floor have
+cl_max, alpha_at_cl_max, cm_at_cl_*, peak_nose_up_cm and the lip-moment/retained-fraction fields blanked and below_floor = 1;
+n_converged and the alpha coverage are kept.  No plate viscous row meets the floor, so every viscous row is blanked.
+The "pass" column in polars/plate_polar_database.csv is a constant 1 copied from the existing database format; it is NOT a
+quality flag (unconverged-looking points such as the non-monotone PLATE_30 ones carry pass = 1).  The database was not regenerated.
+
+TE DIAGNOSIS (results/runs/rigid_glider/plate_te_diag/, diagnosis only, not used in any model or window)
+The as-is contour returns 0/29 at Re 60k/100k x Ncrit 5/9; blunt-base truncation of the TE ellipse (0.2/0.5/1.0% chord) and a sharp wedge
+over the last 0.5/1.0% chord return mostly 22-29/29; TE panel density 0.6 gives 6-7/29, 1.0 gives 13-27/29; NACA 0006 control 28-29/29.
+This implicates the TE closure/panelling of the as-is contour; see plate_te_diag/diag_summary.txt for numbers and limits.
+
+SECOND-REVIEW FINDING (record only; see plate_te_diag/diag_summary.txt, jumps.csv)
+At Re 60k-100k, XFOIL on this plate is trailing-edge-treatment dependent (as-is closure: no solution; blunt base / sharp wedge: solutions), and every
+converging variant checked shows a lift-and-moment jump of a single 0.5 deg step inside the trim band (cl +0.16 to +0.45 for 15 of 22 runs, cm -0.02 to -0.08,
+xtr_top 1.0 -> 0.04-0.35) with post-jump viscous cl above the inviscid plate value (viscous/inviscid 1.1-2.0 at 3 deg).  This disagrees with the published smooth
+polar and near-zero pre-stall quarter-chord moment (Ananda et al. 2015, Sections 3.1 and 3.4, text only).  The "MRCHUE convergence failed at 80/81 side 1" message
+also appears in converging runs and the NACA control, so it is not a failure signature.  No plate CG window is available from this chain; the choice of any further
+plate modelling is Kai's.

@@ -1,0 +1,99 @@
+E. BUILD NUMBERS  (P07 NACA_0006, b = 400 mm)
+
+Wing: AR 4.5, taper 0.5, area 355.6 cm2, root chord 118.5 mm, tip chord 59.3 mm, MAC 92.2 mm (LE of MAC at x = 48.0 mm), c/4 sweep 25 deg, LE sweep 28.4 deg, TE sweep 13.7 deg, tip LE x = 108.1 mm, tip TE x = 167.3 mm.  Pure-wing neutral point 70.1 mm from root LE.
+
+CG envelope over the tested W/S (6..24), N5/N9 coupled windows and AVL-only windows, mm aft of root LE:
+  pure: 64.1 .. 71.5
+  lip (0.2, 'outer')/10: 51.9 .. 63.4
+  lip (0.15, 'outer')/8: 51.9 .. 66.2
+  lip (0.2, 'outer')/5: 53.8 .. 66.2
+  tail (0.1, 2.0)/-3: 60.4 .. 72.0
+  tail (0.08, 1.5)/-3: 58.7 .. 70.2
+=> one CG rail covering all architectures: 51.9 .. 72.0 mm (add +-3 mm margin)
+
+Trailing-edge lip: hinge at 1 - cf of the local chord; outboard placement = eta >= 0.4 semispan (split at y = 80 mm); TE rise = cf*c*sin(angle):
+   10/3 outer hinge 90% c  lip chord 9.5 mm (inboard) / 5.9 mm (tip)  TE rise 0.5 / 0.3 mm
+   10/3 full  hinge 90% c  lip chord 11.9 mm (inboard) / 5.9 mm (tip)  TE rise 0.6 / 0.3 mm
+   10/6 outer hinge 90% c  lip chord 9.5 mm (inboard) / 5.9 mm (tip)  TE rise 1.0 / 0.6 mm
+   10/6 full  hinge 90% c  lip chord 11.9 mm (inboard) / 5.9 mm (tip)  TE rise 1.2 / 0.6 mm
+   15/5 outer hinge 85% c  lip chord 14.2 mm (inboard) / 8.9 mm (tip)  TE rise 1.2 / 0.8 mm
+   15/5 full  hinge 85% c  lip chord 17.8 mm (inboard) / 8.9 mm (tip)  TE rise 1.5 / 0.8 mm
+   15/8 outer hinge 85% c  lip chord 14.2 mm (inboard) / 8.9 mm (tip)  TE rise 2.0 / 1.2 mm
+   15/8 full  hinge 85% c  lip chord 17.8 mm (inboard) / 8.9 mm (tip)  TE rise 2.5 / 1.2 mm
+   20/5 outer hinge 80% c  lip chord 19.0 mm (inboard) / 11.9 mm (tip)  TE rise 1.7 / 1.0 mm
+   20/5 full  hinge 80% c  lip chord 23.7 mm (inboard) / 11.9 mm (tip)  TE rise 2.1 / 1.0 mm
+  20/10 outer hinge 80% c  lip chord 19.0 mm (inboard) / 11.9 mm (tip)  TE rise 3.3 / 2.1 mm
+  20/10 full  hinge 80% c  lip chord 23.7 mm (inboard) / 11.9 mm (tip)  TE rise 4.1 / 2.1 mm
+
+Tail (horizontal, span 35% b = 140 mm, thin symmetric section, inviscid):
+  area 8% = 28.4 cm2  chord 20.3 mm  quarter chord at 1.5 root chords = 178 mm; tail arm from the (with-tail) NP 103 mm; NP shift +4.3 mm (+4.7% MAC); Re of tail at 7 m/s 9.5k
+  area 8% = 28.4 cm2  chord 20.3 mm  quarter chord at 2 root chords = 237 mm; tail arm from the (with-tail) NP 159 mm; NP shift +7.6 mm (+8.3% MAC); Re of tail at 7 m/s 9.5k
+  area 10% = 35.6 cm2  chord 25.4 mm  quarter chord at 1.5 root chords = 178 mm; tail arm from the (with-tail) NP 103 mm; NP shift +5.0 mm (+5.4% MAC); Re of tail at 7 m/s 11.9k
+  area 10% = 35.6 cm2  chord 25.4 mm  quarter chord at 2 root chords = 237 mm; tail arm from the (with-tail) NP 158 mm; NP shift +8.8 mm (+9.5% MAC); Re of tail at 7 m/s 11.9k
+  area 12% = 42.7 cm2  chord 30.5 mm  quarter chord at 1.5 root chords = 178 mm; tail arm from the (with-tail) NP 102 mm; NP shift +5.6 mm (+6.0% MAC); Re of tail at 7 m/s 14.2k
+  area 12% = 42.7 cm2  chord 30.5 mm  quarter chord at 2 root chords = 237 mm; tail arm from the (with-tail) NP 157 mm; NP shift +9.8 mm (+10.6% MAC); Re of tail at 7 m/s 14.2k
+
+Fins (vertical, chord = 0.5 root chord, above the wing plane):
+  6% of wing area = 21.3 cm2: chord 59.3 mm x height 36.0 mm, quarter chord at 178 mm (1.5 root chords)
+  4% of wing area = 14.2 cm2: chord 59.3 mm x height 24.0 mm, quarter chord at 237 mm (2 root chords)
+  6% of wing area = 21.3 cm2: chord 59.3 mm x height 36.0 mm, quarter chord at 237 mm (2 root chords)
+  4% of wing area = 14.2 cm2: chord 59.3 mm x height 24.0 mm, quarter chord at 178 mm (1.5 root chords)
+
+Predicted nominal trim (centre of the both-Ncrit coupled window, panels 160, any evidence):
+ W/S  6 (22 g) pure: windows mm AVL-only 0.0 N5 3.2 N9 4.1 both 1.8 ; first CG 67.3 mm (20.9% MAC, SM +3.0%)
+      N5: CL 0.23 alpha 4.2 deg V 6.5 m/s Re 50-26k ; dCL/mm 0.027 (0.1 in CL = 3.8 mm)
+      N9: CL 0.36 alpha 6.3 deg V 5.2 m/s Re 41-21k ; dCL/mm 0.060 (0.1 in CL = 1.7 mm)
+ W/S  6 (22 g) lip (0.2, 'outer') 10: windows mm AVL-only 4.6 N5 7.8 N9 11.5 both 7.8 ; first CG 55.6 mm (8.2% MAC, SM +16.0%)
+      N5: CL 0.27 alpha 5.2 deg V 6.1 m/s Re 47-24k ; dCL/mm 0.024 (0.1 in CL = 4.2 mm)
+      N9: CL 0.27 alpha 5.4 deg V 6.0 m/s Re 47-24k ; dCL/mm 0.032 (0.1 in CL = 3.2 mm)
+ W/S  6 (22 g) lip (0.15, 'outer') 8: windows mm AVL-only 8.3 N5 4.6 N9 10.6 both 4.6 ; first CG 60.2 mm (13.2% MAC, SM +11.0%)
+      N5: CL 0.24 alpha 4.3 deg V 6.4 m/s Re 50-25k ; dCL/mm 0.022 (0.1 in CL = 4.5 mm)
+      N9: CL 0.32 alpha 6.0 deg V 5.5 m/s Re 43-22k ; dCL/mm 0.049 (0.1 in CL = 2.0 mm)
+ W/S  6 (22 g) lip (0.2, 'outer') 5: windows mm AVL-only 9.7 N5 3.7 N9 8.8 both 3.7 ; first CG 62.1 mm (15.2% MAC, SM +9.0%)
+      N5: CL 0.24 alpha 4.3 deg V 6.4 m/s Re 50-25k ; dCL/mm 0.020 (0.1 in CL = 5.0 mm)
+      N9: CL 0.35 alpha 6.4 deg V 5.3 m/s Re 42-21k ; dCL/mm 0.043 (0.1 in CL = 2.3 mm)
+ W/S  6 (22 g) tail (0.1, 2.0) -3: windows mm AVL-only 9.7 N5 9.7 N9 10.1 both 9.7 ; first CG 65.0 mm (18.5% MAC, SM +15.0%)
+      N5: CL 0.27 alpha 4.7 deg V 6.0 m/s Re 47-24k ; dCL/mm 0.014 (0.1 in CL = 7.0 mm)
+      N9: CL 0.32 alpha 5.9 deg V 5.5 m/s Re 43-22k ; dCL/mm 0.019 (0.1 in CL = 5.2 mm)
+ W/S  6 (22 g) tail (0.08, 1.5) -3: windows mm AVL-only 5.1 N5 7.4 N9 9.7 both 7.4 ; first CG 65.1 mm (18.6% MAC, SM +10.0%)
+      N5: CL 0.25 alpha 4.6 deg V 6.2 m/s Re 48-25k ; dCL/mm 0.017 (0.1 in CL = 6.0 mm)
+      N9: CL 0.32 alpha 5.9 deg V 5.5 m/s Re 43-22k ; dCL/mm 0.027 (0.1 in CL = 3.8 mm)
+ W/S 12 (44 g) pure: windows mm AVL-only 0.0 N5 1.8 N9 4.6 both 0.5 ; first CG 68.2 mm (21.9% MAC, SM +2.0%)
+      N5: CL 0.20 alpha 3.5 deg V 9.8 m/s Re 76-39k ; dCL/mm 0.029 (0.1 in CL = 3.4 mm)
+      N9: CL 0.31 alpha 5.4 deg V 7.9 m/s Re 61-31k ; dCL/mm 0.043 (0.1 in CL = 2.3 mm)
+ W/S 12 (44 g) lip (0.2, 'outer') 10: windows mm AVL-only 4.6 N5 7.8 N9 8.3 both 7.8 ; first CG 55.6 mm (8.2% MAC, SM +16.0%)
+      N5: CL 0.28 alpha 5.5 deg V 8.3 m/s Re 65-33k ; dCL/mm 0.044 (0.1 in CL = 2.3 mm)
+      N9: CL 0.25 alpha 4.8 deg V 8.9 m/s Re 70-35k ; dCL/mm 0.014 (0.1 in CL = 7.3 mm)
+ W/S 12 (44 g) lip (0.15, 'outer') 8: windows mm AVL-only 8.3 N5 3.7 N9 6.9 both 3.7 ; first CG 60.7 mm (13.7% MAC, SM +10.5%)
+      N5: CL 0.25 alpha 4.4 deg V 8.9 m/s Re 69-35k ; dCL/mm 0.030 (0.1 in CL = 3.3 mm)
+      N9: CL 0.25 alpha 4.5 deg V 8.8 m/s Re 69-35k ; dCL/mm 0.018 (0.1 in CL = 5.7 mm)
+ W/S 12 (44 g) lip (0.2, 'outer') 5: windows mm AVL-only 9.7 N5 2.3 N9 6.9 both 2.3 ; first CG 63.0 mm (16.2% MAC, SM +8.0%)
+      N5: CL 0.24 alpha 4.2 deg V 9.1 m/s Re 71-36k ; dCL/mm 0.033 (0.1 in CL = 3.0 mm)
+      N9: CL 0.29 alpha 5.3 deg V 8.2 m/s Re 64-32k ; dCL/mm 0.053 (0.1 in CL = 1.9 mm)
+ W/S 12 (44 g) tail (0.1, 2.0) -3: windows mm AVL-only 9.7 N5 9.7 N9 10.1 both 9.7 ; first CG 65.5 mm (19.0% MAC, SM +14.5%)
+      N5: CL 0.25 alpha 4.3 deg V 8.8 m/s Re 68-35k ; dCL/mm 0.014 (0.1 in CL = 7.1 mm)
+      N9: CL 0.30 alpha 5.3 deg V 8.1 m/s Re 63-32k ; dCL/mm 0.016 (0.1 in CL = 6.3 mm)
+ W/S 12 (44 g) tail (0.08, 1.5) -3: windows mm AVL-only 5.1 N5 5.1 N9 10.1 both 5.1 ; first CG 66.1 mm (19.6% MAC, SM +9.0%)
+      N5: CL 0.24 alpha 4.1 deg V 9.0 m/s Re 70-36k ; dCL/mm 0.018 (0.1 in CL = 5.7 mm)
+      N9: CL 0.30 alpha 5.3 deg V 8.1 m/s Re 63-32k ; dCL/mm 0.022 (0.1 in CL = 4.6 mm)
+ W/S 24 (87 g) pure: windows mm AVL-only 0.0 N5 0.9 N9 5.5 both 0.5 ; first CG 71.0 mm (24.9% MAC, SM -1.0%)
+      N5: CL 0.23 alpha 3.6 deg V 13.0 m/s Re 101-51k ; dCL/mm 0.066 (0.1 in CL = 1.5 mm)
+      N9: CL 0.35 alpha 5.4 deg V 10.6 m/s Re 83-42k ; dCL/mm 0.042 (0.1 in CL = 2.4 mm)
+ W/S 24 (87 g) lip (0.2, 'outer') 10: windows mm AVL-only 4.6 N5 7.8 N9 7.8 both 7.8 ; first CG 55.6 mm (8.2% MAC, SM +16.0%)
+      N5: CL 0.30 alpha 5.8 deg V 11.5 m/s Re 90-45k ; dCL/mm 0.027 (0.1 in CL = 3.7 mm)
+      N9: CL 0.24 alpha 4.8 deg V 12.7 m/s Re 99-50k ; dCL/mm 0.016 (0.1 in CL = 6.2 mm)
+ W/S 24 (87 g) lip (0.15, 'outer') 8: windows mm AVL-only 8.3 N5 3.7 N9 4.6 both 3.7 ; first CG 60.7 mm (13.7% MAC, SM +10.5%)
+      N5: CL 0.25 alpha 4.4 deg V 12.4 m/s Re 97-49k ; dCL/mm 0.091 (0.1 in CL = 1.1 mm)
+      N9: CL 0.24 alpha 4.2 deg V 12.9 m/s Re 101-51k ; dCL/mm 0.018 (0.1 in CL = 5.6 mm)
+ W/S 24 (87 g) lip (0.2, 'outer') 5: windows mm AVL-only 9.7 N5 0.9 N9 5.1 both 0.9 ; first CG 63.4 mm (16.7% MAC, SM +7.5%)
+      N5: CL 0.23 alpha 3.9 deg V 13.2 m/s Re 103-52k ; dCL/mm 0.032 (0.1 in CL = 3.1 mm)
+      N9: CL 0.25 alpha 4.5 deg V 12.4 m/s Re 97-49k ; dCL/mm 0.018 (0.1 in CL = 5.7 mm)
+ W/S 24 (87 g) tail (0.1, 2.0) -3: windows mm AVL-only 9.7 N5 7.8 N9 10.1 both 7.4 ; first CG 66.9 mm (20.5% MAC, SM +13.0%)
+      N5: CL 0.25 alpha 3.9 deg V 12.5 m/s Re 97-49k ; dCL/mm 0.016 (0.1 in CL = 6.2 mm)
+      N9: CL 0.29 alpha 4.9 deg V 11.6 m/s Re 90-46k ; dCL/mm 0.014 (0.1 in CL = 7.3 mm)
+ W/S 24 (87 g) tail (0.08, 1.5) -3: windows mm AVL-only 5.1 N5 3.7 N9 9.2 both 3.7 ; first CG 67.9 mm (21.6% MAC, SM +7.0%)
+      N5: CL 0.24 alpha 3.9 deg V 12.7 m/s Re 99-50k ; dCL/mm 0.023 (0.1 in CL = 4.3 mm)
+      N9: CL 0.30 alpha 5.0 deg V 11.4 m/s Re 89-45k ; dCL/mm 0.019 (0.1 in CL = 5.3 mm)
+
+Moving the CG: trim CL = (nose-up moment)/(static margin). CG AFT raises trim CL (slower, higher alpha, stall side); CG FORWARD lowers trim CL (faster, dive side).
+If it dives / flies fast: move the CG aft in steps of ~ 0.1/(dCL/mm) mm (listed above, 3-7 mm per 0.1 of CL); if it pitches up / stalls: move it forward by the same.

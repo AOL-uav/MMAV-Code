@@ -1,0 +1,15 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| TEACHING CASE (toy). transportProperties = the fluid. |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;           // file-format version
+    format      ascii;         // text file
+    class       dictionary;    // dictionary of settings
+    object      transportProperties; // fixed name the solver looks for
+}
+
+transportModel  Newtonian;     // viscosity is a constant number (air and water behave this way). The only model used here
+
+nu              1e-3;          // kinematic viscosity, m^2/s (here in chord units). Reynolds number = speed x chord / nu = 1 x 1 / 0.001 = 1000. Halve nu and Re doubles; mesh may then be too coarse
+// ************************************************************************* //

@@ -1,0 +1,13 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| TEACHING CASE (toy). turbulenceProperties = turbulence modelling choice. |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;           // file-format version
+    format      ascii;         // text file
+    class       dictionary;    // dictionary of settings
+    object      turbulenceProperties; // fixed name the solver looks for
+}
+
+simulationType  laminar;       // solve the Navier-Stokes equations as they are, with no turbulence model. Right for this low Reynolds number; the validation case also runs laminar. "RAS" would add a turbulence model and need more 0/ files
+// ************************************************************************* //

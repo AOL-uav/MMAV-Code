@@ -1,0 +1,59 @@
+== force coefficients (time-weighted means, sd of fluctuation)
+4  measured (Ananda, interpolated)  -      CL 0.2465 CD 0.0282 CM +0.0122 | xcp 0.201
+4  laminar CFD                      8-20   CL 0.2189 CD 0.0285 CM +0.0075 | xcp 0.216
+4  laminar CFD                      10-20  CL 0.2192 CD 0.0285 CM +0.0074 | xcp 0.217
+4  kOmegaSSTLM CFD                  8-20   CL 0.2181 CD 0.0284 CM +0.0076 | xcp 0.215
+4  kOmegaSSTLM CFD                  10-20  CL 0.2185 CD 0.0284 CM +0.0075 | xcp 0.216
+4  kOmegaSSTLM CFD                  20-30  CL 0.2177 CD 0.0284 CM +0.0078 | xcp 0.214
+4  kOmegaSSTLM CFD                  10-30  CL 0.2181 CD 0.0284 CM +0.0077 | xcp 0.215
+8  measured (Ananda, interpolated)  -      CL 0.5023 CD 0.0746 CM +0.0137 | xcp 0.223
+8  laminar CFD                      8-20   CL 0.4713 CD 0.0786 CM -0.0290 | xcp 0.311
+8  laminar CFD                      10-20  CL 0.4712 CD 0.0787 CM -0.0295 | xcp 0.312
+8  kOmegaSSTLM CFD                  8-20   CL 0.4381 CD 0.0704 CM -0.0036 | xcp 0.258
+8  kOmegaSSTLM CFD                  10-20  CL 0.4382 CD 0.0704 CM -0.0036 | xcp 0.258
+8  kOmegaSSTLM CFD                  20-30  CL 0.4379 CD 0.0704 CM -0.0034 | xcp 0.258
+8  kOmegaSSTLM CFD                  10-30  CL 0.4380 CD 0.0704 CM -0.0035 | xcp 0.258
+== drift (LM): 10-20 vs 20-30 halves and slope per 10 chords over 10-30
+alpha 4 CL: half1 0.2185 half2 0.2177 diff -0.0008 (-0.4%) slope/10 -0.0006
+alpha 4 CD: half1 0.0284 half2 0.0284 diff -0.0000 (-0.1%) slope/10 -0.0000
+alpha 4 CM: half1 0.0075 half2 0.0078 diff +0.0003 (+4.1%) slope/10 0.0002
+alpha 8 CL: half1 0.4382 half2 0.4379 diff -0.0003 (-0.1%) slope/10 -0.0003
+alpha 8 CD: half1 0.0704 half2 0.0704 diff -0.0000 (-0.1%) slope/10 -0.0000
+alpha 8 CM: half1 -0.0036 half2 -0.0034 diff +0.0002 (-4.6%) slope/10 0.0002
+== reversed-flow zones, upper surface (x/c)  [basis mean2 = mean of the two saved snapshots]
+alpha 4 span 0.25 LM           frac 0.47 zones [0.07-0.46;0.93-TE]
+alpha 4 span 0.50 LM           frac 0.37 zones [0.08-0.44]
+alpha 4 span 0.75 LM           frac 0.31 zones [0.10-0.39]
+alpha 8 span 0.25 LM           frac 0.76 zones [0.05-0.78]
+alpha 8 span 0.50 LM           frac 0.62 zones [0.05-0.64]
+alpha 8 span 0.75 LM           frac 0.31 zones [0.05-0.35]
+alpha 4 span 0.25 laminar      frac 0.39 zones [0.07-0.45]
+alpha 4 span 0.50 laminar      frac 0.37 zones [0.08-0.44]
+alpha 4 span 0.75 laminar      frac 0.30 zones [0.10-0.38]
+alpha 8 span 0.25 laminar      frac 0.84 zones [0.05-0.24;0.30-0.47;0.54-TE]
+alpha 8 span 0.50 laminar      frac 0.60 zones [0.05-0.23;0.39-0.79]
+alpha 8 span 0.75 laminar      frac 0.31 zones [0.05-0.16;0.27-0.45]
+== near-surface (h < 0.03 c above upper surface) at mid-span, mean of t = 25 and 30: chord bin: max nut/nu, min gammaInt, mean gammaInt
+alpha 4
+  x/c 0.0-0.1  max nut/nu    0.08   min gammaInt 0.021   mean gammaInt 0.490   max k 0.000674
+  x/c 0.1-0.2  max nut/nu    0.09   min gammaInt 0.021   mean gammaInt 0.113   max k 0.000341
+  x/c 0.2-0.3  max nut/nu    0.11   min gammaInt 0.021   mean gammaInt 0.096   max k 0.00046
+  x/c 0.3-0.4  max nut/nu    0.15   min gammaInt 0.022   mean gammaInt 0.086   max k 0.000427
+  x/c 0.4-0.5  max nut/nu    0.18   min gammaInt 0.022   mean gammaInt 0.061   max k 0.000321
+  x/c 0.5-0.6  max nut/nu    0.18   min gammaInt 0.021   mean gammaInt 0.050   max k 0.000262
+  x/c 0.6-0.7  max nut/nu    0.16   min gammaInt 0.020   mean gammaInt 0.040   max k 0.000195
+  x/c 0.7-0.8  max nut/nu    0.16   min gammaInt 0.020   mean gammaInt 0.034   max k 0.000151
+  x/c 0.8-0.9  max nut/nu    0.31   min gammaInt 0.020   mean gammaInt 0.039   max k 0.000215
+  x/c 0.9-1.0  max nut/nu    0.20   min gammaInt 0.021   mean gammaInt 0.056   max k 0.000115
+alpha 8
+  x/c 0.0-0.1  max nut/nu    3.48   min gammaInt 0.031   mean gammaInt 0.353   max k 0.00808
+  x/c 0.1-0.2  max nut/nu   30.85   min gammaInt 0.078   mean gammaInt 0.655   max k 0.0454
+  x/c 0.2-0.3  max nut/nu   52.27   min gammaInt 0.075   mean gammaInt 0.717   max k 0.0498
+  x/c 0.3-0.4  max nut/nu   60.07   min gammaInt 0.089   mean gammaInt 0.747   max k 0.0493
+  x/c 0.4-0.5  max nut/nu   65.56   min gammaInt 0.108   mean gammaInt 0.766   max k 0.0461
+  x/c 0.5-0.6  max nut/nu   66.92   min gammaInt 0.122   mean gammaInt 0.768   max k 0.0407
+  x/c 0.6-0.7  max nut/nu   66.47   min gammaInt 0.108   mean gammaInt 0.767   max k 0.0374
+  x/c 0.7-0.8  max nut/nu   64.24   min gammaInt 0.092   mean gammaInt 0.762   max k 0.0312
+  x/c 0.8-0.9  max nut/nu   60.53   min gammaInt 0.083   mean gammaInt 0.806   max k 0.026
+  x/c 0.9-1.0  max nut/nu   59.77   min gammaInt 0.812   mean gammaInt 0.979   max k 0.0241
+plots: ['CL_history_alpha4.svg', 'CL_history_alpha8.svg', 'CM_history_alpha4.svg', 'CM_history_alpha8.svg', 'Cp_alpha4_lam_vs_LM.svg', 'Cp_alpha8_lam_vs_LM.svg', 'shear_alpha4_lam_vs_LM.svg', 'shear_alpha8_lam_vs_LM.svg', 'transition_alpha4.svg', 'transition_alpha8.svg']

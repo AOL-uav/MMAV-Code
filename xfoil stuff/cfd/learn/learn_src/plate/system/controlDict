@@ -1,0 +1,72 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| TEACHING CASE (toy). controlDict = run control: which solver, how long, how often to write. |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;           // file-format version; leave alone
+    format      ascii;         // this file is plain text
+    class       dictionary;    // a dictionary of settings
+    object      controlDict;   // fixed name the solver looks for
+}
+
+application     pimpleFoam;    // which solver to run (the Allrun script calls it by name). Wrong name = "command not found"
+
+startFrom       startTime;     // where to start: from the time given below (alternative: latestTime = restart from the newest saved folder)
+startTime       0;             // simulation time at the start. The initial fields are read from the folder named 0
+stopAt          endTime;       // when to stop: at endTime below (alternatives: writeNow, nextWrite)
+endTime         20;            // stop when simulation time reaches this. Here 1 time unit = one chord length travelled at free-stream speed, so 20 chord passages. Bigger = longer run
+
+deltaT          0.001;         // first time step. Because adjustTimeStep is on, this is only the starting value; it grows by itself up to maxCo / maxDeltaT
+adjustTimeStep  yes;           // let the solver pick the step so the Courant number stays at or below maxCo. "no" = fixed deltaT (can blow up if too big)
+maxCo           1;             // largest allowed Courant number (cell-crossing fraction per step). Raise it and the run is faster but less stable. The big validation case uses 1.5
+maxDeltaT       0.02;          // never take a step bigger than this, even if the Courant number would allow it
+
+writeControl    adjustableRunTime; // when to save fields: at set simulation times, and the solver adjusts the step so it lands exactly on them
+writeInterval   5;             // save every 5 time units, i.e. folders 5, 10, 15, 20. Smaller = more folders and more disk
+purgeWrite      0;             // 0 = keep every saved folder. 2 would keep only the last two (what the big case does to save disk)
+writeFormat     ascii;         // save fields as text you can read. "binary" is smaller and faster
+writePrecision  8;             // digits written for numbers in ascii files
+timeFormat      general;       // how time-folder names are written (5, 10, 0.5 ...)
+timePrecision   6;             // digits kept in time-folder names
+runTimeModifiable true;        // re-read the dictionaries while running, so you can edit e.g. writeInterval mid-run and it takes effect
+
+// functions = extra calculations done on the fly, after every time step, with no change to the solver
+functions
+{
+    forceCoeffs1           // our name for this calculation. Output goes to postProcessing/forceCoeffs1/0/coefficient.dat
+    {
+        type            forceCoeffs;   // integrate pressure + viscous force over the patch and turn it into dimensionless coefficients
+        libs            (forces);      // the library that contains it; if missing, "unknown function object" error
+        writeControl    timeStep;      // evaluate every N time steps ...
+        writeInterval   1;             // ... N = 1, i.e. every step, so you can watch forces settle
+        patches         (plate);       // which boundary patch to integrate over. Must match a patch name in blockMeshDict. Typo = "cannot find patch"
+        rho             rhoInf;        // incompressible solver has no density field: use the constant rhoInf below
+        rhoInf          1;             // density used. Pressure in this solver is "p / rho", so the value 1 makes the forces come out right
+        liftDir         (-0.06975647 0.99756405 0);   // direction that counts as lift: perpendicular to the free stream (inflow is tilted 4 degrees, see 0/U)
+        dragDir         (0.99756405 0.06975647 0);    // direction that counts as drag: along the free stream. Change the angle in 0/U and you must change these two too
+        CofR            (0.25 0 0);    // centre of rotation for the moment: the quarter-chord point (x = 0.25, y = 0)
+        pitchAxis       (0 0 -1);      // moment is taken about this axis. In this 2D case x points to the tail, y up; axis -z makes NOSE-UP moment positive (same sign convention as the 3D validation case)
+        magUInf         1;             // free-stream speed used to make coefficients dimensionless
+        lRef            1;             // reference length for the moment coefficient: the chord
+        Aref            0.1;           // reference area = chord (1) x domain thickness in z (0.1). Wrong value scales CL, CD, CM all together
+    }
+
+    forceCoeffsMid         // the same calculation with the moment taken about mid-chord: a sign check, see README
+    {
+        type            forceCoeffs;
+        libs            (forces);
+        writeControl    timeStep;
+        writeInterval   1;
+        patches         (plate);
+        rho             rhoInf;
+        rhoInf          1;
+        liftDir         (-0.06975647 0.99756405 0);
+        dragDir         (0.99756405 0.06975647 0);
+        CofR            (0.5 0 0);     // only difference: moment about x = 0.5
+        pitchAxis       (0 0 -1);
+        magUInf         1;
+        lRef            1;
+        Aref            0.1;
+    }
+}
+// ************************************************************************* //

@@ -1,0 +1,45 @@
+PLOP
+G
+
+LOAD foil.dat
+PANE
+PSAV paneled.dat
+OPER
+VISC 80000
+VPAR
+N 5
+
+ITER 300
+PACC
+polar_Re80000.dat
+
+ALFA 0
+INIT
+ASEQ 0 8 0.5
+PACC
+Re 85000
+PACC
+polar_Re85000.dat
+
+ASEQ 8 0 -0.5
+PACC
+Re 90000
+PACC
+polar_Re90000.dat
+
+ASEQ 0 8 0.5
+PACC
+Re 95000
+PACC
+polar_Re95000.dat
+
+ASEQ 8 0 -0.5
+PACC
+Re 100000
+PACC
+polar_Re100000.dat
+
+ASEQ 0 8 0.5
+PACC
+
+QUIT

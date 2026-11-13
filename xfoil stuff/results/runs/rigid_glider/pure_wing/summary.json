@@ -1,0 +1,1643 @@
+{
+ "assumptions": [
+  "AVL is inviscid and linear in alpha for planar/dihedral untwisted symmetric-section wings; it is run once per span-normalised shape (b=1 m) and scaled.",
+  "2D XFOIL section data (cm about local quarter chord, cd, alpha_2D at matched local cl and Re) are applied STREAMWISE on the swept wing with no sweep (cos Lambda) correction.",
+  "No spanwise boundary-layer flow, no tip/centre-section viscous effects, no interference, no 3D separation; each strip is independent 2D.",
+  "Strip Re = V * local chord / nu with V = sqrt(2 (W/S)/(rho CL)); rho=1.225, nu=1.5e-5. L = W (small glide angle, cos(gamma)~1).",
+  "Section cm acts as a pure couple (streamwise sections) added to the AVL moment about the CG: Cm_visc = sum(cm c^2 dy)/(S MAC) over both halves.",
+  "Level 1: the AVL loading shape (cl(y)/CL) is unchanged by viscosity; alpha_visc correction = area-weighted (alpha_2D,visc(cl) - alpha_2D,inviscid XFOIL(cl)).",
+  "Level 2: viscous decambering via per-node AINC offsets = -(alpha_visc - alpha_inv_XFOIL)(cl, Re) with under-relaxation; AVL slope (thin-plate 2 pi) differs from XFOIL inviscid thick-section slope by ~ 2 pi*0.77 t, so the AVL strip lift curve is not identical to XFOIL inviscid.",
+  "Sections symmetric: negative-cl strips use odd symmetry (cm, alpha odd; cd even).",
+  "Attached-flow branch = the cl-alpha crossing nearest the inviscid alpha; crossings only between adjacent stored alphas <= 1 deg apart; Re interpolation is linear in log Re between adjacent stored Re only when BOTH are valid; no Re extrapolation; no gap filling. Otherwise the strip is UNCOVERED.",
+  "Uncovered strips contribute zero viscous cm, are excluded from CDp and the alpha correction (reported through the coverage fraction); trims with coverage < 0.9 are flagged, not results.",
+  "XFOIL has no free-stream turbulence model other than Ncrit; Ncrit 5 vs 9 is treated as an uncertainty band, not a measured quantity. Laminar separation bubbles at Re<40k make polars jagged; neither AVL nor XFOIL is ground truth.",
+  "Weight/mass/CG are exploratory parameters (W/S, SM), not measured.  No twist, washout, reflex, tail, fuselage, or fins.",
+  "Cm_alpha and static margin of the AVL-only wing are Re-independent; 'coupled static margin' = -dCm/dCL, along the constant-W/S glide line and at fixed speed."
+ ],
+ "band": [
+  0.15,
+  0.6
+ ],
+ "coverage_min": 0.9,
+ "jagged_clean_max": 0.1,
+ "n_curves": 7360,
+ "n_shapes": 46,
+ "n_root_rows": 59102,
+ "stable_inband_any_SM>=0": {
+  "cases": 3680,
+  "with_N5": 2718,
+  "with_N9": 3312,
+  "with_both": 2715
+ },
+ "top_both_any_SM>=0": [
+  {
+   "shape": "AR4.5_sw35_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.1
+   ],
+   "n_sm_points": 21,
+   "cg_width_mm": 7.07,
+   "cg_width_pct_mac": 10.5
+  },
+  {
+   "shape": "AR3_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.74,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR3_sw20_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.74,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR3_sw20_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.67,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR3_sw30_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.74,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR3_sw30_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.67,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR3_sw35_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.74,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR3_sw35_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.67,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR4.5_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 4.49,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR4.5_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.74,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR4.5_sw10_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 4.44,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR4.5_sw10_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.67,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR4.5_sw20_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 4.49,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR4.5_sw20_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 6.74,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR4.5_sw20_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.0,
+    0.095
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 4.44,
+   "cg_width_pct_mac": 10.0
+  }
+ ],
+ "ws_extent_both_any_SM>=0_top": [
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0004",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0004",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0004",
+    0.4
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0004",
+    0.5
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.4
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0008",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.7_di0",
+    "NACA_0004",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.7_di0",
+    "NACA_0004",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ]
+ ],
+ "both_by_section_any_SM>=0": {
+  "NACA_0004": 849,
+  "NACA_0006": 858,
+  "NACA_0008": 680,
+  "NACA_0010": 328
+ },
+ "both_by_span_any_SM>=0": {
+  "0.2": 736,
+  "0.3": 743,
+  "0.4": 668,
+  "0.5": 568
+ },
+ "both_by_ws_any_SM>=0": {
+  "2": 567,
+  "4": 594,
+  "6": 550,
+  "8": 530,
+  "12": 474
+ },
+ "stable_inband_any_SM>=0.025": {
+  "cases": 3680,
+  "with_N5": 2445,
+  "with_N9": 3195,
+  "with_both": 2442
+ },
+ "top_both_any_SM>=0.025": [
+  {
+   "shape": "AR6_sw20_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.025,
+    0.12
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 3.33,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR6_sw30_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.025,
+    0.12
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 3.33,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR6_sw35_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.025,
+    0.12
+   ],
+   "n_sm_points": 20,
+   "cg_width_mm": 3.33,
+   "cg_width_pct_mac": 10.0
+  },
+  {
+   "shape": "AR4.5_sw30_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.03,
+    0.12
+   ],
+   "n_sm_points": 19,
+   "cg_width_mm": 4.22,
+   "cg_width_pct_mac": 9.5
+  },
+  {
+   "shape": "AR4.5_sw35_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.03,
+    0.12
+   ],
+   "n_sm_points": 19,
+   "cg_width_mm": 4.22,
+   "cg_width_pct_mac": 9.5
+  },
+  {
+   "shape": "AR6_sw20_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.025,
+    0.115
+   ],
+   "n_sm_points": 19,
+   "cg_width_mm": 4.75,
+   "cg_width_pct_mac": 9.5
+  },
+  {
+   "shape": "AR6_sw30_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.025,
+    0.115
+   ],
+   "n_sm_points": 19,
+   "cg_width_mm": 4.75,
+   "cg_width_pct_mac": 9.5
+  },
+  {
+   "shape": "AR6_sw35_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.025,
+    0.115
+   ],
+   "n_sm_points": 19,
+   "cg_width_mm": 4.75,
+   "cg_width_pct_mac": 9.5
+  },
+  {
+   "shape": "AR4.5_sw10_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.035,
+    0.12
+   ],
+   "n_sm_points": 18,
+   "cg_width_mm": 4.0,
+   "cg_width_pct_mac": 9.0
+  },
+  {
+   "shape": "AR4.5_sw20_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.035,
+    0.12
+   ],
+   "n_sm_points": 18,
+   "cg_width_mm": 4.0,
+   "cg_width_pct_mac": 9.0
+  },
+  {
+   "shape": "AR6_sw10_tp1_di0",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.035,
+    0.12
+   ],
+   "n_sm_points": 18,
+   "cg_width_mm": 3.0,
+   "cg_width_pct_mac": 9.0
+  },
+  {
+   "shape": "AR6_sw10_tp1_di4",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.035,
+    0.12
+   ],
+   "n_sm_points": 18,
+   "cg_width_mm": 3.0,
+   "cg_width_pct_mac": 9.0
+  },
+  {
+   "shape": "AR6_sw10_tp1_di8",
+   "section": "NACA_0010",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.035,
+    0.12
+   ],
+   "n_sm_points": 18,
+   "cg_width_mm": 3.0,
+   "cg_width_pct_mac": 9.0
+  },
+  {
+   "shape": "AR6_sw10_tp1_di8",
+   "section": "NACA_0010",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.035,
+    0.115
+   ],
+   "n_sm_points": 17,
+   "cg_width_mm": 4.25,
+   "cg_width_pct_mac": 8.5
+  },
+  {
+   "shape": "AR4.5_sw35_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.025,
+    0.1
+   ],
+   "n_sm_points": 16,
+   "cg_width_mm": 5.39,
+   "cg_width_pct_mac": 8.0
+  }
+ ],
+ "ws_extent_both_any_SM>=0.025_top": [
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0004",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0004",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0004",
+    0.4
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.7_di0",
+    "NACA_0004",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.7_di0",
+    "NACA_0004",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.7_di0",
+    "NACA_0004",
+    0.4
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.7_di0",
+    "NACA_0004",
+    0.5
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.7_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ]
+ ],
+ "both_by_section_any_SM>=0.025": {
+  "NACA_0004": 843,
+  "NACA_0006": 807,
+  "NACA_0008": 551,
+  "NACA_0010": 241
+ },
+ "both_by_span_any_SM>=0.025": {
+  "0.2": 694,
+  "0.3": 668,
+  "0.4": 591,
+  "0.5": 489
+ },
+ "both_by_ws_any_SM>=0.025": {
+  "2": 531,
+  "4": 547,
+  "6": 513,
+  "8": 465,
+  "12": 386
+ },
+ "stable_inband_clean_SM>=0": {
+  "cases": 3680,
+  "with_N5": 2042,
+  "with_N9": 814,
+  "with_both": 398
+ },
+ "top_both_clean_SM>=0": [
+  {
+   "shape": "AR6_sw10_tp1_di4",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 6,
+   "sm_range": [
+    0.085,
+    0.095
+   ],
+   "n_sm_points": 3,
+   "cg_width_mm": 0.5,
+   "cg_width_pct_mac": 1.5
+  },
+  {
+   "shape": "AR4.5_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.45,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw10_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.44,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw20_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.45,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw20_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.44,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw30_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.45,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw30_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.44,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw35_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.44,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.34,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 6,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.34,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.51,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 6,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.33,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.5,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw20_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.34,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw20_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 6,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.34,
+   "cg_width_pct_mac": 1.0
+  }
+ ],
+ "ws_extent_both_clean_SM>=0_top": [
+  [
+   [
+    "AR6_sw20_tp0.7_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR6_sw30_tp0.7_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR6_sw35_tp0.7_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR3_sw20_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR3_sw30_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR3_sw35_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR4.5_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR4.5_sw20_tp0.4_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR6_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.4
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ]
+ ],
+ "both_by_section_clean_SM>=0": {
+  "NACA_0004": 6,
+  "NACA_0006": 339,
+  "NACA_0008": 53
+ },
+ "both_by_span_clean_SM>=0": {
+  "0.2": 166,
+  "0.3": 133,
+  "0.4": 49,
+  "0.5": 50
+ },
+ "both_by_ws_clean_SM>=0": {
+  "2": 124,
+  "4": 88,
+  "6": 107,
+  "8": 36,
+  "12": 43
+ },
+ "stable_inband_clean_SM>=0.025": {
+  "cases": 3680,
+  "with_N5": 1390,
+  "with_N9": 814,
+  "with_both": 398
+ },
+ "top_both_clean_SM>=0.025": [
+  {
+   "shape": "AR6_sw10_tp1_di4",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 6,
+   "sm_range": [
+    0.085,
+    0.095
+   ],
+   "n_sm_points": 3,
+   "cg_width_mm": 0.5,
+   "cg_width_pct_mac": 1.5
+  },
+  {
+   "shape": "AR4.5_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.45,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw10_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.44,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw20_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.45,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw20_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.44,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw30_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.45,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw30_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.44,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR4.5_sw35_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.44,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.34,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 6,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.34,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.51,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 6,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.33,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw10_tp1_di0",
+   "section": "NACA_0008",
+   "span_m": 0.3,
+   "ws": 2,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.5,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw20_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 4,
+   "sm_range": [
+    0.085,
+    0.09
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.34,
+   "cg_width_pct_mac": 1.0
+  },
+  {
+   "shape": "AR6_sw20_tp0.7_di0",
+   "section": "NACA_0008",
+   "span_m": 0.2,
+   "ws": 6,
+   "sm_range": [
+    0.09,
+    0.095
+   ],
+   "n_sm_points": 2,
+   "cg_width_mm": 0.34,
+   "cg_width_pct_mac": 1.0
+  }
+ ],
+ "ws_extent_both_clean_SM>=0.025_top": [
+  [
+   [
+    "AR6_sw20_tp0.7_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR6_sw30_tp0.7_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR6_sw35_tp0.7_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8,
+    12
+   ]
+  ],
+  [
+   [
+    "AR3_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR3_sw20_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR3_sw30_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR3_sw35_tp0.4_di0",
+    "NACA_0006",
+    0.2
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR4.5_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR4.5_sw20_tp0.4_di0",
+    "NACA_0006",
+    0.3
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ],
+  [
+   [
+    "AR6_sw10_tp0.4_di0",
+    "NACA_0006",
+    0.4
+   ],
+   [
+    2,
+    4,
+    6,
+    8
+   ]
+  ]
+ ],
+ "both_by_section_clean_SM>=0.025": {
+  "NACA_0004": 6,
+  "NACA_0006": 339,
+  "NACA_0008": 53
+ },
+ "both_by_span_clean_SM>=0.025": {
+  "0.2": 166,
+  "0.3": 133,
+  "0.4": 49,
+  "0.5": 50
+ },
+ "both_by_ws_clean_SM>=0.025": {
+  "2": 124,
+  "4": 88,
+  "6": 107,
+  "8": 36,
+  "12": 43
+ },
+ "clean_stable_width_stats_SM_ge_0p025": {
+  "N5": {
+   "cases": 1390,
+   "median_width_pct_mac": 1.0,
+   "max_width_pct_mac": 4.5,
+   "median_width_mm": 0.8333333333333333,
+   "max_width_mm": 7.07482993197279,
+   "sm_min": 0.025,
+   "sm_max": 0.095,
+   "by_section": {
+    "NACA_0004": 397,
+    "NACA_0006": 750,
+    "NACA_0008": 131,
+    "NACA_0010": 112
+   }
+  },
+  "N9": {
+   "cases": 814,
+   "median_width_pct_mac": 0.5,
+   "max_width_pct_mac": 3.5,
+   "median_width_mm": 0.44905805459438686,
+   "max_width_mm": 2.694348327566321,
+   "sm_min": 0.03,
+   "sm_max": 0.145,
+   "by_section": {
+    "NACA_0004": 14,
+    "NACA_0006": 514,
+    "NACA_0008": 278,
+    "NACA_0010": 8
+   }
+  },
+  "both": {
+   "cases": 398,
+   "median_width_pct_mac": 0.5,
+   "max_width_pct_mac": 1.5,
+   "median_width_mm": 0.33679354094579006,
+   "max_width_mm": 0.707482993197279,
+   "sm_min": 0.03,
+   "sm_max": 0.095,
+   "by_section": {
+    "NACA_0004": 6,
+    "NACA_0006": 339,
+    "NACA_0008": 53,
+    "NACA_0010": 0
+   }
+  }
+ },
+ "clean_both_ws_extent_histogram": {
+  "4": 20,
+  "2": 60,
+  "1": 75,
+  "3": 36,
+  "5": 3
+ },
+ "discrete_stable_inband_valid_rows_SM_ge_0": 14442,
+ "discrete_stable_inband_valid_clean_rows_SM_ge_0": 1856,
+ "good_root_section_cell": {
+  "mean_cm_sec": 0.008086745967888052,
+  "frac_cm_positive": 0.9419747957346628,
+  "frac_dcmdcl_sec_negative": 0.9574851128652542,
+  "mean_dcm_dcl_sec": -0.08236057032381382
+ },
+ "diagnosis_by_sm": {
+  "SM=0.025": {
+   "STABLE": 536,
+   "no root in band (cm_extra/CL crosses SM outside band or on uncovered CL)": 398,
+   "roots exist but unstable (dCm/dCL >= 0: positive cm coincides with destabilising dcm/dcl)": 103,
+   "section cm positive but too weak/absent at this SM (no root in band)": 1185,
+   "stable only on jagged (steep/multibranch) data": 4823,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 96,
+   "section cm nose-down (<=0) at all covered band CL": 219
+  },
+  "SM=0.05": {
+   "section cm positive but too weak/absent at this SM (no root in band)": 3515,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 96,
+   "STABLE": 470,
+   "roots exist but unstable (dCm/dCL >= 0: positive cm coincides with destabilising dcm/dcl)": 60,
+   "stable only on jagged (steep/multibranch) data": 2888,
+   "no root in band (cm_extra/CL crosses SM outside band or on uncovered CL)": 112,
+   "section cm nose-down (<=0) at all covered band CL": 219
+  },
+  "SM=0.1": {
+   "section cm positive but too weak/absent at this SM (no root in band)": 6118,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 96,
+   "stable only on jagged (steep/multibranch) data": 699,
+   "STABLE": 191,
+   "no root in band (cm_extra/CL crosses SM outside band or on uncovered CL)": 24,
+   "roots exist but unstable (dCm/dCL >= 0: positive cm coincides with destabilising dcm/dcl)": 13,
+   "section cm nose-down (<=0) at all covered band CL": 219
+  }
+ },
+ "diagnosis_sm0p05_by_section_ncrit": {
+  "NACA_0004|N5": {
+   "section cm positive but too weak/absent at this SM (no root in band)": 908,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 12
+  },
+  "NACA_0004|N9": {
+   "section cm positive but too weak/absent at this SM (no root in band)": 908,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 12
+  },
+  "NACA_0006|N5": {
+   "STABLE": 404,
+   "roots exist but unstable (dCm/dCL >= 0: positive cm coincides with destabilising dcm/dcl)": 20,
+   "section cm positive but too weak/absent at this SM (no root in band)": 191,
+   "stable only on jagged (steep/multibranch) data": 293,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 12
+  },
+  "NACA_0006|N9": {
+   "STABLE": 46,
+   "roots exist but unstable (dCm/dCL >= 0: positive cm coincides with destabilising dcm/dcl)": 20,
+   "section cm positive but too weak/absent at this SM (no root in band)": 22,
+   "stable only on jagged (steep/multibranch) data": 820,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 12
+  },
+  "NACA_0008|N5": {
+   "no root in band (cm_extra/CL crosses SM outside band or on uncovered CL)": 32,
+   "roots exist but unstable (dCm/dCL >= 0: positive cm coincides with destabilising dcm/dcl)": 4,
+   "section cm positive but too weak/absent at this SM (no root in band)": 461,
+   "stable only on jagged (steep/multibranch) data": 411,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 12
+  },
+  "NACA_0008|N9": {
+   "no root in band (cm_extra/CL crosses SM outside band or on uncovered CL)": 32,
+   "roots exist but unstable (dCm/dCL >= 0: positive cm coincides with destabilising dcm/dcl)": 4,
+   "section cm positive but too weak/absent at this SM (no root in band)": 93,
+   "stable only on jagged (steep/multibranch) data": 779,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 12
+  },
+  "NACA_0010|N5": {
+   "STABLE": 20,
+   "no root in band (cm_extra/CL crosses SM outside band or on uncovered CL)": 24,
+   "roots exist but unstable (dCm/dCL >= 0: positive cm coincides with destabilising dcm/dcl)": 4,
+   "section cm nose-down (<=0) at all covered band CL": 19,
+   "section cm positive but too weak/absent at this SM (no root in band)": 721,
+   "stable only on jagged (steep/multibranch) data": 120,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 12
+  },
+  "NACA_0010|N9": {
+   "no root in band (cm_extra/CL crosses SM outside band or on uncovered CL)": 24,
+   "roots exist but unstable (dCm/dCL >= 0: positive cm coincides with destabilising dcm/dcl)": 8,
+   "section cm nose-down (<=0) at all covered band CL": 200,
+   "section cm positive but too weak/absent at this SM (no root in band)": 211,
+   "stable only on jagged (steep/multibranch) data": 465,
+   "uncovered: <90% of area inside database Re/cl in the whole band": 12
+  }
+ },
+ "level2_clean_counts": {
+  "N5_clean L1 False L2 False": 2461,
+  "N5_clean L1 False L2 True": 22,
+  "N5_clean L1 True L2 False": 11,
+  "N5_clean L1 True L2 True": 66,
+  "N9_clean L1 False L2 False": 2523,
+  "N9_clean L1 False L2 True": 14,
+  "N9_clean L1 True L2 False": 9,
+  "N9_clean L1 True L2 True": 14,
+  "both_ncrit_clean L1 False L2 False": 2553,
+  "both_ncrit_clean L1 False L2 True": 5,
+  "both_ncrit_clean L1 True L2 False": 1,
+  "both_ncrit_clean L1 True L2 True": 1
+ },
+ "level2": {
+  "curves": 640,
+  "converged_cl_points": 30254,
+  "total_cl_points": 30340,
+  "frac_converged": 0.9971654581410679,
+  "max_iterations_seen": 60,
+  "stable_inband_L1_vs_L2_counts": {
+   "N5|L1=False|L2=False": 2387,
+   "N5|L1=False|L2=True": 37,
+   "N5|L1=True|L2=False": 15,
+   "N5|L1=True|L2=True": 441,
+   "N9|L1=False|L2=False": 2016,
+   "N9|L1=False|L2=True": 43,
+   "N9|L1=True|L2=False": 60,
+   "N9|L1=True|L2=True": 761
+  }
+ }
+}

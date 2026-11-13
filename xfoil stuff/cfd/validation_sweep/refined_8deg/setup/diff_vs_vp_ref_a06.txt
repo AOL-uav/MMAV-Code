@@ -1,0 +1,30 @@
+##### diff system
+diff -r -b vp_ref_a06/system/decomposeParDict vp_ref_a08/system/decomposeParDict
+8,9c8
+< numberOfSubdomains 12;
+< method scotch;
+---
+> numberOfSubdomains 8; method scotch;
+Only in vp_ref_a06/system: mapFieldsDict
+diff -r -b vp_ref_a06/system/snappyHexMeshDict vp_ref_a08/system/snappyHexMeshDict
+8,9c8,9
+<   box7 { type rotatedBox; span (0.24 1.72 0.0414); origin (-0.038411 -0.100000 0.030313); e1 (0.9945218953682733 0 -0.10452846326765347); e3 (0.10452846326765347 0 0.9945218953682733); }
+<   box6 { type rotatedBox; span (0.92 1.75 0.0714); origin (-0.068247 -0.100000 0.033449); e1 (0.9945218953682733 0 -0.10452846326765347); e3 (0.10452846326765347 0 0.9945218953682733); }
+---
+>   box7 { type rotatedBox; span (0.24 1.72 0.0414); origin (-0.037178 -0.100000 0.040360); e1 (0.9902680687415704 0 -0.13917310096006544); e3 (0.13917310096006544 0 0.9902680687415704); }
+>   box6 { type rotatedBox; span (0.92 1.75 0.0714); origin (-0.066886 -0.100000 0.044535); e1 (0.9902680687415704 0 -0.13917310096006544); e3 (0.13917310096006544 0 0.9902680687415704); }
+##### diff 0.orig
+(identical)
+##### diff constant/transportProperties
+(identical)
+##### diff constant/turbulenceProperties
+(identical)
+##### diff geometry/profile.txt
+(identical)
+##### files in system:
+blockMeshDict controlDict decomposeParDict fvSchemes fvSolution mapFieldsDict snappyHexMeshDict 
+blockMeshDict controlDict decomposeParDict fvSchemes fvSolution snappyHexMeshDict 
+#### STL differs:
+different (rotation)
+#### a06 decompose originally:
+numberOfSubdomains 12;

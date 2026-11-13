@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "<MAV-2026>\Codes\rigid_glider\sheet_builder.py", line 2875, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "<MAV-2026>\Codes\rigid_glider\sheet_builder.py", line 2862, in main
+    res = build_kit(cfg, cpath.parent)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<MAV-2026>\Codes\rigid_glider\sheet_builder.py", line 2124, in build_kit
+    rail_shells, rail_info = build_rail(cfg, P, wing, outline, win_len, station)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<MAV-2026>\Codes\rigid_glider\sheet_builder.py", line 1828, in build_rail
+    half_web = mesh_regions(regions_web)                          # coordinates (x, z, w = y)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<MAV-2026>\Codes\rigid_glider\sheet_builder.py", line 366, in mesh_regions
+    for t in triangulate(r["loops"][0], r["loops"][1:]):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<MAV-2026>\Codes\rigid_glider\sheet_builder.py", line 187, in triangulate
+    ring = _bridge_holes(outer, holes) if holes else list(outer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<MAV-2026>\Codes\rigid_glider\sheet_builder.py", line 177, in _bridge_holes
+    raise ValueError("hole bridge: no visible ring vertex")
+ValueError: hole bridge: no visible ring vertex

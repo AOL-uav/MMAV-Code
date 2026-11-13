@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMAV glider: findings so far</title>
+<style>
+:root{color-scheme:dark;--bg:#14181d;--sheet:#1c2229;--ink:#dde3ea;--ink2:#9aa7b4;--rule:#333c46;--wing:#243242;
+  --pure:#6fa8e6;--lip:#e89a55;--tail:#6cc08b;--pureL:#2c4763;--lipL:#5b3f26;--tailL:#2a4c38;--link:#7fb4ff;--thead:#262e37}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Segoe UI",system-ui,sans-serif}
+main{max-width:900px;margin:0 auto;padding:40px 20px 72px;display:flex;flex-direction:column;gap:40px}
+h1{font-size:32px;line-height:1.15;margin:0 0 10px;text-wrap:balance}
+h2{font-size:22px;line-height:1.25;margin:0;text-wrap:balance}
+h3{font-size:16px;margin:0}
+p{margin:0;max-width:66ch}
+section{display:flex;flex-direction:column;gap:14px}
+.sub{color:var(--ink2)}
+.note{border-left:3px solid var(--lip);padding:2px 0 2px 12px;color:var(--ink2);font-size:15px;max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{background:var(--sheet);border:1px solid var(--rule);padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card p{font-size:15px}
+.card svg,figure svg{display:block;width:100%;height:auto}
+figure{margin:0;background:var(--sheet);border:1px solid var(--rule);padding:16px;display:flex;flex-direction:column;gap:10px}
+figcaption{font-size:14.5px;color:var(--ink2)}
+ul,ol{margin:0;padding-left:22px;max-width:68ch;display:flex;flex-direction:column;gap:8px}
+.rank{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+a{color:var(--link)}
+small{color:var(--ink2);font-size:14px;line-height:1.5;display:block;max-width:74ch}
+svg text{font:12px "Segoe UI",system-ui,sans-serif;fill:var(--ink)}
+svg text.m{fill:var(--ink2)}
+.w{fill:var(--wing);stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
+.ax{stroke:var(--ink2);stroke-width:1;fill:none}
+.gr{stroke:var(--rule);stroke-width:1}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Can a very small unpowered flying wing glide steadily on its own?</h1>
+  <p class="sub">Where the MMAV glider study stands on 11 October 2026, in plain terms.</p>
+</header>
+
+<p class="note">Everything below comes from computer models and published wind-tunnel papers. Nothing has been built or flown yet. Read the numbers as estimates.</p>
+
+<section>
+  <h2>The short version</h2>
+  <ol>
+    <li>A plain flying wing can probably glide, but only if its balance point is placed to within about 2 mm. That is too tight to count on.</li>
+    <li>Adding a small bent-up lip on the trailing edge, or a small tail, loosens that to roughly 6–12 mm.</li>
+    <li>The model cannot tell us whether the lip or the tail is better. Under its strictest test, the lip is the only one of the three that keeps any room at all (1–7 mm).</li>
+    <li>So the next step is one wing that can be flown all three ways, and letting flight tests decide. That wing is now chosen: see <a href="article1/index.html">the Article 1 drawings</a>.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Three ways to make it stable</h2>
+  <p>Same 400 mm wing in each picture, seen from above with the nose up. They are listed in order of preference: fewest parts first.</p>
+  <div class="grid" id="arch"></div>
+</section>
+
+<section>
+  <h2>What the model says</h2>
+  <p>The useful question is: how far can the balance point be off before the glider stops flying steadily? More room means it survives printing errors and sloppy launches.</p>
+  <figure>
+    <svg id="bars" viewBox="0 0 640 250" role="img" aria-label="Room for balance-point error: pure wing about 2 mm, lip 6 to 12 mm, tail 7 to 11 mm"></svg>
+    <figcaption>Room for error in balance-point position, for the 400 mm candidate wing at a light build of about 30 g. Solid bar: the low estimate. Pale bar: up to the high estimate. The lip and the tail overlap almost completely.</figcaption>
+  </figure>
+  <ul>
+    <li><strong>Pure wing: about 2 mm.</strong> If the build comes out heavy (about 46 g where 24 g was hoped), it drops to about half a millimetre.</li>
+    <li><strong>Lip: 6 to 12 mm,</strong> depending on which of three reasonable ways the lip is modelled.</li>
+    <li><strong>Tail: 7 to 11 mm,</strong> depending on how well a very small tail really works.</li>
+    <li><strong>All three need a small vertical fin.</strong> The bare wing has almost no tendency to point into the airflow.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Why the model cannot settle it</h2>
+  <p>At this size the air behaves in ways the standard tools predict poorly. Each option leans on a different thing nobody has measured.</p>
+  <div class="grid">
+    <div class="card"><h3 style="color:var(--pure)">Pure wing</h3><p>Depends on a small, fragile airflow effect on the upper surface. If that effect is slightly different in reality, the 2 mm disappears.</p></div>
+    <div class="card"><h3 style="color:var(--lip)">Lip</h3><p>Depends on how much "bite" a few-millimetre lip has in slow, sticky air. The model says it could keep anywhere from none to about half of its ideal effect.</p></div>
+    <div class="card"><h3 style="color:var(--tail)">Tail</h3><p>Depends on how well a 25 mm wide tail works while sitting in the disturbed air behind the wing.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>What about a plain flat plate, with no airfoil shape?</h2>
+  <p>Our model cannot answer this. We tried: the airfoil tool gave flat-plate results that changed with small details of how the trailing edge was drawn and that contradict wind-tunnel measurements, so we are not using them. Published wind-tunnel tests on flat-plate wings point to four things.</p>
+  <ul>
+    <li><strong>Flat plates behave consistently.</strong> Tests found thin plates were barely affected by changes in speed or air turbulence, while a conventional airfoil was badly affected at small scale. No sudden jumps or stickiness in the forces were seen. Consistency is exactly what repeatable flight needs.</li>
+    <li><strong>A flat plate does not rescue the pure wing.</strong> Its turning force stays near zero until it stalls, so on its own it still has no reason to settle into a lifting glide. It still needs the lip or the tail.</li>
+    <li><strong>It has less lift to spare.</strong> Flat-plate wings stalled at a lift level only a little above where our glider is meant to fly. The glider would need to fly toward the faster, flatter end of its range.</li>
+    <li><strong>The balance-sensitive point moves around.</strong> In the tests it shifted by about 7% of the wing's width as the angle changed. At our size that is about 6 mm, as large as the room for error the model predicts. This is a reason to trust flight tests over the model's millimetres.</li>
+  </ul>
+  <p class="sub">Caution: those tests were on unswept wings at somewhat higher speeds than ours, and none measured a lip on a plate. A flat plate looks like a sensible choice for the tail surface and a fair alternative for the wing, and it is far easier to make consistently. The 20 cm printed benchmark gliders are the quickest way to find out.</p>
+</section>
+
+<section>
+  <h2>What happens next</h2>
+  <ol>
+    <li>Weigh the printed 20 cm benchmark gliders and find their balance point. Weight matters more than anything else for the pure wing.</li>
+    <li>Decided on 11 October: a 400 mm swept, tapered wing with small fins at the tips, built first from flat sheet on a printed centre piece, then printed with an airfoil shape.</li>
+    <li>Build it with a sliding weight, swappable trailing-edge strips, and a clip-on tail.</li>
+    <li>Fly it clean first, then with the lip, then with the tail, moving the balance point 1 mm at a time and watching for repeatable glides.</li>
+  </ol>
+</section>
+
+<small>
+  Detail: <a href="figures.html">all model plots</a> · report in <code>rigid_glider/ARCH_COMPARISON.md</code>. Model numbers are for candidate wing P07 (aspect ratio 4.5, 25° sweep, NACA 0006) at 8 N/m².<br>
+  Flat-plate sources: Ananda, Sukumar and Selig, <a href="https://m-selig.web.engr.illinois.edu/pubs/AnandaSukumarSelig-2015-AeroSciTech-LowReWings.pdf">Aerospace Science and Technology 42 (2015)</a>, flat-plate wings at Reynolds number 60,000–160,000; Laitone, Experiments in Fluids 23 (1997), wings below Reynolds number 70,000; Pelletier and Mueller, Journal of Aircraft 37(5) (2000). The last two were read from abstracts only. Our glider is expected at roughly 25,000–60,000 across the wing.
+</small>
+</main>
+
+<script>
+const S=200,f=v=>v.toFixed(1);
+const cr=118.5,ct=59.3,t=Math.tan(25*Math.PI/180);
+const c=y=>cr+(ct-cr)*Math.abs(y)/S, le=y=>0.25*cr+Math.abs(y)*t-0.25*c(y), te=y=>le(y)+c(y);
+const outline=[[-S,le(S)],[0,0],[S,le(S)],[S,te(S)],[0,cr],[-S,te(S)]].map(p=>p.map(f).join(',')).join(' ');
+const strip=s=>{const a=80*s,b=200*s;return `<polygon points="${[[a,te(80)-0.2*c(80)],[b,te(200)-0.2*c(200)],[b,te(200)],[a,te(80)]].map(p=>p.map(f).join(',')).join(' ')}" fill="var(--lip)" stroke="var(--ink)" stroke-width=".8"/>`};
+const pod=`<rect x="-8" y="-30" width="16" height="64" rx="7" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.2"/>`;
+const A=[
+ {n:'Pure wing',r:'First choice',col:'--pure',x:'',d:'Nothing added. Fewest parts and the easiest to fold and stow.'},
+ {n:'Wing with a lip',r:'Second choice',col:'--lip',x:strip(1)+strip(-1),d:'The outer trailing edge is bent up by 2–3 mm. Still one piece.'},
+ {n:'Wing with a small tail',r:'Fallback',col:'--tail',x:`<line x1="0" y1="${cr}" x2="0" y2="232" stroke="var(--ink)" stroke-width="2"/><rect x="-70" y="231" width="140" height="25" fill="var(--tail)" stroke="var(--ink)" stroke-width=".8"/>`,d:'A tail one tenth the size of the wing, on a thin boom. Most parts, best understood.'}];
+document.getElementById('arch').innerHTML=A.map(a=>`<div class="card"><span class="rank">${a.r}</span><h3 style="color:var(${a.col})">${a.n}</h3>
+ <svg viewBox="-215 -40 430 305" role="img" aria-label="${a.n}, top view"><polygon class="w" points="${outline}"/>${a.x}${pod}</svg><p>${a.d}</p></div>`).join('');
+
+(function(){const X=v=>150+v*34, rows=[['Pure wing','--pure','--pureL',2,2,'about 2 mm'],['Wing with a lip','--lip','--lipL',6,12,'6 to 12 mm'],['Wing with a small tail','--tail','--tailL',7,11,'7 to 11 mm']];
+ let h='';for(let v=0;v<=14;v+=2)h+=`<line class="gr" x1="${X(v)}" y1="24" x2="${X(v)}" y2="196"/><text class="m" x="${X(v)}" y="214" text-anchor="middle">${v}</text>`;
+ h+=`<line class="ax" x1="${X(0)}" y1="196" x2="${X(14)}" y2="196"/><text class="m" x="${X(7)}" y="238" text-anchor="middle">room for balance-point error, mm</text>`;
+ rows.forEach((r,i)=>{const y=40+i*54;h+=`<text x="140" y="${y+19}" text-anchor="end">${r[0]}</text>
+  <rect x="${X(0)}" y="${y}" width="${X(r[4])-X(0)}" height="30" fill="var(${r[2]})"/><rect x="${X(0)}" y="${y}" width="${X(r[3])-X(0)}" height="30" fill="var(${r[1]})"/>
+  <text x="${X(r[4])+8}" y="${y+19}">${r[5]}</text>`;});
+ document.getElementById('bars').innerHTML=h;})();
+</script>
+</body>
+</html>

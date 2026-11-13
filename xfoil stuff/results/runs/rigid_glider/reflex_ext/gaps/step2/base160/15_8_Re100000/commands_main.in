@@ -1,0 +1,30 @@
+PLOP
+G
+
+LOAD foil.dat
+PANE
+PSAV paneled_main.dat
+OPER
+VISC 100000
+VPAR
+N 5
+
+ITER 150
+PACC
+polar_main.dat
+
+ALFA 0
+INIT
+ALFA -3
+ASEQ -3 0 0.5
+DUMP dump_a0.dat
+ASEQ 0 2 0.5
+DUMP dump_a2.dat
+ASEQ 2 4 0.5
+DUMP dump_a4.dat
+ASEQ 4 6 0.5
+DUMP dump_a6.dat
+ASEQ 6 8 0.5
+PACC
+
+QUIT
